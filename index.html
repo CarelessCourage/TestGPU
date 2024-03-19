@@ -15,8 +15,10 @@
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) throw new Error("No appropriate GPUAdapter found.");
 
-      const canvas = document.querySelector("canvas");
+      //config 
+      const GRID_SIZE = 4;
 
+      const canvas = document.querySelector("canvas");
       const device = await adapter.requestDevice();
 
       const context = canvas.getContext("webgpu");
@@ -26,23 +28,22 @@
         format: canvasFormat,
       });
 
-      const vertices = new Float32Array([
-        -0.8, -0.8, // Triangle 1
-        0.8, -0.8,
-        0.8,  0.8,
-
-        -0.8, -0.8, // Triangle 2
-        0.8,  0.8,
-        -0.8,  0.8,
-      ]);
-
+      const vertices = new Float32Array([-0.8, -0.8, 0.8, -0.8, 0.8,  0.8, -0.8, -0.8, 0.8,  0.8, -0.8,  0.8]);
       const vertexBuffer = device.createBuffer({
         label: "Cell vertices",
         size: vertices.byteLength,
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
       });
-
       device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/0, vertices);
+
+      // Uniform buffers and vertex buffers are both buffers, but they are used differently.
+      const uniformArray = new Float32Array([GRID_SIZE, GRID_SIZE]);
+      const uniformBuffer = device.createBuffer({
+        label: "Grid Uniforms",
+        size: uniformArray.byteLength,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      });
+      device.queue.writeBuffer(uniformBuffer, 0, uniformArray);
 
       //Describes how your data is packed in the vertex buffers
       const vertexBufferLayout = {
