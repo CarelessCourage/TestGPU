@@ -113,7 +113,7 @@
           module: cellShaderModule,
           entryPoint: "fragmentMain",
           targets: [{
-            //matches colorAttachments
+            //Matches colorAttachments
             format: canvasFormat
           }]
         }
@@ -150,11 +150,9 @@
         vertices.length / 2, // 6 vertices
         GRID_SIZE * GRID_SIZE // 16 instances
       );
-
       pass.end();
 
       const commandBuffer = encoder.finish();
-
       device.queue.submit([commandBuffer]);
     </script>
   </body>
