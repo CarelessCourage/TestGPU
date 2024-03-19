@@ -63,7 +63,19 @@
           @vertex
           fn vertexMain(@location(0) pos: vec2f) ->
             @builtin(position) vec4f {
-            return vec4f(pos.x / grid.x, pos.y / grid.y, 0, 1);
+
+              
+            //Makes sure the square is aligned with the grid since the square would normally be aligned with the center
+            let gridPos = (pos + 1) / grid;
+            
+            //Makes sure that 0 is bottom right and not center
+            let normalisedPos = gridPos - 1;
+
+            let cell = vec2f(1, 1);
+            let cellOffset = cell / grid * 2;
+            let cellPos = normalisedPos + cellOffset;
+
+            return vec4f(cellPos, 0, 1);
           }
 
           @fragment
