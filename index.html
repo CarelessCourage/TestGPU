@@ -71,8 +71,9 @@
             //Makes sure that 0 is bottom right and not center
             let normalisedPos = gridPos - 1;
 
-            let i = f32(instance); // Save the instance_index as a float
-            let cell = vec2f(i, i);
+            let i = f32(instance); // Type cast the instance to a float instead of an unsigned int
+            //Maps cell instance to the grid
+            let cell = vec2f(i % grid.x, floor(i / grid.x));
             let cellOffset = cell / grid * 2;
             let cellPos = normalisedPos + cellOffset;
 
