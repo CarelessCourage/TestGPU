@@ -66,6 +66,7 @@
 
           struct VertexOutput {
             @builtin(position) pos: vec4f,
+            @location(0) cell: vec2f,
           };
 
           //this is uniform data that is passed to the shader
@@ -88,12 +89,14 @@
 
             var output: VertexOutput;
             output.pos = vec4f(cellPos, 0, 1);
+            output.cell = cell;
             return output;
           }
 
           @fragment
-          fn fragmentMain() -> @location(0) vec4f {
-            return vec4f(0.9, 0.3, 0.4, 1); // (R, G, B, A)
+          fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+            let color = vec2f(input.cell/grid);
+            return vec4f(color, color.y, 1);
           }
         `
       });
