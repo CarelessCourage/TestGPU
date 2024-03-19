@@ -61,7 +61,7 @@
           @group(0) @binding(0) var<uniform> grid: vec2f;
 
           @vertex
-          fn vertexMain(@location(0) pos: vec2f) ->
+          fn vertexMain(@location(0) pos: vec2f, @builtin(instance_index) instance: u32) ->
             @builtin(position) vec4f {
 
               
@@ -71,7 +71,8 @@
             //Makes sure that 0 is bottom right and not center
             let normalisedPos = gridPos - 1;
 
-            let cell = vec2f(1, 1);
+            let i = f32(instance); // Save the instance_index as a float
+            let cell = vec2f(i, i);
             let cellOffset = cell / grid * 2;
             let cellPos = normalisedPos + cellOffset;
 
@@ -130,7 +131,10 @@
       pass.setBindGroup(0, bindGroup); // Makes sure the bind group with all the uniform stuff is actually being used in the pass
       //The 0 passed as the first argument corresponds to the @group(0) in the shader code. 
       //You're saying that each @binding that's part of @group(0) uses the resources in this bind group.
-      pass.draw(vertices.length / 2); // 6 vertices
+      pass.draw(
+        vertices.length / 2, // 6 vertices
+        GRID_SIZE * GRID_SIZE // 16 instances
+      );
 
       pass.end();
 
