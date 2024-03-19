@@ -44,12 +44,13 @@
 
       device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/0, vertices);
 
+      //Describes how your data is packed in the vertex buffers
       const vertexBufferLayout = {
         arrayStride: 8,
         attributes: [{
           format: "float32x2",
           offset: 0,
-          shaderLocation: 0, // Position, see vertex shader
+          shaderLocation: 0, // builtin(position), see vertex shader
         }],
       };
 
@@ -63,21 +64,44 @@
 
           @fragment
           fn fragmentMain() -> @location(0) vec4f {
-            return vec4f(1, 0, 0, 1); // (R, G, B, A)
+            return vec4f(1, 1, 0, 1); // (R, G, B, A)
           }
         `
+      });
+
+      const cellPipeline = device.createRenderPipeline({
+        label: "Cell pipeline",
+        layout: "auto",
+        vertex: {
+          module: cellShaderModule,
+          entryPoint: "vertexMain",
+          buffers: [vertexBufferLayout]
+        },
+        fragment: {
+          module: cellShaderModule,
+          entryPoint: "fragmentMain",
+          targets: [{
+            //matches colorAttachments
+            format: canvasFormat
+          }]
+        }
       });
 
       const encoder = device.createCommandEncoder();
 
       const pass = encoder.beginRenderPass({
         colorAttachments: [{
+           //@location(0), see fragment shader
           view: context.getCurrentTexture().createView(),
           loadOp: "clear",
           clearValue: { r: 0.3, g: 0.3, b: 0.6, a: 1 }, // New line
           storeOp: "store",
         }]
       });
+
+      pass.setPipeline(cellPipeline);
+      pass.setVertexBuffer(0, vertexBuffer);
+      pass.draw(vertices.length / 2); // 6 vertices
 
       pass.end();
 
