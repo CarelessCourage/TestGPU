@@ -10,15 +10,10 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.2",
     "vite": "^5.1.6"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "prettier": "^3.2.5"
+    "vite-plugin-glsl": "^1.2.1"
   }
 }
