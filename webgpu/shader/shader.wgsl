@@ -177,6 +177,26 @@ fn perlinNoise2(P: vec2f) -> f32 {
     return 2.3 * n_xy;
 }
 
+fn perlinPack(uv: vec2f) -> f32 {
+    var intensity = 7.0;
+    var scale = 2.0;
+    return perlinNoise2(uv * scale) * intensity;
+}
+
+fn acidZebra(uv: vec2f) -> f32 {
+    var intensity = 1.1;
+    var frequency = 0.5;
+    return bandNoise(vec3f(uv, f32(time) * frequency)) * intensity;
+}
+
+fn vibeGlass(uv: vec2f) -> f32 {
+    var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
+    var intensity = 1.0;
+    var frequency = 0.5;
+    var zebra = acidZebra(uv);
+    return perlinPack(uv) * zebra * vibe;
+}
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -190,9 +210,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
     var color = vec4f(input.uv, input.uv.y, 1);
-    var gunit = bandNoise(vec3f(input.uv, f32(time) * 0.1)) * 0.5; // Adjust the 0.1 factor to control the grain intensity
-    //var perlin = perlinNoise2(input.uv * 10.0) * 30.0 * gunit * vibe;
-    var perlin = perlinNoise2(input.uv * 10.0);
+    var glass = vibeGlass(input.uv);
+    var perlin = perlinPack(input.uv);
     var simplex = simplexNoise2(input.uv * 1000.0) * 0.1;
-    return mix(color, vec4f(1, 1, 1, 1), simplex);
+    return mix(color, vec4f(1, 1, 1, 1), perlin);
 }
