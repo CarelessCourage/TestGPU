@@ -24,7 +24,7 @@ const uniformBuffer = device.createBuffer({
 });
 device.queue.writeBuffer(uniformBuffer, /*bufferOffset=*/0, new Uint32Array([time]));
 
-const vertices = new Float32Array([-0.8, -0.8, 0.8, -0.8, 0.8,  0.8, -0.8, -0.8, 0.8,  0.8, -0.8,  0.8]);
+const vertices = new Float32Array([-0.8, -0.8, 0.8, -0.8, 0.8, 0.8, -0.8, -0.8, 0.8,  0.8, -0.8,  0.8]);
 const vertexBuffer = device.createBuffer({
   label: "Cell vertices",
   size: vertices.byteLength,
