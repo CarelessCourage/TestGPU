@@ -33,11 +33,23 @@ body {
   justify-content: center;
 }
 
+.canvas-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.canvas-wrapper h1 {
+  position: absolute;
+  right: -80px;
+  top: -5px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
 canvas {
   position: relative;
   z-index: 1;
   border: #ffffff solid 16px;
-  margin-top: 1em;
   background-color: #242424;
 }
 
