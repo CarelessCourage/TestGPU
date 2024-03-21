@@ -39,9 +39,12 @@ body {
 }
 
 .canvas-wrapper h1 {
+  font-size: 4em;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
   position: absolute;
-  right: -80px;
-  top: -5px;
+  right: -1em;
+  top: -0.07em;
   writing-mode: vertical-rl;
   text-orientation: mixed;
 }
