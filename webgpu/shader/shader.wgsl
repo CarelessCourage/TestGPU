@@ -200,7 +200,6 @@ fn vibeGlass(uv: vec2f) -> f32 {
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    //var scale = 1.0 + sin(f32(time) * 0.01) * 0.5;
     output.pos = vec4f(input.pos, 0, 1);
     output.uv = input.pos.xy * 0.5 + 0.5;
     return output;

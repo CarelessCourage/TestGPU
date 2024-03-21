@@ -24,7 +24,8 @@ const uniformBuffer = device.createBuffer({
 });
 device.queue.writeBuffer(uniformBuffer, /*bufferOffset=*/0, new Uint32Array([time]));
 
-const vertices = new Float32Array([-0.8, -0.8, 0.8, -0.8, 0.8, 0.8, -0.8, -0.8, 0.8,  0.8, -0.8,  0.8]);
+const size = 1.0;
+const vertices = new Float32Array([-size, -size, size, -size, size, size, -size, -size, size,  size, -size, size]);
 const vertexBuffer = device.createBuffer({
   label: "Cell vertices",
   size: vertices.byteLength,
@@ -76,7 +77,6 @@ const cellPipeline = device.createRenderPipeline({
     }]
   }
 });
-
 
 // This is where we attach the uniform to the shader through the pipeline
 const bindGroup = device.createBindGroup({
