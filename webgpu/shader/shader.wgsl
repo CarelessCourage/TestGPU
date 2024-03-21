@@ -178,7 +178,7 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var intensity = 7.0;
+    var intensity = 1.0;
     var scale = 2.0;
     return perlinNoise2(uv * scale) * intensity;
 }
@@ -197,6 +197,19 @@ fn vibeGlass(uv: vec2f) -> f32 {
     return perlinPack(uv) * zebra * vibe;
 }
 
+// cosine based palette, 4 vec3 params
+fn palette(t: f32) -> vec3<f32> {
+    var a = vec3f(0.5, 0.5, 0.5);
+    var b = vec3f(0.5, 0.5, 0.5);
+    var c = vec3f(1.0, 1.0, 1.0);
+    var d = vec3f(0.0, 0.1, 0.2);
+    return a + b*cos( 6.28318*(c*t+d) );
+}
+
+fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
+    return 0.299*rgb.x + 0.587*rgb.y + 0.114*rgb.z;  // standard formula for grayscale
+}
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -212,5 +225,12 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var glass = vibeGlass(input.uv);
     var perlin = perlinPack(input.uv);
     var simplex = simplexNoise2(input.uv * 1000.0) * 0.1;
-    return mix(color, vec4f(1, 1, 1, 1), perlin);
+
+    var layer1 = mix(color, vec4f(0.2, 1, 1, 1), perlin);
+    let intensity = rgb_to_intensity(layer1.xyz);
+
+    var output = vec4f(palette(intensity + glass + simplex), 1.0);
+    //var output = vec4f(palette(intensity + simplex), 1.0);
+
+    return output;
 }
