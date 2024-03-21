@@ -198,11 +198,35 @@ fn vibeGlass(uv: vec2f) -> f32 {
 }
 
 // cosine based palette, 4 vec3 params
-fn palette(t: f32) -> vec3<f32> {
+fn palette1(t: f32) -> vec3<f32> {
     var a = vec3f(0.5, 0.5, 0.5);
     var b = vec3f(0.5, 0.5, 0.5);
     var c = vec3f(1.0, 1.0, 1.0);
     var d = vec3f(0.0, 0.1, 0.2);
+    return a + b*cos( 6.28318*(c*t+d) );
+}
+
+fn palette2(t: f32) -> vec3<f32> {
+    var a = vec3f(0.5, 0.5, 0.5);
+    var b = vec3f(0.5, 0.5, 0.5);
+    var c = vec3f(1.0, 1.0, 1.0);
+    var d = vec3f(0.30, 0.20, 0.20);
+    return a + b*cos( 6.28318*(c*t+d) );
+}
+
+fn palette3(t: f32) -> vec3<f32> {
+    var a = vec3f(0.5, 0.5, 0.5);
+    var b = vec3f(0.5, 0.5, 0.5);
+    var c = vec3f(1.0, 0.7, 0.4);
+    var d = vec3f(0.00, 0.15, 0.20);
+    return a + b*cos( 6.28318*(c*t+d) );
+}
+
+fn palette4(t: f32) -> vec3<f32> {
+    var a = vec3f(0.8, 0.5, 0.4);
+    var b = vec3f(0.2, 0.4, 0.2);
+    var c = vec3f(2.0, 1.0, 1.0);
+    var d = vec3f(0.00, 0.25, 0.25);
     return a + b*cos( 6.28318*(c*t+d) );
 }
 
@@ -229,8 +253,17 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var layer1 = mix(color, vec4f(0.2, 1, 1, 1), perlin);
     let intensity = rgb_to_intensity(layer1.xyz);
 
-    var output = vec4f(palette(intensity + glass + simplex), 1.0);
-    //var output = vec4f(palette(intensity + simplex), 1.0);
+    var remap1 = palette1(intensity + glass + simplex);
+    var remap2 = palette2(intensity + glass + simplex);
+    var remap3 = palette3(intensity + glass + simplex);
+    var remap4 = palette4(intensity + glass + simplex);
+
+    var mix1 = mix(remap1, remap2, vibe);
+    var mix2 = mix(remap3, remap4, vibe);
+    var mix3 = mix(mix1, mix2, perlin);
+    
+    var output = vec4f(mix3, 1.0);
+    //var output = vec4f(palette1(intensity + simplex), 1.0);
 
     return output;
 }
