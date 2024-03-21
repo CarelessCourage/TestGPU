@@ -44,34 +44,7 @@ const vertexBufferLayout = {
 
 const cellShaderModule = device.createShaderModule({
   label: "Cell shader",
-  code: `
-    //Structs are like TS interfaces
-    struct VertexInput {
-        @location(0) pos: vec2f,
-        @builtin(instance_index) instance: u32,
-    };
-    
-    struct VertexOutput {
-        @builtin(position) pos: vec4f,
-        @location(2) uv: vec2f,
-    };
-    
-    @group(0) @binding(0) var<uniform> time: u32;
-    
-    @vertex
-    fn vertexMain(input: VertexInput) -> VertexOutput {
-        var output: VertexOutput;
-        var scale = 1.0 + sin(f32(time) * 0.01) * 0.5;
-        output.pos = vec4f(input.pos * scale, 0, 1);
-        output.uv = input.pos.xy * 0.5 + 0.5;
-        return output;
-    }
-    
-    @fragment
-    fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-        return vec4f(input.uv, 1, 1);
-    }
-  `
+  code: Shader, // `Shader` is a string containing the shader code
 });
 
 const cellPipeline = device.createRenderPipeline({
@@ -79,17 +52,14 @@ const cellPipeline = device.createRenderPipeline({
   layout: device.createPipelineLayout({
     bindGroupLayouts: [
       device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-              type: 'uniform',
-            },
+        entries: [{
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {
+            type: 'uniform',
           },
-        ],
+        }],
       }),
-      // ... other bind group layouts ...
     ],
   }),
   vertex: {
