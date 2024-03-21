@@ -3,8 +3,8 @@ if (!navigator.gpu) throw new Error("WebGPU not supported on this browser.");
       if (!adapter) throw new Error("No appropriate GPUAdapter found.");
 
       //Config
-      const GRID_SIZE = 12;
-      const UPDATE_INTERVAL = 200; // Update every 200ms (5 times/sec)
+      const GRID_SIZE = 200;
+      const UPDATE_INTERVAL = 3; // Update every 200ms (5 times/sec)
 
       const canvas = document.querySelector("canvas");
       const device = await adapter.requestDevice();
