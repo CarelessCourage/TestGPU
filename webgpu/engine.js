@@ -16,9 +16,8 @@ async function moonBow() {
   });
 
   const time = uniformTime(device);
-  const intensity = uniformIntensity(device)
   const plane = planeBuffer(device);
-
+  const intensity = uniformIntensity(device, 1.0);
   const pipeline = usePipeline(device, canvasFormat, plane, time, intensity);
 
   useFrame(1000 / 60, () => {
@@ -27,7 +26,7 @@ async function moonBow() {
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [{
-        //@location(0), see fragment shader
+        // @location(0), see fragment shader
         view: context.getCurrentTexture().createView(),
         loadOp: "clear",
         clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
@@ -58,29 +57,15 @@ function usePipeline(device, canvasFormat, plane, time, intensity) {
     code: Shader, // `Shader` is a string containing the shader code
   });
 
-  const layout = device.createPipelineLayout({
-    bindGroupLayouts: [
-      device.createBindGroupLayout({
-        entries: [{
-          binding: 0,
-          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-          buffer: {
-            type: 'uniform',
-          },
-        }, {
-          binding: 1,
-          visibility: GPUShaderStage.FRAGMENT,
-          buffer: {
-            type: 'uniform',
-          },
-        }],
-      }),
-    ],
-  })
+  const { entries, bindGroupEntries } = getEntries(time, intensity);
+
+  const layout = device.createBindGroupLayout({entries})
 
   const pipeline = device.createRenderPipeline({
     label: "Cell pipeline",
-    layout: layout,
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [layout]
+    }),
     vertex: {
       module: cellShaderModule,
       entryPoint: "vertexMain",
@@ -89,23 +74,17 @@ function usePipeline(device, canvasFormat, plane, time, intensity) {
     fragment: {
       module: cellShaderModule,
       entryPoint: "fragmentMain",
-      //Matches colorAttachments
+      // Matches colorAttachments
       targets: [{format: canvasFormat}]
     }
   });
 
-    // This is where we attach the uniform to the shader through the pipeline
-    const bindGroup = device.createBindGroup({
-      label: "Cell renderer bind group",
-      layout: pipeline.getBindGroupLayout(0), //@group(0) in shader 
-      entries: [{
-        binding: 0, //@binding(0) in shader
-        resource: { buffer: time.buffer } //Buffer resource assigned to this binding
-      }, {
-        binding: 1,
-        resource: { buffer: intensity.buffer }
-      }],
-    })
+  // This is where we attach the uniform to the shader through the pipeline
+  const bindGroup = device.createBindGroup({
+    label: "Cell renderer bind group",
+    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
+    entries: bindGroupEntries
+  })
 
   return {
     pipeline: pipeline,
@@ -113,8 +92,35 @@ function usePipeline(device, canvasFormat, plane, time, intensity) {
   };
 }
 
-function uniformIntensity(device) {
-  const intensity = 1.0;
+function getEntries(time, intensity) {
+  const entries = [{
+    binding: 0,
+    visibility: GPUShaderStage.FRAGMENT,
+    buffer: { type: 'uniform' },
+    resource: { buffer: time.buffer } //Buffer resource assigned to this binding
+  }, {
+    binding: 1,
+    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+    buffer: { type: 'uniform' },
+    resource: { buffer: intensity.buffer }
+  }]
+
+  const bindGroupEntries = entries.map(entry => {
+    return {
+      binding: entry.binding,
+      resource: {
+        buffer: entry.resource.buffer
+      }
+    }
+  })
+
+  return {
+    entries,
+    bindGroupEntries
+  }
+}
+
+function uniformIntensity(device, intensity = 10.0) {
   const intensityBuffer = device.createBuffer({
     label: "Intensity buffer",
     size: 4,
