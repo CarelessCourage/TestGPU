@@ -139,6 +139,7 @@ fn simplexNoise2(v: vec2f) -> f32 {
     let g = vec3(a0.x * x0.x + h.x * x0.y, a0.yz * x12.xz + h.yz * x12.yw);
     return 130. * dot(m, g);
 }
+
 //perlin
 
 fn permute4(x: vec4f) -> vec4f { return ((x * 34. + 1.) * x) % vec4f(289.); }
@@ -184,15 +185,16 @@ fn perlinPack(uv: vec2f) -> f32 {
 }
 
 fn acidZebra(uv: vec2f) -> f32 {
-    var intensity = 1.1;
-    var frequency = 0.5;
-    return bandNoise(vec3f(uv, f32(time) * frequency)) * intensity;
+    var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
+    var intensity = 0.0; // gold
+    var frequency = 5.0;
+    return bandNoise(vec3f(uv, vibe * frequency)) * intensity;
 }
 
 fn vibeGlass(uv: vec2f) -> f32 {
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
     var intensity = 1.0;
-    var frequency = 0.5;
+    var frequency = 0.2;
     var zebra = acidZebra(uv);
     return perlinPack(uv) * zebra * vibe;
 }

@@ -75,7 +75,7 @@ h1 {
 h1.display {
   position: fixed;
   z-index: 0;
-  bottom: -5vh;
+  bottom: 9.5vh;
   font-size: clamp(2.8em, 22vw, 39.2em);
   line-height: 1.1;
 }
@@ -96,10 +96,52 @@ p span.dim {
 }
 
 div.meta {
+  position: absolute;
   --padding: 5vw;
   display: grid;
   grid-template-columns: auto repeat(3, 1fr);
   gap: calc(var(--padding) / 2);
   padding-left: var(--padding);
   padding-right: var(--padding);
+  top: 10vh;
+}
+
+header {
+  position: absolute;
+  background-color: #242424;
+  z-index: 10;
+  top: 0px;
+  left: 0px;
+  width: 100vw;
+}
+
+ul {
+  display: flex;
+  gap: 1em;
+  padding: 1em 2em;
+  margin: 0;
+}
+
+ul li {
+  display: block;
+  list-style: none;
+}
+
+a {
+  color: #ffffff;
+  text-decoration: none;
+  opacity: 0.5;
+}
+
+a:hover {
+  opacity: 1;
+  color: #ffae00;
+}
+
+a:active {
+  color: #00b3ff;
+}
+
+a.active {
+  opacity: 1;
 }

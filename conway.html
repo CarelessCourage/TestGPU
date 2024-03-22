@@ -1,0 +1,31 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebGPU Life</title>
+    <link rel="stylesheet" href="../src/style.css">
+  </head>
+  <body>
+    <header>
+        <ul>
+            <a href="/conway" class="active"><li>Conway</li></a>
+            <a href="/"><li>Gradients</li></a>
+        </ul>
+    </header>
+    <div class="meta">
+      <div class="title">
+        <h1>Conway's</h1> 
+        <h1>game </br> of life </h1>
+      </div>
+      <p>Less than two live neighbors kills the cell, <span class="dim">as if by underpopulation</span></p>
+      <p>More than three live neighbors kills a cell, <span class="dim">as if by overpopulation</span></p>
+      <p>Three live neighbors becomes a live cell, <span class="dim">as if by reproduction</span></p>
+    </div>
+    <div class="canvas-wrapper">
+      <canvas width="512" height="512"></canvas>
+    </div>
+    <h1 class="display">WebGPU</h1>
+    <script type="module" src="../conways.js"></script>
+  </body>
+</html> 
