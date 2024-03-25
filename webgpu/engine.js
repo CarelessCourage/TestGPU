@@ -1,25 +1,22 @@
 import Shader from "./shader/shader.wgsl";
 
 async function moonBow() {
-  if (!navigator.gpu) throw new Error("WebGPU not supported on this browser.");
-  const adapter = await navigator.gpu.requestAdapter();
-  if (!adapter) throw new Error("No appropriate GPUAdapter found.");
-
-  const canvas = document.querySelector("canvas");
-  const device = await adapter.requestDevice();
-
-  const context = canvas.getContext("webgpu");
-  const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-  context.configure({
-    device: device,
-    format: canvasFormat,
-  });
-
-  const time = uniformTime(device);
+  // Setup
+  const { device } = await gpuDevice();
+  const canvas = gpuCanvas(device);
+  
+  // Geometry
   const plane = planeBuffer(device);
-  const intensity = uniformIntensity(device, 1.0);
-  const pipeline = usePipeline(device, canvasFormat, plane, time, intensity);
 
+  // Uniforms
+  const time = uniformTime(device);
+  const intensity = uniformIntensity(device, 0.0);
+
+  // Assembly
+  const entries = getEntries(device, {time, intensity});
+  const pipeline = usePipeline(device, canvas.format, plane, entries);
+
+  // Render
   useFrame(1000 / 60, () => {
     time.update();
 
@@ -27,7 +24,7 @@ async function moonBow() {
     const pass = encoder.beginRenderPass({
       colorAttachments: [{
         // @location(0), see fragment shader
-        view: context.getCurrentTexture().createView(),
+        view: canvas.context.getCurrentTexture().createView(),
         loadOp: "clear",
         clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
         storeOp: "store",
@@ -37,6 +34,7 @@ async function moonBow() {
     pass.setPipeline(pipeline.pipeline);
     pass.setVertexBuffer(0, plane.buffer);
     pass.setBindGroup(0, pipeline.bindGroup);
+    
     pass.draw(plane.vertices.length / 2);
     pass.end();
 
@@ -47,24 +45,49 @@ async function moonBow() {
 
 moonBow();
 
+async function gpuDevice() {
+  if (!navigator.gpu) throw new Error("WebGPU not supported on this browser.");
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) throw new Error("No appropriate GPUAdapter found.");
+
+  const device = await adapter.requestDevice();
+  return {
+    adapter: adapter,
+    device: device
+  };
+}
+
+function gpuCanvas(device) {
+  const canvas = document.querySelector("canvas");
+
+  const context = canvas.getContext("webgpu");
+  const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device: device,
+    format: canvasFormat,
+  });
+
+  return {
+    wlement: canvas,
+    context: context,
+    format: canvasFormat
+  };
+}
+
 function useFrame(interval = 1000 / 60, update) {
   setInterval(update, interval);
 }
 
-function usePipeline(device, canvasFormat, plane, time, intensity) {
+function usePipeline(device, canvasFormat, plane, entries) {
   const cellShaderModule = device.createShaderModule({
     label: "Cell shader",
     code: Shader, // `Shader` is a string containing the shader code
   });
 
-  const { entries, bindGroupEntries } = getEntries(time, intensity);
-
-  const layout = device.createBindGroupLayout({entries})
-
   const pipeline = device.createRenderPipeline({
     label: "Cell pipeline",
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [layout]
+      bindGroupLayouts: [entries.layout]
     }),
     vertex: {
       module: cellShaderModule,
@@ -82,8 +105,8 @@ function usePipeline(device, canvasFormat, plane, time, intensity) {
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = device.createBindGroup({
     label: "Cell renderer bind group",
-    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
-    entries: bindGroupEntries
+    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
+    entries: entries.bindGroup
   })
 
   return {
@@ -92,17 +115,17 @@ function usePipeline(device, canvasFormat, plane, time, intensity) {
   };
 }
 
-function getEntries(time, intensity) {
+function getEntries(device, uniforms) {
   const entries = [{
     binding: 0,
     visibility: GPUShaderStage.FRAGMENT,
     buffer: { type: 'uniform' },
-    resource: { buffer: time.buffer } //Buffer resource assigned to this binding
+    resource: { buffer: uniforms.time.buffer } // Buffer resource assigned to this binding
   }, {
     binding: 1,
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
     buffer: { type: 'uniform' },
-    resource: { buffer: intensity.buffer }
+    resource: { buffer: uniforms.intensity.buffer }
   }]
 
   const bindGroupEntries = entries.map(entry => {
@@ -114,9 +137,12 @@ function getEntries(time, intensity) {
     }
   })
 
+
+  const layout = device.createBindGroupLayout({entries})
+
   return {
-    entries,
-    bindGroupEntries
+    layout,
+    bindGroup: bindGroupEntries
   }
 }
 
