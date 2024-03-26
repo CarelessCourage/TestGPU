@@ -1,5 +1,5 @@
 import shader from "./shader/shader.wgsl";
-import { useMoonbow, uniformBuffer } from "./pipeline.js";
+import { usePipeline, uniformBuffer } from "./pipeline.js";
 import { planeBuffer } from "./plane.js";
 import { useTarget } from "./target.js";
 
@@ -21,13 +21,11 @@ async function moonBow() {
   const intensity = uniformBuffer(device, {
     binding: 1,
     label: "Intensity Uniform Buffer",
-    change: (buffer) => {
-      device.queue.writeBuffer(buffer, 0, new Float32Array([0.0]));
-    }
+    change: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array([0.0]))
   });
 
   // Assembly
-  const pipeline = useMoonbow(device, {
+  const pipeline = usePipeline(device, {
     shader, plane, canvas,
     uniforms: { time, intensity },
   })

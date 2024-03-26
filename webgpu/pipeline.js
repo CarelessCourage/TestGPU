@@ -1,6 +1,6 @@
-export function useMoonbow(device, {uniforms, shader, plane, canvas}) {
+export function usePipeline(device, {uniforms, shader, plane, canvas}) {
   const entries = getEntries(device, uniforms);
-  return usePipeline(device, {
+  return makePipeline(device, {
     shader,
     entries,
     vertex: {
@@ -14,7 +14,7 @@ export function useMoonbow(device, {uniforms, shader, plane, canvas}) {
   })
 }
 
-export function usePipeline(device, options) {
+function makePipeline(device, options) {
   const cellShaderModule = device.createShaderModule({
     label: "Cell shader",
     code: options.shader, // `Shader` is a string containing the shader code
@@ -50,7 +50,7 @@ export function usePipeline(device, options) {
   };
 }
 
-export function getEntries(device, uniforms) {
+function getEntries(device, uniforms) {
   const getArray = (obj) => Object.keys(obj).map(key => obj[key]);
   const entries = getArray(uniforms).map((uniform, index) => {
     return {
