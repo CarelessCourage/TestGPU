@@ -1,4 +1,5 @@
 import Shader from "./shader/shader.wgsl";
+import { usePipeline } from "./pipeline.js";
 
 async function moonBow() {
   // Setup
@@ -9,12 +10,38 @@ async function moonBow() {
   const plane = planeBuffer(device);
 
   // Uniforms
-  const time = uniformTime(device);
-  const intensity = uniformIntensity(device, 0.0);
+  let elapsedTime = 0;
+  const time = uniformBuffer(device, {
+    binding: 0,
+    label: "Time Uniform Buffer",
+    change: (buffer) => {
+      const time = elapsedTime++;
+      device.queue.writeBuffer(buffer, 0, new Uint32Array([time]));
+    },
+  });
+
+  const intensity = uniformBuffer(device, {
+    binding: 1,
+    label: "Intensity Uniform Buffer",
+    change: (buffer) => {
+      device.queue.writeBuffer(buffer, 0, new Float32Array([0.0]));
+    }
+  });
 
   // Assembly
   const entries = getEntries(device, {time, intensity});
-  const pipeline = usePipeline(device, canvas.format, plane, entries);
+  const pipeline = usePipeline(device, {
+    shader: Shader,
+    entries: entries,
+    vertex: {
+      entryPoint: "vertexMain",
+      buffers: [plane.layout]
+    },
+    fragment: {
+      entryPoint: "fragmentMain",
+      targets: [{format: canvas.format}]
+    }
+  })
 
   // Render
   useFrame(1000 / 60, () => {
@@ -78,111 +105,38 @@ function useFrame(interval = 1000 / 60, update) {
   setInterval(update, interval);
 }
 
-function usePipeline(device, canvasFormat, plane, entries) {
-  const cellShaderModule = device.createShaderModule({
-    label: "Cell shader",
-    code: Shader, // `Shader` is a string containing the shader code
-  });
-
-  const pipeline = device.createRenderPipeline({
-    label: "Cell pipeline",
-    layout: device.createPipelineLayout({
-      bindGroupLayouts: [entries.layout]
-    }),
-    vertex: {
-      module: cellShaderModule,
-      entryPoint: "vertexMain",
-      buffers: [plane.layout]
-    },
-    fragment: {
-      module: cellShaderModule,
-      entryPoint: "fragmentMain",
-      // Matches colorAttachments
-      targets: [{format: canvasFormat}]
-    }
-  });
-
-  // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup = device.createBindGroup({
-    label: "Cell renderer bind group",
-    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
-    entries: entries.bindGroup
-  })
-
-  return {
-    pipeline: pipeline,
-    bindGroup: bindGroup
-  };
-}
-
 function getEntries(device, uniforms) {
-  const entries = [{
-    binding: 0,
-    visibility: GPUShaderStage.FRAGMENT,
-    buffer: { type: 'uniform' },
-    resource: { buffer: uniforms.time.buffer } // Buffer resource assigned to this binding
-  }, {
-    binding: 1,
-    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-    buffer: { type: 'uniform' },
-    resource: { buffer: uniforms.intensity.buffer }
-  }]
-
-  const bindGroupEntries = entries.map(entry => {
+  const getArray = (obj) => Object.keys(obj).map(key => obj[key]);
+  const entries = getArray(uniforms).map((uniform, index) => {
     return {
-      binding: entry.binding,
-      resource: {
-        buffer: entry.resource.buffer
-      }
+      binding: uniform.binding || index,
+      visibility: uniform.visibility,
+      buffer: { type: 'uniform' },
+      resource: { buffer: uniform.buffer }
     }
-  })
-
+  });
 
   const layout = device.createBindGroupLayout({entries})
-
-  return {
-    layout,
-    bindGroup: bindGroupEntries
+  return { 
+    layout, 
+    bindGroup: entries
   }
 }
 
-function uniformIntensity(device, intensity = 10.0) {
+function uniformBuffer(device, options) {
+  const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;
   const intensityBuffer = device.createBuffer({
-    label: "Intensity buffer",
-    size: 4,
+    label: options.label,
+    size: options.size || 4,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   })
-  device.queue.writeBuffer(intensityBuffer, /*bufferOffset=*/0, new Float32Array([intensity]));
 
-  function update(newIntensity) {
-    device.queue.writeBuffer(intensityBuffer, 0, new Float32Array([newIntensity]));
-  }
-
+  options.change(intensityBuffer);
   return {
+    binding: options.binding || undefined,
+    visibility: options.visibility || defaultVisibility,
     buffer: intensityBuffer,
-    update
-  };
-}
-
-function uniformTime(device) {
-  let time = 0;
-  // Create a uniform buffer
-  const uniformBufferSize = 4; // Size of a u32 in bytes
-  const uniformBuffer = device.createBuffer({
-    label: "Uniform buffer",
-    size: uniformBufferSize,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-  device.queue.writeBuffer(uniformBuffer, /*bufferOffset=*/0, new Uint32Array([time]));
-
-  function update() {
-    time++;
-    device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array([time]));
-  }
-
-  return {
-    buffer: uniformBuffer, 
-    update: update
+    update: () => options.change(intensityBuffer)
   };
 }
 
@@ -190,7 +144,7 @@ function planeBuffer(device) {
   const size = 1.0;
   const vertices = new Float32Array([-size, -size, size, -size, size, size, -size, -size, size,  size, -size, size]);
   const vertexBuffer = device.createBuffer({
-    label: "Cell vertices",
+    label: "Plane Vertices Buffer",
     size: vertices.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });

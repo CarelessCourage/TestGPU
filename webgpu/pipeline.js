@@ -1,20 +1,20 @@
 //@ts-ignore
 import Shader from "./shader/shader.wgsl";
 
-interface options {
-    shader: string,
-    entries: any,
-    vertex: {
-        entryPoint: string,
-        buffers: GPUVertexBufferLayout[]
-    }
-    fragment: {
-        entryPoint: string,
-        targets: GPUColorTargetState[]
-    }
-}
+// const options = {
+//   shader: Shader,
+//   entries: undefined,
+//   vertex: {
+//     entryPoint: "vertexMain",
+//     buffers: undefined, // [plane.layout]
+//   },
+//   fragment: {
+//     entryPoint: "fragmentMain",
+//     targets: undefined, // [{format: canvasFormat}]
+//   }
+// };
 
-export function usePipeline(device, options: options) {
+export function usePipeline(device, options) {
     const cellShaderModule = device.createShaderModule({
       label: "Cell shader",
       code: Shader, // `Shader` is a string containing the shader code
@@ -27,13 +27,12 @@ export function usePipeline(device, options: options) {
       }),
       vertex: {
         module: cellShaderModule,
-        entryPoint: "vertexMain",
+        entryPoint: options.vertex.entryPoint,
         buffers: options.vertex.buffers
       },
       fragment: {
         module: cellShaderModule,
-        entryPoint: "fragmentMain",
-        // Matches colorAttachments
+        entryPoint: options.fragment.entryPoint,
         targets: options.fragment.targets
       }
     });
