@@ -4,11 +4,11 @@ import { planeBuffer } from "./plane.js";
 import { useTarget } from "./target.js";
 
 async function moonBow() {
-  const { device, canvas } = await useTarget()
+  const { device, canvas } = await useTarget();
   const plane = planeBuffer(device);
 
-  const time = uTime(device)
-  const intensity = uf32(device, 2.0)
+  const time = uTime(device);
+  const intensity = uf32(device, 2.0);
 
   const pipeline = usePipeline(device, {
     plane: plane,
@@ -18,7 +18,7 @@ async function moonBow() {
       time,
       intensity
     ]
-  })
+  });
 
   useFrame(1000 / 60, () => {
     time.update();
