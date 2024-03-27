@@ -34,7 +34,10 @@ function makePipeline(device, options) {
       module: cellShaderModule,
       entryPoint: options.fragment.entryPoint,
       targets: options.fragment.targets
-    }
+    },
+    primitive: {
+      topology: "line-list",
+    },
   });
 
   // This is where we attach the uniform to the shader through the pipeline
@@ -51,8 +54,7 @@ function makePipeline(device, options) {
 }
 
 function getEntries(device, uniforms) {
-  const getArray = (obj) => Object.keys(obj).map(key => obj[key]);
-  const entries = getArray(uniforms).map((uniform, index) => {
+  const entries = uniforms.map((uniform, index) => {
     return {
       binding: uniform.binding || index, // might be bugged if value is 0 but index is not 0
       visibility: uniform.visibility,
@@ -68,19 +70,33 @@ function getEntries(device, uniforms) {
   }
 }
 
-export function uniformBuffer(device, options) {
+export function uTime(device){
+  let time = 0;
+  return uniformBuffer(device, {
+    update: (buffer) => {
+      time++;
+      device.queue.writeBuffer(buffer, 0, new Uint32Array([time]));
+    }
+  });
+}
+
+export const uf32 = (device, value) => uniformBuffer(device, {
+  update: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array(value))
+});
+
+function uniformBuffer(device, options) {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;
-  const intensityBuffer = device.createBuffer({
+  const buffer = device.createBuffer({
     label: options.label,
     size: options.size || 4,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   })
 
-  options.change(intensityBuffer);
+  options.update(buffer);
   return {
     binding: options.binding,
     visibility: options.visibility || defaultVisibility,
-    buffer: intensityBuffer,
-    update: () => options.change(intensityBuffer)
+    buffer: buffer,
+    update: () => options.update(buffer)
   };
 }

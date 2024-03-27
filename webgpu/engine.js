@@ -1,5 +1,5 @@
 import shader from "./shader/shader.wgsl";
-import { usePipeline, uniformBuffer } from "./pipeline.js";
+import { usePipeline, uTime, uf32 } from "./pipeline.js";
 import { planeBuffer } from "./plane.js";
 import { useTarget } from "./target.js";
 
@@ -7,30 +7,16 @@ async function moonBow() {
   const { device, canvas } = await useTarget()
   const plane = planeBuffer(device);
 
-  // Uniforms
-  let elapsedTime = 0;
-  const time = uniformBuffer(device, {
-    binding: 0,
-    label: "Time Uniform Buffer",
-    change: (buffer) => {
-      const time = elapsedTime++;
-      device.queue.writeBuffer(buffer, 0, new Uint32Array([time]));
-    },
-  });
+  const time = uTime(device)
+  const intensity = uf32(device, 2.0)
 
-  const intensity = uniformBuffer(device, {
-    binding: 1,
-    label: "Intensity Uniform Buffer",
-    change: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array([0.0]))
-  });
-
-  // Assembly
   const pipeline = usePipeline(device, {
-    shader, plane, canvas,
-    uniforms: { time, intensity },
+    plane,
+    canvas,
+    shader,
+    uniforms: [ time, intensity ]
   })
 
-  // Render
   useFrame(1000 / 60, () => {
     time.update();
 
