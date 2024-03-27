@@ -1,50 +1,36 @@
-export function usePipeline(device, {uniforms, shader, plane, canvas}) {
+export function usePipeline(device, {uniforms, shader, plane, canvas, wireframe = false}) {
   const entries = getEntries(device, uniforms);
-  return makePipeline(device, {
-    shader,
-    entries,
-    vertex: {
-      entryPoint: "vertexMain",
-      buffers: [plane.layout]
-    },
-    fragment: {
-      entryPoint: "fragmentMain",
-      targets: [{format: canvas.format}]
-    }
-  })
-}
 
-function makePipeline(device, options) {
   const cellShaderModule = device.createShaderModule({
     label: "Cell shader",
-    code: options.shader, // `Shader` is a string containing the shader code
+    code: shader,
   });
 
   const pipeline = device.createRenderPipeline({
     label: "Cell pipeline",
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [options.entries.layout]
+      bindGroupLayouts: [entries.layout]
     }),
     vertex: {
       module: cellShaderModule,
-      entryPoint: options.vertex.entryPoint,
-      buffers: options.vertex.buffers
+      entryPoint: "vertexMain",
+      buffers: [plane.layout]
     },
     fragment: {
       module: cellShaderModule,
-      entryPoint: options.fragment.entryPoint,
-      targets: options.fragment.targets
+      entryPoint: "fragmentMain",
+      targets: [{format: canvas.format}]
     },
     primitive: {
-      topology: "line-list",
+      topology: wireframe ? "line-list" : "triangle-list",
     },
   });
 
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = device.createBindGroup({
     label: "Cell renderer bind group",
-    layout: options.entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
-    entries: options.entries.bindGroup
+    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader 
+    entries: entries.bindGroup
   })
 
   return {

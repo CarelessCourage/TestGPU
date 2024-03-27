@@ -11,10 +11,13 @@ async function moonBow() {
   const intensity = uf32(device, 2.0)
 
   const pipeline = usePipeline(device, {
-    plane,
-    canvas,
-    shader,
-    uniforms: [ time, intensity ]
+    plane: plane,
+    canvas: canvas,
+    shader: shader,
+    uniforms: [
+      time,
+      intensity
+    ]
   })
 
   useFrame(1000 / 60, () => {
