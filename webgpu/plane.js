@@ -1,24 +1,9 @@
 export function planeBuffer(device, size, res) {
   const geo = geoplane(size, res);
-
   const vertices = new Float32Array(geo.vertices);
   const indices = new Uint16Array(geo.indices);
 
-  const verticesBuffer = device.createBuffer({
-      label: "Plane Vertices Buffer",
-      size: vertices.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-  });
-  device.queue.writeBuffer(verticesBuffer, 0, vertices);
-
-  const indicesBuffer = device.createBuffer({
-      label: "Plane Indices Buffer",
-      size: indices.byteLength,
-      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-  });
-  device.queue.writeBuffer(indicesBuffer, 0, indices);
-
-  //Describes how your data is packed in the vertex buffers
+  // Describes how the data is packed in the vertex buffers
   const vertexBufferLayout = {
     arrayStride: 8,
     attributes: [{
@@ -29,12 +14,32 @@ export function planeBuffer(device, size, res) {
   };
 
   return {
-      vertices: verticesBuffer,
-      indices: indicesBuffer,
-      layout: vertexBufferLayout,
-      vertexCount: geo.vertices.length,
-      indicesCount: geo.indices.length
+    layout: vertexBufferLayout,
+    vertexCount: geo.vertices.length,
+    indicesCount: geo.indices.length,
+    vertices: verticesBuffer(device, vertices),
+    indices: indicesBuffer(device, indices),
   };
+}
+
+function verticesBuffer(device, vertices) {
+  const buffer = device.createBuffer({
+    label: "Plane Vertices Buffer",
+    size: vertices.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(buffer, 0, vertices);
+  return buffer;
+}
+
+function indicesBuffer(device, indices) {
+  const buffer = device.createBuffer({
+    label: "Plane Indices Buffer",
+    size: indices.byteLength,
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(buffer, 0, indices);
+  return buffer;
 }
 
 function geoplane(size, res) {
