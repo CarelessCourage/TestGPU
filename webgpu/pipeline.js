@@ -1,4 +1,4 @@
-export function usePipeline(device, {uniforms, shader, plane, canvas, wireframe = false}) {
+export function usePipeline({device, canvas}, {uniforms, shader, layout, wireframe = false}) {
   const entries = getEntries(device, uniforms);
 
   const cellShaderModule = device.createShaderModule({
@@ -14,7 +14,7 @@ export function usePipeline(device, {uniforms, shader, plane, canvas, wireframe 
     vertex: {
       module: cellShaderModule,
       entryPoint: "vertexMain",
-      buffers: [plane.layout]
+      buffers: [layout]
     },
     fragment: {
       module: cellShaderModule,
@@ -56,9 +56,9 @@ function getEntries(device, uniforms) {
   }
 }
 
-export function uTime(device){
+export function uTime({device}){
   let time = 0;
-  return uniformBuffer(device, {
+  return uniformBuffer({device}, {
     update: (buffer) => {
       time++;
       device.queue.writeBuffer(buffer, 0, new Uint32Array([time]));
@@ -66,12 +66,12 @@ export function uTime(device){
   });
 }
 
-export const uf32 = (device, value) => uniformBuffer(device, {
+export const uf32 = ({device}, value) => uniformBuffer({device}, {
   size: 8,
   update: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array(value))
 });
 
-function uniformBuffer(device, options) {
+function uniformBuffer({device}, options) {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;
   const buffer = device.createBuffer({
     label: options.label,

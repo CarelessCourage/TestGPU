@@ -1,4 +1,4 @@
-export function planeBuffer(device, size, res) {
+export function planeBuffer({device}, size, res) {
   const geo = geoplane(size, res);
   const vertices = new Float32Array(geo.vertices);
   const indices = new Uint16Array(geo.indices);
@@ -43,10 +43,10 @@ function indicesBuffer(device, indices) {
 }
 
 function geoplane(size, res) {
-  const height = size[0];
-  const width = size[1];
-  const heightSegments = res[0];
-  const widthSegments = res[1];
+  const height = Array.isArray(size) ? size[0] : size;
+  const width = Array.isArray(size) ? size[1] || size[0] : size;
+  const heightSegments = Array.isArray(res) ? res[0] : res;
+  const widthSegments = Array.isArray(res) ? res[1] || res[0] : res;
 
   const indices = [];
   const vertices = [];

@@ -1,4 +1,4 @@
-export async function useTarget() {
+export async function gpuTarget() {
   const { device, adapter } = await gpuDevice();
   const canvas = gpuCanvas(device);
   return {

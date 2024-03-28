@@ -1,55 +1,39 @@
 import shader from "./shader/shader.wgsl";
 import { usePipeline, uTime, uf32 } from "./pipeline.js";
 import { planeBuffer } from "./plane.js";
-import { useTarget } from "./target.js";
+import { gpuTarget } from "./target.js";
+import { render, passGeo, passPipeline, initRender, submitPass } from "./render.js";
+
+// [] - Multiple planes
+// [] - Other shapes
+// [] - DOM sync
+// [] - Proxy objects
+// [] - Vue integration for proxy objects
 
 async function moonBow() {
-  const { device, canvas } = await useTarget();
-  const plane = planeBuffer(device, [1, 1], [4, 4]);
+  const gpu = await gpuTarget();
+  const plane = planeBuffer(gpu, 2.0, 1);
 
-  const time = uTime(device);
-  const intensity = uf32(device, 2.0);
+  const time = uTime(gpu);
+  const intensity = uf32(gpu, 2.0);
 
-  const pipeline = usePipeline(device, {
-    plane: plane,
-    canvas: canvas,
+  const pipeline = usePipeline(gpu, {
     shader: shader,
-    wireframe: true,
+    layout: plane.layout,
+    wireframe: false,
     uniforms: [
       time,
       intensity
     ]
   });
 
-  useFrame(1000 / 60, () => {
+  render(1000 / 60, () => {
     time.update();
-
-    const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [{
-        // @location(0), see fragment shader
-        view: canvas.context.getCurrentTexture().createView(),
-        loadOp: "clear",
-        clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
-        storeOp: "store",
-      }]
-    });
-
-    pass.setPipeline(pipeline.pipeline);
-    pass.setVertexBuffer(0, plane.vertices); // We can have multiple vertex buffers. Thats why we need to specify the index. 
-    pass.setIndexBuffer(plane.indices, 'uint16'); // We can only have one index buffer. So we dont need to specify the index.
-    pass.setBindGroup(0, pipeline.bindGroup);
-    pass.drawIndexed(plane.indicesCount, 1, 0, 0, 0);
-    //pass.draw(plane.vertexCount / 2, 0, 0, 0); // The fuck does these numbers do
-    pass.end();
-
-    const commandBuffer = encoder.finish();
-    device.queue.submit([commandBuffer]);
+    const render = initRender(gpu);
+    passPipeline(render, pipeline);
+    passGeo(render, plane);
+    submitPass(gpu, render);
   });
 }
 
 moonBow();
-
-function useFrame(interval = 1000 / 60, update) {
-  setInterval(update, interval);
-}
