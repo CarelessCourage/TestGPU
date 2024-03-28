@@ -1,11 +1,12 @@
 import shader from "./shader/shader.wgsl";
 import { usePipeline, uTime, uf32 } from "./pipeline.js";
-import { planeBuffer } from "./plane.js";
+import { planeBuffer, planeBuffer2 } from "./plane.js";
 import { useTarget } from "./target.js";
 
 async function moonBow() {
   const { device, canvas } = await useTarget();
-  const plane = planeBuffer(device);
+  const plane = planeBuffer(device, 1, 1, 4, 4);
+  //const plane2 = planeBuffer2(device);
 
   const time = uTime(device);
   const intensity = uf32(device, 2.0);
@@ -14,6 +15,7 @@ async function moonBow() {
     plane: plane,
     canvas: canvas,
     shader: shader,
+    wireframe: true,
     uniforms: [
       time,
       intensity
@@ -35,9 +37,11 @@ async function moonBow() {
     });
 
     pass.setPipeline(pipeline.pipeline);
-    pass.setVertexBuffer(0, plane.buffer);
+    pass.setVertexBuffer(0, plane.vertices); // We can have multiple vertex buffers. Thats why we need to specify the index. 
+    pass.setIndexBuffer(plane.indices, 'uint16'); // We can only have one index buffer. So we dont need to specify the index.
     pass.setBindGroup(0, pipeline.bindGroup);
-    pass.draw(plane.vertices.length / 2);
+    pass.drawIndexed(plane.indicesCount, 1, 0, 0, 0);
+    //pass.draw(plane.vertexCount / 2, 0, 0, 0); // The fuck does these numbers do
     pass.end();
 
     const commandBuffer = encoder.finish();

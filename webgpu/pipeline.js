@@ -67,6 +67,7 @@ export function uTime(device){
 }
 
 export const uf32 = (device, value) => uniformBuffer(device, {
+  size: 8,
   update: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array(value))
 });
 
