@@ -4,12 +4,6 @@ import { planeBuffer } from "./plane.js";
 import { gpuTarget } from "./target.js";
 import { render, passGeo, passPipeline, initRender, submitPass } from "./render.js";
 
-// [] - Multiple planes
-// [] - Other shapes
-// [] - DOM sync
-// [] - Proxy objects
-// [] - Vue integration for proxy objects
-
 async function moonBow() {
   const gpu = await gpuTarget();
   const plane = planeBuffer(gpu, 2.0, 1);
