@@ -1,4 +1,4 @@
-#TODO:
+# TODO:
 - [] Plane position
 - [] Multiple planes
 - [] Other shapes
@@ -15,7 +15,7 @@
 - [] WGSL Bomber
 - [] Tension Shader
 
-Next Evo:
+# Next Evo:
 - Lights
 - VR
 - Models
@@ -28,7 +28,7 @@ Next Evo:
 - Audio
 - HMR
 
-Insp
+# Insp
 - usegpu: usegpu.live/
 - athena: athena.js.org
 - three: threejs.org/docs/
