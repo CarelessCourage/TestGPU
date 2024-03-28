@@ -1,12 +1,11 @@
 import shader from "./shader/shader.wgsl";
 import { usePipeline, uTime, uf32 } from "./pipeline.js";
-import { planeBuffer, planeBuffer2 } from "./plane.js";
+import { planeBuffer } from "./plane.js";
 import { useTarget } from "./target.js";
 
 async function moonBow() {
   const { device, canvas } = await useTarget();
-  const plane = planeBuffer(device, 1, 1, 4, 4);
-  //const plane2 = planeBuffer2(device);
+  const plane = planeBuffer(device, [1, 1], [4, 4]);
 
   const time = uTime(device);
   const intensity = uf32(device, 2.0);
