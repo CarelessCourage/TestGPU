@@ -10,11 +10,13 @@ async function moonBow() {
   const plane = planeBuffer(gpu, {
     resolution: 1,
     position: [0.0, 0.0],
-    size: 2,
+    size: 1,
   });
 
   const time = uTime(gpu);
-  const intensity = uf32(gpu, 2.0);
+  const intensity = uf32(gpu, 1.0);
+  const planeSize = uf32(gpu, plane.options.size);
+  const scale = uf32(gpu, 1.0);
 
   const pipeline = usePipeline(gpu, {
     shader: shader,
@@ -22,7 +24,9 @@ async function moonBow() {
     wireframe: false,
     uniforms: [
       time,
-      intensity
+      intensity,
+      planeSize,
+      scale,
     ]
   });
 

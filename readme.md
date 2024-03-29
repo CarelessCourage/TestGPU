@@ -1,6 +1,6 @@
 # TODO:
 - [x] Plane position
-- [ ] Plane UV
+- [x] Plane UV
 - [ ] Plane Mutability
 - [ ] Multiple planes
 - [ ] Other shapes

@@ -68,8 +68,8 @@ function getOptions(passedOptions) {
 
 function geoplane({size, resolution, position}) {
   const [x, y] = position;
-  const [width, height] = size;
   const [widthSegments, heightSegments] = resolution;
+  const [width, height] = size.map((value) => value * 2);
 
   const indices = [];
   const vertices = [];
