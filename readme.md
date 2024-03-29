@@ -1,7 +1,7 @@
 # TODO:
 - [x] Plane position
-- [0] Plane UV
-- [0] Multiple planes
+- [o] Plane UV
+- [o] Multiple planes
 - [] Other shapes
 - [] DOM sync
 - [] Proxy objects
