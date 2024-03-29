@@ -1,20 +1,20 @@
 # TODO:
 - [x] Plane position
-- [o] Plane UV
-- [o] Multiple planes
-- [] Other shapes
-- [] DOM sync
-- [] Proxy objects
-- [] Vue integration for proxy objects
-- [] TS conversion
-- [] Scroll hook
-- [] Mouse hook
-- [] Image plane
-- [] Video plane
-- [] Bend plane
-- [] Deform gradient plane
-- [] WGSL Bomber
-- [] Tension Shader
+- [ ] Plane UV
+- [ ] Multiple planes
+- [ ] Other shapes
+- [ ] DOM sync
+- [ ] Proxy objects
+- [ ] Vue integration for proxy objects
+- [ ] TS conversion
+- [ ] Scroll hook
+- [ ] Mouse hook
+- [ ] Image plane
+- [ ] Video plane
+- [ ] Bend plane
+- [ ] Deform gradient plane
+- [ ] WGSL Bomber
+- [ ] Tension Shader
 
 # Next Evo:
 - Lights
