@@ -1,5 +1,5 @@
-export function planeBuffer({device}, size, res) {
-  const geo = geoplane(size, res);
+export function planeBuffer({device}, g) {
+  const geo = geoplane(g);
   const vertices = new Float32Array(geo.vertices);
   const indices = new Uint16Array(geo.indices);
 
@@ -49,10 +49,10 @@ function ensureTwoElementArray(value) {
   return [x, y];
 }
 
-function geoplane(size = [2, 2], res = [1, 1], pos = [0.2, 0]) {
-  const [x, y] = ensureTwoElementArray(pos);
+function geoplane({size = [2, 2], resolution = [1, 1], position = [0.2, 0]}) {
+  const [x, y] = ensureTwoElementArray(position);
   const [width, height] = ensureTwoElementArray(size);
-  const [widthSegments, heightSegments] = ensureTwoElementArray(res);
+  const [widthSegments, heightSegments] = ensureTwoElementArray(resolution);
 
   const indices = [];
   const vertices = [];

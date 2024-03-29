@@ -6,7 +6,12 @@ import { render, passGeo, passPipeline, initRender, submitPass } from "./render.
 
 async function moonBow() {
   const gpu = await gpuTarget();
-  const plane = planeBuffer(gpu, 0.5, 1);
+
+  const plane = planeBuffer(gpu, {
+    resolution: 1,
+    position: [0.0, 0.0],
+    size: 0.5,
+  });
 
   const time = uTime(gpu);
   const intensity = uf32(gpu, 2.0);

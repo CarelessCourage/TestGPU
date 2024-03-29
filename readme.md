@@ -1,6 +1,7 @@
 # TODO:
 - [x] Plane position
 - [ ] Plane UV
+- [ ] Plane Mutability
 - [ ] Multiple planes
 - [ ] Other shapes
 - [ ] DOM sync
