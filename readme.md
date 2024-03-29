@@ -17,6 +17,8 @@
 - [ ] WGSL Bomber
 - [ ] Tension Shader
 - [ ] Post Processing
+- [ ] Compute Shaders
+- [ ] Frame Buffer Tools
 
 # Future Considerations:
 - Lights
@@ -35,4 +37,5 @@
 - [usegpu](usegpu.live/)
 - [athena](athena.js.org)
 - [three](threejs.org/docs/)
+- [babyloon](https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/core/src/Meshes/Builders/planeBuilder.ts)
 - [shadergradient](https://www.shadergradient.co/)
