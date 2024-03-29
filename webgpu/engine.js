@@ -19,7 +19,7 @@ async function moonBow() {
   const pipeline = usePipeline(gpu, {
     shader: shader,
     layout: plane.layout,
-    wireframe: true,
+    wireframe: false,
     uniforms: [
       time,
       intensity

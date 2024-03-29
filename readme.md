@@ -16,8 +16,9 @@
 - [ ] Deform gradient plane
 - [ ] WGSL Bomber
 - [ ] Tension Shader
+- [ ] Post Processing
 
-# Next Evo:
+# Future Considerations:
 - Lights
 - VR
 - Models
@@ -27,11 +28,11 @@
 - Materials
 - Physics
 - Particles
-- Post Processing
 - Audio
 - HMR
 
-# Insp
-- usegpu: usegpu.live/
-- athena: athena.js.org
-- three: threejs.org/docs/
+# Inspiration
+- [usegpu](usegpu.live/)
+- [athena](athena.js.org)
+- [three](threejs.org/docs/)
+- [shadergradient](https://www.shadergradient.co/)
