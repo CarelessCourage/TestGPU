@@ -80,5 +80,7 @@ function geoplane(size = [2, 2], res = [1, 1], pos = [0.2, 0]) {
     }
   }
 
+  const uv = [];
+
   return {vertices, indices};
 }
