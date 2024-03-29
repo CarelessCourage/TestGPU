@@ -1,5 +1,5 @@
 # TODO:
-- [] Plane position
+- [x] Plane position
 - [] Multiple planes
 - [] Other shapes
 - [] DOM sync
