@@ -6,7 +6,7 @@ import { render, passGeo, passPipeline, initRender, submitPass } from "./render.
 
 async function moonBow() {
   const gpu = await gpuTarget();
-  const plane = planeBuffer(gpu, 2.0, 1);
+  const plane = planeBuffer(gpu, 0.5, 1);
 
   const time = uTime(gpu);
   const intensity = uf32(gpu, 2.0);
@@ -14,7 +14,7 @@ async function moonBow() {
   const pipeline = usePipeline(gpu, {
     shader: shader,
     layout: plane.layout,
-    wireframe: false,
+    wireframe: true,
     uniforms: [
       time,
       intensity

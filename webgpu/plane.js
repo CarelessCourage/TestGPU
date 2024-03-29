@@ -42,30 +42,41 @@ function indicesBuffer(device, indices) {
   return buffer;
 }
 
-function geoplane(size, res) {
-  const height = Array.isArray(size) ? size[0] : size;
-  const width = Array.isArray(size) ? size[1] || size[0] : size;
-  const heightSegments = Array.isArray(res) ? res[0] : res;
-  const widthSegments = Array.isArray(res) ? res[1] || res[0] : res;
+function ensureTwoElementArray(value) {
+  // value could be: n, [n], [n, n]. We want to return [n, n] no matter what.
+  const y = Array.isArray(value) ? value[0] : value;
+  const x = Array.isArray(value) ? value[1] || value[0] : value;
+  return [x, y];
+}
+
+function geoplane(size = [2, 2], res = [1, 1], pos = [0.2, 0]) {
+  const [x, y] = ensureTwoElementArray(pos);
+  const [width, height] = ensureTwoElementArray(size);
+  const [widthSegments, heightSegments] = ensureTwoElementArray(res);
 
   const indices = [];
   const vertices = [];
 
+  const getY = (index) => index * height / heightSegments - height / 2 + y;
+  const getX = (index) => index * width / widthSegments - width / 2 + x;
+
+  for(let i = 0; i <= heightSegments; i++) {
+    const y = getY(i);
+    for(let j = 0; j <= widthSegments; j++) {
+      const x = getX(j);
+      vertices.push(x, y);
+      pushIndices(i, j)
+    }
+  }
+
   function pushIndices(i, j) {
+    // Indecies are used to describe which verties connect to form a triangle
+    // Indecies is the plural of index
     if(i < heightSegments && j < widthSegments) {
       const a = i * (widthSegments + 1) + j;
       const b = a + widthSegments + 1;
       indices.push(a, b, a + 1);
       indices.push(b, b + 1, a + 1);
-    }
-  }
-
-  for(let i = 0; i <= heightSegments; i++) {
-    const y = i * height / heightSegments - height / 2;
-    for(let j = 0; j <= widthSegments; j++) {
-      const x = j * width / widthSegments - width / 2;
-      vertices.push(x, y);
-      pushIndices(i, j)
     }
   }
 

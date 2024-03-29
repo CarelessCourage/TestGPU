@@ -19,8 +19,9 @@
 - Lights
 - VR
 - Models
-- Animations
-- Timeline
+- Animations (gsap?)
+- Timeline (gsap?)
+- Groups
 - Materials
 - Physics
 - Particles
