@@ -10,7 +10,7 @@ async function moonBow() {
   const plane = planeBuffer(gpu, {
     resolution: 1,
     position: [0.0, 0.0],
-    size: 0.5,
+    size: 2,
   });
 
   const time = uTime(gpu);

@@ -1,5 +1,7 @@
-export function planeBuffer({device}, g) {
-  const geo = geoplane(g);
+export function planeBuffer({device}, passedOptions) {
+  const options = getOptions(passedOptions)
+
+  const geo = geoplane(options);
   const vertices = new Float32Array(geo.vertices);
   const indices = new Uint16Array(geo.indices);
 
@@ -19,6 +21,7 @@ export function planeBuffer({device}, g) {
     indicesCount: geo.indices.length,
     vertices: verticesBuffer(device, vertices),
     indices: indicesBuffer(device, indices),
+    options: options,
   };
 }
 
@@ -49,10 +52,24 @@ function ensureTwoElementArray(value) {
   return [x, y];
 }
 
-function geoplane({size = [2, 2], resolution = [1, 1], position = [0.2, 0]}) {
-  const [x, y] = ensureTwoElementArray(position);
-  const [width, height] = ensureTwoElementArray(size);
-  const [widthSegments, heightSegments] = ensureTwoElementArray(resolution);
+function getOptions(passedOptions) {
+  const options = {
+    size: 2, 
+    resolution: 1, 
+    position: 0, 
+    ...passedOptions
+  };
+  return {
+    size: ensureTwoElementArray(options.size),
+    resolution: ensureTwoElementArray(options.resolution),
+    position: ensureTwoElementArray(options.position),
+  }
+}
+
+function geoplane({size, resolution, position}) {
+  const [x, y] = position;
+  const [width, height] = size;
+  const [widthSegments, heightSegments] = resolution;
 
   const indices = [];
   const vertices = [];
@@ -79,8 +96,6 @@ function geoplane({size = [2, 2], resolution = [1, 1], position = [0.2, 0]}) {
       indices.push(b, b + 1, a + 1);
     }
   }
-
-  const uv = [];
 
   return {vertices, indices};
 }
