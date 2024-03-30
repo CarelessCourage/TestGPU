@@ -15,11 +15,13 @@ export function planeBuffer({device}, passedOptions) {
     }],
   };
 
+  const vBuffer = verticesBuffer(device, vertices); // Figure out something prettier for this that lets me update the geometry
+
   return {
     layout: vertexBufferLayout,
     vertexCount: geo.vertices.length,
     indicesCount: geo.indices.length,
-    vertices: verticesBuffer(device, vertices),
+    vertices: vBuffer(vertices),
     indices: indicesBuffer(device, indices),
     options: options,
   };
@@ -31,8 +33,13 @@ function verticesBuffer(device, vertices) {
     size: vertices.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(buffer, 0, vertices);
-  return buffer;
+
+  function update(vertices) {
+    device.queue.writeBuffer(buffer, 0, vertices);
+    return buffer;
+  }
+
+  return update;
 }
 
 function indicesBuffer(device, indices) {

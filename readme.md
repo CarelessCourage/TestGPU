@@ -1,19 +1,19 @@
 # TODO:
 - [x] Plane position
 - [x] Plane UV
-- [ ] Plane Mutability
-- [ ] Multiple planes
-- [ ] Other shapes
-- [ ] DOM sync
-- [ ] Proxy objects
-- [ ] Vue integration for proxy objects
-- [ ] TS conversion
-- [ ] Scroll hook
-- [ ] Mouse hook
-- [ ] Image plane
-- [ ] Video plane
-- [ ] Bend plane
-- [ ] Deform gradient plane
+- [ ] Plane Mutability <- todo tomorrrow
+- [ ] Multiple Planes
+- [ ] Other Shapes
+- [ ] DOM Sync
+- [ ] Proxy Objects
+- [ ] Vue Integration for Proxy Objects
+- [ ] TS Conversion
+- [ ] Scroll Hook
+- [ ] Mouse Hook
+- [ ] Image Plane
+- [ ] Video Plane
+- [ ] Bend Plane
+- [ ] Deform Gradient Plane
 - [ ] WGSL Bomber
 - [ ] Tension Shader
 - [ ] Post Processing
