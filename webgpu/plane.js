@@ -15,15 +15,23 @@ export function planeBuffer({device}, passedOptions) {
     }],
   };
 
-  const vBuffer = verticesBuffer(device, vertices); // Figure out something prettier for this that lets me update the geometry
+  const v = verticesBuffer(device, vertices); // Figure out something prettier for this that lets me update the geometry
+
+  function update(passedOptions) {
+    const options = getOptions(passedOptions)
+    const geo = geoplane(options);
+    const vertices = new Float32Array(geo.vertices);
+    return v.update(vertices);
+  }
 
   return {
     layout: vertexBufferLayout,
     vertexCount: geo.vertices.length,
     indicesCount: geo.indices.length,
-    vertices: vBuffer(vertices),
+    vertices: v.buffer,
     indices: indicesBuffer(device, indices),
     options: options,
+    update: update,
   };
 }
 
@@ -39,7 +47,12 @@ function verticesBuffer(device, vertices) {
     return buffer;
   }
 
-  return update;
+  update(vertices);
+
+  return {
+    update,
+    buffer,
+  };
 }
 
 function indicesBuffer(device, indices) {
