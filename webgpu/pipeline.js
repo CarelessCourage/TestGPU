@@ -66,9 +66,19 @@ export function uTime({device}){
   });
 }
 
-export const uf32 = ({device}, value) => uniformBuffer({device}, {
+export const f32 = ({device}, value) => uniformBuffer({device}, {
   size: 8,
   update: (buffer) => device.queue.writeBuffer(buffer, 0, new Float32Array(value))
+});
+
+export const vec3 = ({device}, value) => uniformBuffer({device}, {
+  size: 12,
+  update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array(value))
+});
+
+export const vec4 = ({device}, value) => uniformBuffer({device}, {
+  size: 16,
+  update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array(value))
 });
 
 function uniformBuffer({device}, options) {

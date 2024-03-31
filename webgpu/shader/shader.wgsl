@@ -11,7 +11,7 @@ struct VertexOutput {
 
 @group(0) @binding(0) var<uniform> time: u32;
 @group(0) @binding(1) var<uniform> intensity: f32;
-@group(0) @binding(2) var<uniform> planeSize: f32;
+//@group(0) @binding(2) var<uniform> planeSize: f32;
 @group(0) @binding(3) var<uniform> scale: f32;
 
 // Define constants for hashing algorithm
@@ -242,7 +242,7 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     output.pos = vec4f(input.pos, 0, 1);
-    var normalisedpos = input.pos.xy / planeSize;
+    var normalisedpos = input.pos.xy; // planeSize;   
     output.uv = normalisedpos * 0.5 + 0.5;
     return output;
 }

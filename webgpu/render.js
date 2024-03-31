@@ -1,10 +1,10 @@
 export function passGeo({pass}, geo) {
     pass.setVertexBuffer(0, geo.vertices); // We can have multiple vertex buffers. Thats why we need to specify the index. 
-    geo.update({
-        resolution: 1,
-        position: [0.0, 0.7],
-        size: 0.5,
-    });
+    // geo.update({
+    //     resolution: 1,
+    //     position: [0.0, 0.7],
+    //     size: 0.5,
+    // });
     pass.setIndexBuffer(geo.indices, 'uint16'); // We can only have one index buffer. So we dont need to specify the index.
     pass.drawIndexed(geo.indicesCount, 1, 0, 0, 0);
 }
