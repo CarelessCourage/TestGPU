@@ -141,7 +141,7 @@ function cubeBuffer({device, geo}) {
     let transformMatrix = mat4.create();
 
     // Apply transformations
-    mat4.translate(transformMatrix, transformMatrix, positions); // Translate
+    //mat4.translate(transformMatrix, transformMatrix, positions); // Translate
     mat4.rotateX(transformMatrix, transformMatrix, rotation[0]); // Rotate around X-axis
     mat4.rotateY(transformMatrix, transformMatrix, rotation[1]); // Rotate around Y-axis
     mat4.rotateZ(transformMatrix, transformMatrix, rotation[2]); // Rotate around Z-axis
@@ -163,7 +163,7 @@ function cubeBuffer({device, geo}) {
   }
 
   const defaultoptions = {
-    size: 0.3, 
+    size: 0.5, 
     positions: [0, 0, 0], 
     rotation: [1, 0, 1]
   }

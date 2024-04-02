@@ -29,7 +29,7 @@ async function moonBow() {
   const pipeline = usePipeline(gpu, {
     shader: shader,
     layout: box.buffer.layout,
-    wireframe: false,
+    wireframe: true,
     uniforms: [
       time,
       intensity,
@@ -47,7 +47,7 @@ async function moonBow() {
     const maxTime = Math.max(0.1, sinTime);
     const clampTime = Math.min(0.5, maxTime);
 
-    box.set({size: clampTime, rotation: [sinTime, 0, sinTime]});
+    //box.set({rotation: [sinTime, 0, sinTime]});
 
     render.pass.setVertexBuffer(0, box.buffer.vertices);
     render.pass.setIndexBuffer(box.indices, 'uint16');
