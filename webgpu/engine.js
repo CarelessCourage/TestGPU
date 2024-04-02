@@ -1,4 +1,4 @@
-import shader from "./shader/shader.wgsl";
+import shader from "./shader/basic.wgsl";
 import { usePipeline, uTime, f32 } from "./pipeline.js";
 import { planeBuffer } from "./plane.js";
 import { boxBuffer } from "./box.js";
@@ -28,12 +28,12 @@ async function moonBow() {
 
   const pipeline = usePipeline(gpu, {
     shader: shader,
-    layout: plane.layout,
+    layout: box.layout,
     wireframe: false,
     uniforms: [
-      time,
       intensity,
       scale,
+      time,
     ]
   });
 
@@ -41,10 +41,16 @@ async function moonBow() {
     time.update();
     const render = initRender(gpu);
     passPipeline(render, pipeline);
-    passGeo(render, plane);
-    //passGeo(render, plane2);
+    // passGeo(render, plane);
+
+    render.pass.setVertexBuffer(0, box.vertices);
+    render.pass.setIndexBuffer(box.indices, 'uint16');
+    render.pass.drawIndexed(box.indicesCount, 1, 0, 0, 0);
+
+    // passGeo(render, plane2);
     submitPass(gpu, render);
   });
 }
+
 
 moonBow();

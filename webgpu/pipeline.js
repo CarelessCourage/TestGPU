@@ -23,7 +23,13 @@ export function usePipeline({device, canvas}, {uniforms, shader, layout, wirefra
     },
     primitive: {
       topology: wireframe ? "line-list" : "triangle-list",
+      //cullMode: "back",
     },
+    // depthStencil: {
+    //   depthWriteEnabled: true,
+    //   depthCompare: "less",
+    //   format: "depth24plus-stencil8",
+    // },
   });
 
   // This is where we attach the uniform to the shader through the pipeline

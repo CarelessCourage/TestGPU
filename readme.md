@@ -39,3 +39,4 @@
 - [three](threejs.org/docs/)
 - [babyloon](https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/core/src/Meshes/Builders/planeBuilder.ts)
 - [shadergradient](https://www.shadergradient.co/)
+- [samples](https://webgpu.github.io/webgpu-samples/?sample=rotatingCube#main.ts)
