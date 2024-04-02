@@ -31,24 +31,23 @@ async function moonBow() {
     layout: box.buffer.layout,
     wireframe: false,
     uniforms: [
+      time,
       intensity,
       scale,
-      time,
     ]
   });
 
-  let t = 0;
-
   render(1000 / 60, () => {
-    t += 1;
-    time.update();
+    const t = time.update();
     const render = initRender(gpu);
     passPipeline(render, pipeline);
     // passGeo(render, plane);
 
-    const sizeSin = Math.sin(t / 100);
+    const sinTime = Math.sin(t / 100);
+    const maxTime = Math.max(0.1, sinTime);
+    const clampTime = Math.min(0.5, maxTime);
 
-    box.set({size: sizeSin});
+    box.set({size: clampTime, rotation: [sinTime, 0, sinTime]});
 
     render.pass.setVertexBuffer(0, box.buffer.vertices);
     render.pass.setIndexBuffer(box.indices, 'uint16');

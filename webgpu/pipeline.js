@@ -68,6 +68,7 @@ export function uTime({device}){
     update: (buffer) => {
       time++;
       device.queue.writeBuffer(buffer, 0, new Uint32Array([time]));
+      return time;
     }
   });
 }
