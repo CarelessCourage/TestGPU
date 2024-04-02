@@ -1,33 +1,38 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-export function boxBuffer({device}) {
+export function cube({device, transforms}) {
+  const geo = geoBox(transforms);
+  const indices = new Uint16Array(geo.indices);
+  const buffer = cubeBuffer({device, geo});
+
+  return {
+    buffer,
+    vertexCount: geo.vertices.length,
+    indicesCount: geo.indices.length,
+    indices: indicesBuffer(device, indices),
+    set: (transforms) => buffer.update(geoBox(transforms))
+  };
+}
+
+function cubeBuffer({device, geo}) {
     // Describes how the data is packed in the vertex buffers
     const perVertex = 3 + 3 + 2;
     const stride = perVertex * 4;
     const vertexBufferLayout = bufferLayout(stride);
 
-    const geo = geoBox({
-      size: 1, 
-      positions: [0, 0, 0], 
-      rotation: [1, 0, 1]
-    });
-    
     const vertices = new Float32Array(geo.vertices.length * stride);
-    const indices = new Uint16Array(geo.indices);
     const buffer = device.createBuffer({
       label: "Plane Vertices Buffer",
       size: vertices.byteLength,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
-
-    const scale = 0.3;
     
-    update();
-    function update() {
+    update(geo);
+    function update(geo) {
       geo.vertices.forEach((vertex, i) => {
-        const posx = vertex.pos[0] * scale; // * scaleX;
-        const posy = vertex.pos[1] * scale; // * scaleY;
-        const posz = vertex.pos[2] * scale; // * scaleZ;
+        const posx = vertex.pos[0]; // * scaleX;
+        const posy = vertex.pos[1]; // * scaleY;
+        const posz = vertex.pos[2]; // * scaleZ;
         vertices.set([posx, posy, posz], perVertex * i + 0);
         vertices.set(vertex.norm, perVertex * i + 3);
         vertices.set(vertex.uv, perVertex * i + 6);
@@ -35,38 +40,10 @@ export function boxBuffer({device}) {
       device.queue.writeBuffer(buffer, 0, vertices.buffer);
     }
 
-    const x = 0;
-    const y = 0;
-    const z = 0;
-
-    const rotX = 0;
-    const rotY = 0;
-    const rotZ = 0;
-
-    transform()
-
-    function transform() {
-      const transform = mat4.create();
-      const rotate = mat4.create();
-
-      mat4.translate(transform, transform, vec3.fromValues(x, y, z))
-      mat4.rotateX(transform, transform, rotX);
-      mat4.rotateY(transform, transform, rotY);
-      mat4.rotateZ(transform, transform, rotZ);
-
-      mat4.rotateX(rotate, rotate, rotX);
-      mat4.rotateY(rotate, rotate, rotY);
-      mat4.rotateZ(rotate, rotate, rotZ);
-
-      console.log({transform, geo: geo.vertices})
-    }
-
     return {
+      update,
       vertices: buffer,
       layout: vertexBufferLayout,
-      vertexCount: geo.vertices.length,
-      indicesCount: geo.indices.length,
-      indices: indicesBuffer(device, indices),
     };
   }
   
@@ -106,7 +83,9 @@ export function boxBuffer({device}) {
     }
   }
   
-  function geoBox({size, positions, rotation}) {
+  function geoBox(options) {
+    const {size, positions, rotation} = normalizeOptions(options);
+
     const vertices = [
         // front
         { pos: [-1, -1,  1], norm: [ 0,  0,  1], uv: [0, 0], },
@@ -166,7 +145,7 @@ export function boxBuffer({device}) {
     mat4.rotateX(transformMatrix, transformMatrix, rotation[0]); // Rotate around X-axis
     mat4.rotateY(transformMatrix, transformMatrix, rotation[1]); // Rotate around Y-axis
     mat4.rotateZ(transformMatrix, transformMatrix, rotation[2]); // Rotate around Z-axis
-    mat4.scale(transformMatrix, transformMatrix, [size, size, size]); // Scale
+    mat4.scale(transformMatrix, transformMatrix, size); // Scale
 
     // Apply the transformation matrix to each vertex's position
     vertices.forEach(vertex => {
@@ -181,6 +160,29 @@ export function boxBuffer({device}) {
     }
   
     return {vertices, indices};
+  }
+
+  const defaultoptions = {
+    size: 0.3, 
+    positions: [0, 0, 0], 
+    rotation: [1, 0, 1]
+  }
+  
+  function normalizeOptions(options) {
+    const o = { ...defaultoptions, ...options}
+    return {
+      size: ensureThreeElementArray(o.size),
+      positions: o.positions || [0, 0, 0],
+      rotation: o.rotation || [1, 0, 1]
+    }
+  }
+  
+  function ensureThreeElementArray(value) {
+    if(!value) return [1, 1, 1];
+    const z = Array.isArray(value) ? value[0] : value;
+    const y = Array.isArray(value) ? value[1] || value[0] : value;
+    const x = Array.isArray(value) ? value[2] || value[0] : value;
+    return [x, y, z];
   }
   
 

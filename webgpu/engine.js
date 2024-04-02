@@ -1,7 +1,7 @@
 import shader from "./shader/basic.wgsl";
 import { usePipeline, uTime, f32 } from "./pipeline.js";
 import { planeBuffer } from "./plane.js";
-import { boxBuffer } from "./box.js";
+import { cube } from "./box.js";
 import { gpuTarget } from "./target.js";
 import { render, passGeo, passPipeline, initRender, submitPass } from "./render.js";
 
@@ -14,7 +14,7 @@ async function moonBow() {
     size: 1.0,
   });
 
-  const box = boxBuffer(gpu);
+  const box = cube(gpu);
 
   // const plane2 = planeBuffer(gpu, {
   //   resolution: 1,
@@ -28,7 +28,7 @@ async function moonBow() {
 
   const pipeline = usePipeline(gpu, {
     shader: shader,
-    layout: box.layout,
+    layout: box.buffer.layout,
     wireframe: false,
     uniforms: [
       intensity,
@@ -37,13 +37,20 @@ async function moonBow() {
     ]
   });
 
+  let t = 0;
+
   render(1000 / 60, () => {
+    t += 1;
     time.update();
     const render = initRender(gpu);
     passPipeline(render, pipeline);
     // passGeo(render, plane);
 
-    render.pass.setVertexBuffer(0, box.vertices);
+    const sizeSin = Math.sin(t / 100);
+
+    box.set({size: sizeSin});
+
+    render.pass.setVertexBuffer(0, box.buffer.vertices);
     render.pass.setIndexBuffer(box.indices, 'uint16');
     render.pass.drawIndexed(box.indicesCount, 1, 0, 0, 0);
 
