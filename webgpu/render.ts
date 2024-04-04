@@ -19,7 +19,7 @@ export function initRender({ device, canvas }: GPUTarget): Renderer {
                 // @location(0), see fragment shader
                 view: canvas.context.getCurrentTexture().createView(),
                 loadOp: 'clear',
-                clearValue: { r: 5.15, g: 0.15, b: 0.15, a: 1 },
+                clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1 },
                 storeOp: 'store',
             },
         ],

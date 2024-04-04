@@ -14,21 +14,18 @@ async function moonBow() {
     const panel = plane({
         device: gpu.device,
         options: {
-            size: 0.5,
-            resolution: 1,
+            size: 1,
+            resolution: 3,
         },
     })
 
-    console.log(panel.geometry.vertices)
-    console.log(panel.geometry.indices)
-
     const time = uTime(gpu)
-    const insensity = f32(gpu, 0.5)
+    const insensity = f32(gpu, 2.0)
 
     const pipeline = usePipeline(gpu, {
         shader: shader,
         layout: panel.buffer.layout,
-        wireframe: true,
+        wireframe: false,
         uniforms: [
             //camera.uniform(gpu.device),
             time,
@@ -39,8 +36,6 @@ async function moonBow() {
     render(1000 / 60, () => {
         const render = initRender(gpu)
         passPipeline(render, pipeline)
-
-        //box.set({rotation: [sinTime, 0, sinTime]});
 
         render.pass.setVertexBuffer(0, panel.buffer.vertices)
         render.pass.setVertexBuffer(1, panel.buffer.normals)

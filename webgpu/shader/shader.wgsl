@@ -182,14 +182,14 @@ fn perlinNoise2(P: vec2f) -> f32 {
 
 fn perlinPack(uv: vec2f) -> f32 {
     var intensity = 1.0;
-    var scale = 2.0;
+    var scale = 2.0; // Some more gold
     return perlinNoise2(uv * scale) * intensity;
 }
 
 fn acidZebra(uv: vec2f) -> f32 {
     var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
     var frequency = 5.0;
-    return bandNoise(vec3f(uv, vibe * frequency)) * intensity;
+    return bandNoise(vec3f(uv, vibe * frequency)) * intensity; //Gold
 }
 
 fn vibeGlass(uv: vec2f) -> f32 {
@@ -252,7 +252,8 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var color = vec4f(input.uv, input.uv.y, 1);
     var glass = vibeGlass(input.uv);
     var perlin = perlinPack(input.uv);
-    var simplex = simplexNoise2(input.uv * 1000.0) * 0.1;
+    var grain_amount = 1000.0;
+    var simplex = simplexNoise2(input.uv * grain_amount) * 0.1;
 
     var layer1 = mix(color, vec4f(0.2, 1, 1, 1), perlin);
     let intensity = rgb_to_intensity(layer1.xyz);

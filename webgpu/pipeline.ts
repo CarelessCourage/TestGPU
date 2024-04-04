@@ -18,6 +18,8 @@ export function usePipeline(
 ): Pipeline {
     const entries = getEntries(device, uniforms)
 
+    console.log(entries)
+
     const cellShaderModule = device.createShaderModule({
         label: 'Cell shader',
         code: shader,

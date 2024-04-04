@@ -44,48 +44,55 @@ function planeBuffer({ device, options }: PlaneProps): GeoBuffers {
 
 function geoplane(options?: Dim2Options): Geometry {
     const { size, resolution, position } = getOptions(options)
-
     const [x, y] = position
     const [widthSegments, heightSegments] = resolution
     const [width, height] = size.map((value) => value * 2)
 
+    const width_half = width / 2
+    const height_half = height / 2
+
+    const gridX = Math.floor(widthSegments)
+    const gridY = Math.floor(heightSegments)
+
+    const gridX1 = gridX + 1
+    const gridY1 = gridY + 1
+
+    const segment_width = width / gridX
+    const segment_height = height / gridY
+
     const indices: number[] = []
     const vertices: number[] = []
+    const normals: number[] = []
+    const uvs: number[] = []
+    const colors: number[] = []
 
-    const getY = (index) => (index * height) / heightSegments - height / 2 + y
-    const getX = (index) => (index * width) / widthSegments - width / 2 + x
-
-    for (let i = 0; i <= heightSegments; i++) {
-        const y = getY(i)
-        for (let j = 0; j <= widthSegments; j++) {
-            const x = getX(j)
-            vertices.push(x, y)
-            pushIndices(i, j)
+    for (let iy = 0; iy < gridY1; iy++) {
+        const y = iy * segment_height - height_half
+        for (let ix = 0; ix < gridX1; ix++) {
+            const x = ix * segment_width - width_half
+            vertices.push(x, -y, 0)
+            normals.push(0, 0, 1)
+            uvs.push(ix / gridX)
+            uvs.push(1 - iy / gridY)
         }
     }
 
-    function pushIndices(i, j) {
-        // Indecies are used to describe which verties connect to form a triangle
-        // Indecies is the plural of index
-        if (i < heightSegments && j < widthSegments) {
-            const a = i * (widthSegments + 1) + j
-            const b = a + widthSegments + 1
-            indices.push(a, b, a + 1)
-            indices.push(b, b + 1, a + 1)
+    for (let iy = 0; iy < gridY; iy++) {
+        for (let ix = 0; ix < gridX; ix++) {
+            const a = ix + gridX1 * iy
+            const b = ix + gridX1 * (iy + 1)
+            const c = ix + 1 + gridX1 * (iy + 1)
+            const d = ix + 1 + gridX1 * iy
+            indices.push(a, b, d)
+            indices.push(b, c, d)
         }
     }
 
-    const normals = new Float32Array(vertices.length).fill(0)
-    const colors = new Float32Array(vertices.length).fill(1)
-    const uvs = new Float32Array(vertices.length).fill(0)
-
-    const v = new Float32Array(vertices)
-    const i = new Uint16Array(indices)
     return {
-        vertices: v,
-        indices: i,
-        colors,
-        normals,
-        uvs,
+        vertices: new Float32Array(vertices),
+        indices: new Uint16Array(indices),
+        colors: new Float32Array(colors),
+        normals: new Float32Array(normals),
+        uvs: new Float32Array(uvs),
     }
 }
