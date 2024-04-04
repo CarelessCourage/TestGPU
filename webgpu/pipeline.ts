@@ -64,7 +64,13 @@ export function usePipeline(
     }
 }
 
-function getEntries(device: GPUDevice, uniforms: UB[]) {
+function getEntries(
+    device: GPUDevice,
+    uniforms: UB[]
+): {
+    layout: GPUBindGroupLayout
+    bindGroup: GPUBindGroupEntry[]
+} {
     const entries = uniforms.map((uniform, index) => ({
         binding: uniform.binding === undefined ? index : uniform.binding,
         visibility:
@@ -82,7 +88,7 @@ function getEntries(device: GPUDevice, uniforms: UB[]) {
 }
 
 export function uTime({ device }: UBI) {
-    let time = 0
+    let time = 50
     return uniformBuffer(
         { device },
         {

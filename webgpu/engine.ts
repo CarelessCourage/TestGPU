@@ -22,6 +22,8 @@ async function moonBow() {
     const time = uTime(gpu)
     const insensity = f32(gpu, 2.0)
 
+    console.log(time, insensity)
+
     const pipeline = usePipeline(gpu, {
         shader: shader,
         layout: panel.buffer.layout,
