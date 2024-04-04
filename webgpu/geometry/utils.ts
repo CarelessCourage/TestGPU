@@ -4,6 +4,7 @@ export interface GeoObject {
     indicesCount: number
     indices: GPUBuffer
     set: (options?: Dim2Options) => void
+    geometry: Geometry
 }
 
 export interface GeoBuffers {
@@ -25,10 +26,12 @@ export interface Geometry {
 interface GeoBuffer {
     device: GPUDevice
     data: Float32Array
+    label?: string
 }
 
-export function geoBuffer({ device, data }: GeoBuffer) {
+export function geoBuffer({ device, data, label }: GeoBuffer) {
     let buffer = device.createBuffer({
+        label,
         size: data.byteLength,
         usage: GPUBufferUsage.VERTEX,
         mappedAtCreation: true,

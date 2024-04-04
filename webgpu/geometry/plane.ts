@@ -15,6 +15,7 @@ export function plane({ device, options }: PlaneProps): GeoObject {
         indicesCount: geo.indices.length,
         indices: indicesBuffer({ device, indices: geo.indices }),
         set: (options) => buffer.update(options),
+        geometry: geo,
     }
 }
 

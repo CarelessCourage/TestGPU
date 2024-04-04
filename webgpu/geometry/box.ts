@@ -11,6 +11,7 @@ export function cube({ device }: { device: GPUDevice }): GeoObject {
         indicesCount: geo.indices.length,
         indices: indicesBuffer({ device, indices: geo.indices }),
         set: () => buffer.update(),
+        geometry: geo,
     }
 }
 

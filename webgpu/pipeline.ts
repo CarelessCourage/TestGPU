@@ -49,8 +49,6 @@ export function usePipeline(
         // },
     })
 
-    //console.log(entries);
-
     // This is where we attach the uniform to the shader through the pipeline
     const bindGroup = device.createBindGroup({
         label: 'Cell renderer bind group',

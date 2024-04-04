@@ -12,7 +12,6 @@ struct VertexOutput {
 @group(0) @binding(0) var<uniform> time: u32;
 @group(0) @binding(1) var<uniform> intensity: f32;
 //@group(0) @binding(2) var<uniform> planeSize: f32;
-@group(0) @binding(3) var<uniform> scale: f32;
 
 // Define constants for hashing algorithm
 const HASH_SHIFT1 = 10u;
