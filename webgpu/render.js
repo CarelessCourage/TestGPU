@@ -18,11 +18,11 @@ export function initRender({device, canvas}) {
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
         colorAttachments: [{
-        // @location(0), see fragment shader
-        view: canvas.context.getCurrentTexture().createView(),
-        loadOp: "clear",
-        clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
-        storeOp: "store",
+            // @location(0), see fragment shader
+            view: canvas.context.getCurrentTexture().createView(),
+            loadOp: "clear",
+            clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
+            storeOp: "store",
         }]
     });
     return { encoder, pass };

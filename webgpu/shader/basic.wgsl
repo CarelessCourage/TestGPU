@@ -12,12 +12,17 @@ struct VertexOutput {
     @location(2) uv : vec2<f32>,
 };
 
-@group(0) @binding(0) var<uniform> time: u32;
+//@group(0) @binding(0) var<uniform> viewMatrix: mat4x4<f32>;
+//@group(0) @binding(1) var<uniform> projectionMatrix: mat4x4<f32>;
+
+@binding(0) @group(0) var<uniform> modelViewProjectionMatrix: mat4x4<f32>;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
+    var position = vec4f(input.pos, 1.0);
+    var transformedPosition: vec4<f32> = position;
     var output: VertexOutput;
-    output.pos = vec4f(input.pos, 1.0);
+    output.pos = transformedPosition;
     output.uv = input.uv;
     return output;
 }
@@ -26,14 +31,7 @@ const ambientLightFactor: f32 = 0.25;
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    let lightPos: vec3<f32> = vec3<f32>(0.0, 0.0, -0.9);
-    let lightDirection: vec3<f32> = normalize(lightPos - input.pos.xyz);
-    let lightFactor: f32 = dot(lightDirection, input.norm) + 0.5;
-
-    let lightingFactor: f32 = max(min(lightFactor, 1.0), ambientLightFactor);
-    var color: vec3<f32> = vec3f(input.uv.x, input.uv.y, 1.0) * 0.5 + 0.5;
-
-    return vec4<f32>(color * lightingFactor, 1.0);
+    return vec4f(input.uv.x, input.uv.y, 1.0, 1.0) * 0.5 + 0.5;
 }
 
 // struct Uniforms {     // 4x4 transform matrices
