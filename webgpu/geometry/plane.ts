@@ -1,8 +1,14 @@
 import { geoBuffer, bufferLayout, indicesBuffer, getOptions } from './utils.ts'
+import type { GeoObject, GeoBuffers, Geometry, Dim2Options } from './utils.ts'
 
-export function plane({ device, options }) {
+interface PlaneProps {
+    device: GPUDevice
+    options: Dim2Options
+}
+
+export function plane({ device, options }: PlaneProps): GeoObject {
     const geo = geoplane(options)
-    const buffer = planeBuffer({ device }, options)
+    const buffer = planeBuffer({ device, options })
     return {
         buffer,
         vertexCount: geo.vertices.length,
@@ -12,60 +18,38 @@ export function plane({ device, options }) {
     }
 }
 
-function planeBuffer({ device }, passedOptions) {
-    const options = getOptions(passedOptions)
-
+function planeBuffer({ device, options }: PlaneProps): GeoBuffers {
     const geo = geoplane(options)
-    const vertices = new Float32Array(geo.vertices)
-    const indices = new Uint16Array(geo.indices)
 
-    const v = verticesBuffer(device, vertices) // Figure out something prettier for this that lets me update the geometry
+    const vertexBuffer = geoBuffer({ device, data: geo.vertices })
+    const normalBuffer = geoBuffer({ device, data: geo.normals })
+    const uvBuffer = geoBuffer({ device, data: geo.uvs })
 
-    function update(passedOptions) {
-        const options = getOptions(passedOptions)
+    function update(options?: Dim2Options) {
         const geo = geoplane(options)
-        const vertices = new Float32Array(geo.vertices)
-        return v.update(vertices)
+        device.queue.writeBuffer(vertexBuffer, 0, geo.vertices)
+        device.queue.writeBuffer(normalBuffer, 0, geo.normals)
+        device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
     }
 
     return {
+        update: (options?: Dim2Options) => update(options),
+        vertices: vertexBuffer,
+        normals: normalBuffer,
+        uvs: uvBuffer,
         layout: bufferLayout(),
-        vertexCount: geo.vertices.length,
-        indicesCount: geo.indices.length,
-        vertices: v.buffer,
-        indices: indicesBuffer(device, indices),
-        options: options,
-        update: update,
     }
 }
 
-function verticesBuffer(device, vertices) {
-    const buffer = device.createBuffer({
-        label: 'Plane Vertices Buffer',
-        size: vertices.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    })
+function geoplane(options?: Dim2Options): Geometry {
+    const { size, resolution, position } = getOptions(options)
 
-    function update(vertices) {
-        device.queue.writeBuffer(buffer, 0, vertices)
-        return buffer
-    }
-
-    update(vertices)
-
-    return {
-        update,
-        buffer,
-    }
-}
-
-function geoplane({ size, resolution, position }) {
     const [x, y] = position
     const [widthSegments, heightSegments] = resolution
     const [width, height] = size.map((value) => value * 2)
 
-    const indices = []
-    const vertices = []
+    const indices: number[] = []
+    const vertices: number[] = []
 
     const getY = (index) => (index * height) / heightSegments - height / 2 + y
     const getX = (index) => (index * width) / widthSegments - width / 2 + x
@@ -94,9 +78,11 @@ function geoplane({ size, resolution, position }) {
     const colors = new Float32Array(vertices.length).fill(1)
     const uvs = new Float32Array(vertices.length).fill(0)
 
+    const v = new Float32Array(vertices)
+    const i = new Uint16Array(indices)
     return {
-        vertices,
-        indices,
+        vertices: v,
+        indices: i,
         colors,
         normals,
         uvs,

@@ -12,7 +12,7 @@ async function moonBow() {
     const camera = new Camera()
 
     const box = cube(gpu)
-    //const plane = planeBuffer(gpu);
+    const plane = planeBuffer(gpu)
 
     console.log({
         box,

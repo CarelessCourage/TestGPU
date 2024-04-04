@@ -3,11 +3,11 @@ export interface GeoObject {
     vertexCount: number
     indicesCount: number
     indices: GPUBuffer
-    set: () => void
+    set: (options?: Dim2Options) => void
 }
 
 export interface GeoBuffers {
-    update: (geo: Geometry) => void
+    update: (options?: Dim2Options) => void
     vertices: GPUBuffer
     normals: GPUBuffer
     uvs: GPUBuffer
@@ -73,7 +73,13 @@ export function bufferLayout(): [
     return [vertexLayout, normalLayout, uvLayout]
 }
 
-export function getOptions(passedOptions) {
+export interface Dim2Options {
+    size?: [number, number] | number
+    resolution?: [number, number] | number
+    position?: [number, number] | number
+}
+
+export function getOptions(passedOptions?: Dim2Options) {
     const options = {
         size: 2,
         resolution: 1,
@@ -87,7 +93,7 @@ export function getOptions(passedOptions) {
     }
 }
 
-function ensureTwoElementArray(value) {
+function ensureTwoElementArray(value: number | number[]): [number, number] {
     // value could be: n, [n], [n, n]. We want to return [n, n] no matter what.
     const y = Array.isArray(value) ? value[0] : value
     const x = Array.isArray(value) ? value[1] || value[0] : value

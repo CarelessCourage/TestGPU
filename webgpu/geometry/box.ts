@@ -10,7 +10,7 @@ export function cube({ device }: { device: GPUDevice }): GeoObject {
         vertexCount: geo.vertices.length,
         indicesCount: geo.indices.length,
         indices: indicesBuffer({ device, indices: geo.indices }),
-        set: () => buffer.update(geoCube()),
+        set: () => buffer.update(),
     }
 }
 
@@ -20,11 +20,11 @@ interface CubeBufferProps {
 }
 
 function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
-    let vertexBuffer = geoBuffer({ device, data: geo.vertices })
-    let normalBuffer = geoBuffer({ device, data: geo.normals })
-    let uvBuffer = geoBuffer({ device, data: geo.uvs })
+    const vertexBuffer = geoBuffer({ device, data: geo.vertices })
+    const normalBuffer = geoBuffer({ device, data: geo.normals })
+    const uvBuffer = geoBuffer({ device, data: geo.uvs })
 
-    function update(geo) {
+    function update() {
         device.queue.writeBuffer(vertexBuffer, 0, geo.vertices)
         device.queue.writeBuffer(normalBuffer, 0, geo.normals)
         device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
