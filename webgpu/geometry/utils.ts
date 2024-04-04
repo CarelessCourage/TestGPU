@@ -1,3 +1,27 @@
+export interface GeoObject {
+    buffer: GeoBuffers
+    vertexCount: number
+    indicesCount: number
+    indices: GPUBuffer
+    set: () => void
+}
+
+export interface GeoBuffers {
+    update: (geo: Geometry) => void
+    vertices: GPUBuffer
+    normals: GPUBuffer
+    uvs: GPUBuffer
+    layout: GPUVertexBufferLayout[]
+}
+
+export interface Geometry {
+    vertices: Float32Array
+    indices: Uint16Array
+    colors: Float32Array
+    normals: Float32Array
+    uvs: Float32Array
+}
+
 interface GeoBuffer {
     device: GPUDevice
     data: Float32Array

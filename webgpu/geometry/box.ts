@@ -1,7 +1,8 @@
 /// <reference types="@webgpu/types" />
 import { geoBuffer, bufferLayout, indicesBuffer } from './utils.ts'
+import type { GeoObject, GeoBuffers, Geometry } from './utils.ts'
 
-export function cube({ device }: { device: GPUDevice }) {
+export function cube({ device }: { device: GPUDevice }): GeoObject {
     const geo = geoCube()
     const buffer = cubeBuffer({ device, geo })
     return {
@@ -13,20 +14,12 @@ export function cube({ device }: { device: GPUDevice }) {
     }
 }
 
-interface CubeBuffers {
-    update: (geo: Geometry) => void
-    vertices: GPUBuffer
-    normals: GPUBuffer
-    uvs: GPUBuffer
-    layout: GPUVertexBufferLayout[]
-}
-
 interface CubeBufferProps {
     device: GPUDevice
     geo: Geometry
 }
 
-function cubeBuffer({ device, geo }: CubeBufferProps): CubeBuffers {
+function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
     let vertexBuffer = geoBuffer({ device, data: geo.vertices })
     let normalBuffer = geoBuffer({ device, data: geo.normals })
     let uvBuffer = geoBuffer({ device, data: geo.uvs })
@@ -44,14 +37,6 @@ function cubeBuffer({ device, geo }: CubeBufferProps): CubeBuffers {
         uvs: uvBuffer,
         layout: bufferLayout(),
     }
-}
-
-interface Geometry {
-    vertices: Float32Array
-    indices: Uint16Array
-    colors: Float32Array
-    normals: Float32Array
-    uvs: Float32Array
 }
 
 function geoCube(): Geometry {
