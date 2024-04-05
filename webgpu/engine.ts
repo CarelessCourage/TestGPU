@@ -1,6 +1,6 @@
 //@ts-ignore
-import shader from './shader/basic.wgsl'
-import { usePipeline, uTime, f32 } from './pipeline.ts'
+import shader from './shader/shader.wgsl'
+import { usePipeline, uTime, f32, uniformBuffer } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
 import { Camera } from './genka/camera.ts'
@@ -21,19 +21,17 @@ async function moonBow() {
     })
 
     const time = uTime(gpu)
-    const time2 = uTime(gpu)
-    const insensity = f32(gpu, 20.0)
+    const intensity = f32(gpu, 1.0)
 
     const pipeline = usePipeline(gpu, {
         shader: shader,
         layout: panel.buffer.layout,
         wireframe: false,
-        uniforms: [time2, time, time2],
+        uniforms: [time, intensity],
     })
 
     render(1000 / 60, () => {
         time.update()
-        time2.update()
         const render = initRender(gpu)
 
         // Pass Pipeline

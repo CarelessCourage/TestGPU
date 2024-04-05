@@ -106,10 +106,10 @@ export function uTime(gpu: UBI) {
 
 export const f32 = (gpu: UBI, value: number) =>
     uniformBuffer(gpu, {
-        size: 8,
-        binding: undefined,
+        size: 4,
+        binding: 1,
         update: (buffer) => {
-            gpu.device.queue.writeBuffer(buffer, 0, new Float32Array(value))
+            gpu.device.queue.writeBuffer(buffer, 0, new Float32Array([value]))
         },
     })
 
@@ -117,14 +117,14 @@ export const vec3 = (gpu: UBI, value: number) =>
     uniformBuffer(gpu, {
         size: 12,
         update: (buffer) =>
-            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
+            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
     })
 
 export const vec4 = (gpu: UBI, value: number) =>
     uniformBuffer(gpu, {
         size: 16,
         update: (buffer) =>
-            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
+            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
     })
 
 interface UB {

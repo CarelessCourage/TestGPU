@@ -9,8 +9,8 @@ struct VertexOutput {
     @location(2) uv: vec2f,
 };
 
-@group(0) @binding(1) var<uniform> time: u32;
-@group(0) @binding(0) var<uniform> intensity: u32;
+@group(0) @binding(0) var<uniform> time: u32;
+@group(0) @binding(1) var<uniform> intensity: f32;
 
 // Define constants for hashing algorithm
 const HASH_SHIFT1 = 10u;
@@ -188,7 +188,7 @@ fn perlinPack(uv: vec2f) -> f32 {
 fn acidZebra(uv: vec2f) -> f32 {
     var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
     var frequency = 5.0;
-    return bandNoise(vec3f(uv, vibe * frequency)) * (f32(0.0) * vibe); //Gold
+    return bandNoise(vec3f(uv, vibe * frequency)) * intensity; //Gold
 }
 
 fn vibeGlass(uv: vec2f) -> f32 {
