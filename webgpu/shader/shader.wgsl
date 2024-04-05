@@ -1,4 +1,4 @@
-//Structs are like TS interfaces
+// Structs are like TS interfaces
 struct VertexInput {
     @location(0) pos: vec2f,
     @builtin(instance_index) instance: u32,
@@ -180,15 +180,15 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var definition = 0.08;
-    var scale = 4.0; // Some more gold
+    var definition = 2.08;
+    var scale = 3.0; // Some more gold
     return perlinNoise2(uv * scale) * definition;
 }
 
 fn acidZebra(uv: vec2f) -> f32 {
     var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
     var frequency = 5.0;
-    return bandNoise(vec3f(uv, vibe * frequency)) * (f32(35.0) * vibe); //Gold
+    return bandNoise(vec3f(uv, vibe * frequency)) * (f32(0.0) * vibe); //Gold
 }
 
 fn vibeGlass(uv: vec2f) -> f32 {
