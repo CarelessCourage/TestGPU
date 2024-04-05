@@ -85,15 +85,15 @@ export class Camera {
         const offset = 256 // uniformBindGroup offset must be 256-byte aligned
         const uniformBufferSize = offset + matrixSize
 
-        const viewMatrix = uniformBuffer(
+        console.log('lol', this.modelViewProjectionMatrix)
+
+        return uniformBuffer(
             { device },
             {
                 label: 'Camera View/Projection Matrix Buffer',
                 size: uniformBufferSize,
                 update: (buffer) => {
-                    const sourceArray = new Float32Array(
-                        this.modelViewProjectionMatrix
-                    )
+                    const sourceArray = this.modelViewProjectionMatrix
                     device.queue.writeBuffer(
                         buffer,
                         0,
@@ -104,10 +104,15 @@ export class Camera {
                 },
             }
         )
-
-        return viewMatrix
     }
 }
+
+// {
+//     1.3763818740844727, 0, 0, 0,
+//     0, 1.3763818740844727, 0, 0,
+//     0, 0, -1.0020020008087158, -1,
+//     0, 0, -2.002002000808716, 0
+// }
 
 export function getViewProjectionMatrix(gpu) {
     const position = vec3.fromValues(0, 0, 5)

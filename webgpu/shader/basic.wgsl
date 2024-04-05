@@ -14,13 +14,25 @@ struct VertexOutput {
 
 //@binding(0) @group(0) var<uniform> modelViewProjectionMatrix: mat4x4<f32>;
 
+struct ViewProjectionMatrix {
+    matrix: mat4x4<f32>
+};
+
 @group(0) @binding(0) var<uniform> time: u32;
 @group(0) @binding(1) var<uniform> intensity: f32;
-//@group(0) @binding(1) var<uniform> time2: f32; 
+@group(0) @binding(2) var<uniform> view: ViewProjectionMatrix;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
-    var position = vec4f(input.pos, 1.0);
+
+    var viewMatrix: mat4x4<f32> = mat4x4<f32>(
+        vec4<f32>(1.0, 0.0, 0.0, 0.0), // Right vector
+        vec4<f32>(0.0, 1.0, 0.0, 0.0), // Up vector
+        vec4<f32>(0.0, 0.0, 0.0, 0.0), // Forward vector
+        vec4<f32>(0.0, 0.0, 0.0, 1.0)  // Translation / Position
+    );
+
+    var position = vec4f(input.pos, 1.0) * viewMatrix;
     var transformedPosition: vec4<f32> = position;
     var output: VertexOutput;
     output.pos = transformedPosition;

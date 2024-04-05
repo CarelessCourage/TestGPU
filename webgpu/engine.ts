@@ -1,5 +1,5 @@
 //@ts-ignore
-import shader from './shader/shader.wgsl'
+import shader from './shader/basic.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
