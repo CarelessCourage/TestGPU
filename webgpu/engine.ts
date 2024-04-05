@@ -36,6 +36,7 @@ async function moonBow() {
     })
 
     render(1000 / 60, () => {
+        time.update()
         const render = initRender(gpu)
         passPipeline(render, pipeline)
 

@@ -88,7 +88,7 @@ function getEntries(
 }
 
 export function uTime({ device }: UBI) {
-    let time = 50
+    let time = 0
     return uniformBuffer(
         { device },
         {
