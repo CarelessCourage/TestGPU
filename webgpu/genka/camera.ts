@@ -108,3 +108,39 @@ export class Camera {
         return viewMatrix
     }
 }
+
+export function getViewProjectionMatrix(gpu) {
+    const position = vec3.fromValues(0, 0, 5)
+    const target = vec3.fromValues(0, 0, 0)
+    const up = vec3.fromValues(0, 1, 0)
+    const fov = Math.PI / 4
+    const aspect = window.innerWidth / window.innerHeight
+    const near = 0.1
+    const far = 1000.0
+
+    const viewMatrix = mat4.create()
+    mat4.lookAt(viewMatrix, position, target, up)
+
+    const projectionMatrix = mat4.create()
+    mat4.perspective(projectionMatrix, fov, aspect, near, far)
+
+    const viewProjectionMatrix = mat4.create()
+    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
+
+    return uniformBuffer(gpu, {
+        label: 'View/Projection Matrix Buffer',
+        size: 4 * 16,
+        update: (buffer) => {
+            const sourceArray = new Float32Array(viewProjectionMatrix)
+            gpu.device.queue.writeBuffer(
+                buffer,
+                0,
+                sourceArray.buffer,
+                0,
+                sourceArray.byteLength
+            )
+        },
+    })
+
+    return viewProjectionMatrix
+}

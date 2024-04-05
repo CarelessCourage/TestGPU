@@ -1,6 +1,6 @@
 // Structs are like TS interfaces
 struct VertexInput {
-    @location(0) pos: vec2f,
+    @location(0) pos: vec3f,
     @builtin(instance_index) instance: u32,
 };
 
@@ -9,9 +9,13 @@ struct VertexOutput {
     @location(2) uv: vec2f,
 };
 
+struct ViewProjectionMatrix {
+    matrix: mat4x4<f32>
+};
+
 @group(0) @binding(0) var<uniform> time: u32;
 @group(0) @binding(1) var<uniform> intensity: f32;
-@group(0) @binding(2) var<uniform> planeSize: vec2f;
+@group(0) @binding(2) var<uniform> view: ViewProjectionMatrix;
 
 // Define constants for hashing algorithm
 const HASH_SHIFT1 = 10u;
@@ -238,8 +242,8 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    output.pos = vec4f(input.pos, 0.0, 1.0);
-    var normalisedpos = input.pos.xy; // planeSize;   
+    output.pos = vec4f(input.pos, 1.0);
+    var normalisedpos = input.pos.xy;   
     output.uv = normalisedpos * 0.5 + 0.5;
     return output;
 }
