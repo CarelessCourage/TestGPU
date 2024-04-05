@@ -12,10 +12,11 @@ struct VertexOutput {
     @location(2) uv : vec2<f32>,
 };
 
-//@group(0) @binding(0) var<uniform> viewMatrix: mat4x4<f32>;
-//@group(0) @binding(1) var<uniform> projectionMatrix: mat4x4<f32>;
+//@binding(0) @group(0) var<uniform> modelViewProjectionMatrix: mat4x4<f32>;
 
-@binding(0) @group(0) var<uniform> modelViewProjectionMatrix: mat4x4<f32>;
+@group(0) @binding(1) var<uniform> time: u32;
+//@group(0) @binding(1) var<uniform> time2: f32; 
+@group(0) @binding(0) var<uniform> intensity: f32;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
@@ -31,7 +32,8 @@ const ambientLightFactor: f32 = 0.25;
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    return vec4f(input.uv.x, input.uv.y, 1.0, 1.0) * 0.5 + 0.5;
+    var vibe = 1.0 + sin(f32(time) * 0.1) * f32(0.5);
+    return vec4f(input.uv.x * vibe, input.uv.y * vibe, 1.0, 1.0) * 0.5 + 0.5;
 }
 
 // struct Uniforms {     // 4x4 transform matrices

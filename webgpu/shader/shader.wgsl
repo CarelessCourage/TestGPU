@@ -9,9 +9,8 @@ struct VertexOutput {
     @location(2) uv: vec2f,
 };
 
-@group(0) @binding(0) var<uniform> time: u32;
-@group(0) @binding(1) var<uniform> intensity: f32;
-//@group(0) @binding(2) var<uniform> planeSize: f32;
+@group(0) @binding(1) var<uniform> time: u32;
+@group(0) @binding(0) var<uniform> intensity: u32;
 
 // Define constants for hashing algorithm
 const HASH_SHIFT1 = 10u;
@@ -21,7 +20,7 @@ const HASH_SHIFT4 = 11u;
 const HASH_SHIFT5 = 15u;
 
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
-fn hashBase(x: u32) -> u32 {
+fn hashBase(x: i32) -> i32 {
     var xx = x;
     xx = xx + (xx << HASH_SHIFT1);
     xx = xx ^ (xx >> HASH_SHIFT2);
@@ -32,22 +31,22 @@ fn hashBase(x: u32) -> u32 {
 }
 
 // Compound versions of the hashing algorithm
-fn hash1(v: vec2<u32>) -> u32 {
+fn hash1(v: vec2<i32>) -> i32 {
     return hashBase(v.x ^ hashBase(v.y));
 }
 
-fn hash2(v: vec3<u32>) -> u32 {
+fn hash2(v: vec3<i32>) -> i32 {
     return hashBase(v.x ^ hashBase(v.y) ^ hashBase(v.z));
 }
 
-fn hash3(v: vec4<u32>) -> u32 {
+fn hash3(v: vec4<i32>) -> i32 {
     return hashBase(v.x ^ hashBase(v.y) ^ hashBase(v.z) ^ hashBase(v.w));
 }
 
 // Construct a float with half-open range [0:1] using low 23 bits
-fn floatConstruct(m: u32) -> f32 {
-    let ieeeMantissa: u32 = 0x007FFFFF; // binary32 mantissa bitmask
-    let ieeeOne: u32 = 0x3F800000; // 1.0 in IEEE binary32
+fn floatConstruct(m: i32) -> f32 {
+    let ieeeMantissa: i32 = 0x007FFFFF; // binary32 mantissa bitmask
+    let ieeeOne: i32 = 0x3F800000; // 1.0 in IEEE binary32
 
     var mm = m;
 
@@ -60,19 +59,19 @@ fn floatConstruct(m: u32) -> f32 {
 
 // Pseudo-random value in half-open range [0:1]
 fn random(x: f32) -> f32 {
-    return floatConstruct(hashBase(bitcast<u32>(x)));
+    return floatConstruct(hashBase(bitcast<i32>(x)));
 }
 
 fn random1(v: vec2<f32>) -> f32 {
-    return floatConstruct(hash1(vec2<u32>(bitcast<u32>(v.x), bitcast<u32>(v.y))));
+    return floatConstruct(hash1(vec2<i32>(bitcast<i32>(v.x), bitcast<i32>(v.y))));
 }
 
 fn random2(v: vec3<f32>) -> f32 {
-    return floatConstruct(hash2(vec3<u32>(bitcast<u32>(v.x), bitcast<u32>(v.y), bitcast<u32>(v.z))));
+    return floatConstruct(hash2(vec3<i32>(bitcast<i32>(v.x), bitcast<i32>(v.y), bitcast<i32>(v.z))));
 }
 
 fn random3(v: vec4<f32>) -> f32 {
-    return floatConstruct(hash3(vec4<u32>(bitcast<u32>(v.x), bitcast<u32>(v.y), bitcast<u32>(v.z), bitcast<u32>(v.w))));
+    return floatConstruct(hash3(vec4<i32>(bitcast<i32>(v.x), bitcast<i32>(v.y), bitcast<i32>(v.z), bitcast<i32>(v.w))));
 }
 
 // Simple hash-based 3D noise function
@@ -181,21 +180,19 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var intensity = 1.0;
-    var scale = 2.0; // Some more gold
-    return perlinNoise2(uv * scale) * intensity;
+    var definition = 0.08;
+    var scale = 4.0; // Some more gold
+    return perlinNoise2(uv * scale) * definition;
 }
 
 fn acidZebra(uv: vec2f) -> f32 {
     var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
     var frequency = 5.0;
-    return bandNoise(vec3f(uv, vibe * frequency)) * intensity; //Gold
+    return bandNoise(vec3f(uv, vibe * frequency)) * (f32(35.0) * vibe); //Gold
 }
 
 fn vibeGlass(uv: vec2f) -> f32 {
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
-    var intensity = 1.0;
-    var frequency = 0.2;
     var zebra = acidZebra(uv);
     return perlinPack(uv) * zebra * vibe;
 }
@@ -240,7 +237,7 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    output.pos = vec4f(input.pos, 0, 1);
+    output.pos = vec4f(input.pos, 0.0, 1.0);
     var normalisedpos = input.pos.xy; // planeSize;   
     output.uv = normalisedpos * 0.5 + 0.5;
     return output;
@@ -249,19 +246,19 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
-    var color = vec4f(input.uv, input.uv.y, 1);
+    var color = vec4f(input.uv, input.uv.y, 1.0);
     var glass = vibeGlass(input.uv);
     var perlin = perlinPack(input.uv);
     var grain_amount = 1000.0;
     var simplex = simplexNoise2(input.uv * grain_amount) * 0.1;
 
-    var layer1 = mix(color, vec4f(0.2, 1, 1, 1), perlin);
-    let intensity = rgb_to_intensity(layer1.xyz);
+    var layer1 = mix(color, vec4f(0.2, 1.0, 1.0, 1.0), perlin);
+    let intense = rgb_to_intensity(layer1.xyz);
 
-    var remap1 = palette1(intensity + glass + simplex);
-    var remap2 = palette2(intensity + glass + simplex);
-    var remap3 = palette3(intensity + glass + simplex);
-    var remap4 = palette4(intensity + glass + simplex);
+    var remap1 = palette1(intense + glass + simplex);
+    var remap2 = palette2(intense + glass + simplex);
+    var remap3 = palette3(intense + glass + simplex);
+    var remap4 = palette4(intense + glass + simplex);
 
     var mix1 = mix(remap1, remap2, vibe);
     var mix2 = mix(remap3, remap4, vibe);

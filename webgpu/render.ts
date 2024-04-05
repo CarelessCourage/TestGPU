@@ -1,10 +1,4 @@
 import type { GPUTarget } from './target.ts'
-import type { Pipeline } from './pipeline.ts'
-
-export function passPipeline({ pass }: Renderer, pipeline: Pipeline) {
-    pass.setPipeline(pipeline.pipeline)
-    pass.setBindGroup(0, pipeline.bindGroup)
-}
 
 interface Renderer {
     encoder: GPUCommandEncoder

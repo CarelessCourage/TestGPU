@@ -18,8 +18,6 @@ export function usePipeline(
 ): Pipeline {
     const entries = getEntries(device, uniforms)
 
-    console.log(entries)
-
     const cellShaderModule = device.createShaderModule({
         label: 'Cell shader',
         code: shader,
@@ -73,64 +71,61 @@ function getEntries(
 } {
     const entries = uniforms.map((uniform, index) => ({
         binding: uniform.binding === undefined ? index : uniform.binding,
-        visibility:
-            uniform.visibility ||
-            GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
         buffer: { type: 'uniform' as GPUBufferBindingType },
         resource: { buffer: uniform.buffer },
     }))
 
-    const layout = device.createBindGroupLayout({ entries })
+    const bindGroupLayout = device.createBindGroupLayout({
+        label: 'Uniforms Bind Group Layout',
+        entries: entries.map((entry) => ({
+            binding: entry.binding,
+            visibility: entry.visibility,
+            buffer: { type: 'uniform' },
+        })),
+    })
+
     return {
-        layout,
+        layout: bindGroupLayout,
         bindGroup: entries,
     }
 }
 
-export function uTime({ device }: UBI) {
-    let time = 0
-    return uniformBuffer(
-        { device },
-        {
-            label: 'Time Buffer',
-            update: (buffer) => {
-                time++
-                device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
-                return time
-            },
-        }
-    )
+export function uTime(gpu: UBI) {
+    let time = 50
+    return uniformBuffer(gpu, {
+        label: 'Time Buffer',
+        binding: undefined,
+        update: (buffer) => {
+            time++
+            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
+            return time
+        },
+    })
 }
 
-export const f32 = ({ device }: UBI, value: number) =>
-    uniformBuffer(
-        { device },
-        {
-            size: 8,
-            update: (buffer) =>
-                device.queue.writeBuffer(buffer, 0, new Float32Array(value)),
-        }
-    )
+export const f32 = (gpu: UBI, value: number) =>
+    uniformBuffer(gpu, {
+        size: 8,
+        binding: undefined,
+        update: (buffer) => {
+            gpu.device.queue.writeBuffer(buffer, 0, new Float32Array(value))
+        },
+    })
 
-export const vec3 = ({ device }: UBI, value: number) =>
-    uniformBuffer(
-        { device },
-        {
-            size: 12,
-            update: (buffer) =>
-                device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
-        }
-    )
+export const vec3 = (gpu: UBI, value: number) =>
+    uniformBuffer(gpu, {
+        size: 12,
+        update: (buffer) =>
+            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
+    })
 
-export const vec4 = ({ device }: UBI, value: number) =>
-    uniformBuffer(
-        { device },
-        {
-            size: 16,
-            update: (buffer) =>
-                device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
-        }
-    )
+export const vec4 = (gpu: UBI, value: number) =>
+    uniformBuffer(gpu, {
+        size: 16,
+        update: (buffer) =>
+            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array(value)),
+    })
 
 interface UB {
     binding?: number
