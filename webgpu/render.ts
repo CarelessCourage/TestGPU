@@ -5,13 +5,10 @@ interface Renderer {
     pass: GPURenderPassEncoder
 }
 
-export function initRender({ device, canvas }: GPUTarget): Renderer {
-    const depthTexture = device.createTexture({
-        size: [512, 512],
-        format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    })
-
+export function initRender(
+    { device, canvas }: GPUTarget,
+    depthTexture: GPUTexture
+): Renderer {
     const encoder = device.createCommandEncoder()
     const pass = encoder.beginRenderPass({
         colorAttachments: [
@@ -23,13 +20,13 @@ export function initRender({ device, canvas }: GPUTarget): Renderer {
                 storeOp: 'store',
             },
         ],
-        // depthStencilAttachment: {
-        //     view: depthTexture.createView(),
+        depthStencilAttachment: {
+            view: depthTexture.createView(),
 
-        //     depthClearValue: 1.0,
-        //     depthLoadOp: 'clear',
-        //     depthStoreOp: 'store',
-        // },
+            depthClearValue: 1.0,
+            depthLoadOp: 'clear',
+            depthStoreOp: 'store',
+        },
     })
     return { encoder, pass }
 }

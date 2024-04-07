@@ -40,13 +40,14 @@ export function usePipeline(
         },
         primitive: {
             topology: wireframe ? 'line-list' : 'triangle-list',
-            //cullMode: 'back',
+            cullMode: 'back', // ensures backfaces dont get rendered
         },
-        // depthStencil: {
-        //     depthWriteEnabled: true,
-        //     depthCompare: 'less',
-        //     format: 'depth24plus',
-        // },
+        depthStencil: {
+            // this makes sure that faces get rendered in the correct order.
+            depthWriteEnabled: true,
+            depthCompare: 'less',
+            format: 'depth24plus',
+        },
     })
 
     // This is where we attach the uniform to the shader through the pipeline

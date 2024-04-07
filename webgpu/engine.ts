@@ -32,9 +32,15 @@ async function moonBow() {
         uniforms: [time, intensity, camera],
     })
 
+    const depthTexture = gpu.device.createTexture({
+        size: [512, 512],
+        format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
+
     render(1000 / 60, () => {
         time.update()
-        const render = initRender(gpu)
+        const render = initRender(gpu, depthTexture)
 
         // Pass Pipeline
         render.pass.setPipeline(pipeline.pipeline)
