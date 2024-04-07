@@ -1,10 +1,9 @@
 import { mat4, vec3 } from 'gl-matrix'
 import { uniformBuffer } from '../pipeline'
-import type { UBI } from '../pipeline'
+import type { GPUTarget } from '../target'
 
-export function useCamera(gpu: UBI) {
-    const cameraView = cameraMatrix()
-    const mvpMatrix = modelMatrix(cameraView)
+export function useCamera(gpu: GPUTarget) {
+    const matrix = mvpMatrix(gpu)
 
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
@@ -17,12 +16,17 @@ export function useCamera(gpu: UBI) {
             gpu.device.queue.writeBuffer(
                 buffer,
                 0,
-                mvpMatrix.buffer,
+                matrix.buffer,
                 0,
-                mvpMatrix.byteLength
+                matrix.byteLength
             )
         },
     })
+}
+
+function mvpMatrix(gpu: GPUTarget) {
+    const cameraView = cameraMatrix(gpu)
+    return modelMatrix(cameraView)
 }
 
 function modelMatrix(cameraProjectionMatrix: mat4) {
@@ -50,12 +54,12 @@ function modelMatrix(cameraProjectionMatrix: mat4) {
     return mvpMatrix as Float32Array
 }
 
-function cameraMatrix() {
+function cameraMatrix(gpu: GPUTarget) {
     const position = vec3.fromValues(5, 5, 5)
     const target = vec3.fromValues(0, 0, 0)
     const up = vec3.fromValues(0, 1, 0)
     const fov = Math.PI / 4 // maybe 2 instead
-    const aspect = 512 / 512
+    const aspect = gpu.canvas.element.width / gpu.canvas.element.height
     const near = 1
     const far = 1000.0
 

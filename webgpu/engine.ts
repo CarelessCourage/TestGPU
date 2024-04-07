@@ -1,5 +1,5 @@
 //@ts-ignore
-import shader from './shader/basic.wgsl'
+import shader from './shader/shader.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
@@ -23,7 +23,7 @@ async function moonBow() {
     const object = box
 
     const time = uTime(gpu)
-    const intensity = f32(gpu, 1.0)
+    const intensity = f32(gpu, 0.01)
 
     const pipeline = usePipeline(gpu, {
         shader: shader,

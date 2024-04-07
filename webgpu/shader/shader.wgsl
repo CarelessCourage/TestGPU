@@ -185,8 +185,8 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var definition = 2.08;
-    var scale = 3.0; // Some more gold
+    var definition = 1.08;
+    var scale = 1.0; // Some more gold
     return perlinNoise2(uv * scale) * definition;
 }
 
@@ -242,8 +242,8 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    output.pos = vec4f(input.pos, 1.0);
-    var normalisedpos = input.pos.xy;   
+    output.pos = view.matrix * vec4f(input.pos, 1.0);
+    var normalisedpos = input.pos.xy;
     output.uv = normalisedpos * 0.5 + 0.5;
     return output;
 }
