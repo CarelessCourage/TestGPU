@@ -41,14 +41,17 @@ function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
 }
 
 function geoCube(): Geometry {
-    const width = 1
-    const height = 1
-    const depth = 1
-    const widthSegments = 1
-    const heightSegments = 1
-    const depthSegments = 1
+    const size = 3
+    const width = size
+    const height = size
+    const depth = size
 
-    // buffers
+    const resolution = 1
+    const widthSegments = resolution
+    const heightSegments = resolution
+    const depthSegments = resolution
+
+    // geometry data
     const indices: number[] = []
     const vertices: number[] = []
     const normals: number[] = []
@@ -133,16 +136,16 @@ function geoCube(): Geometry {
     ) // nz
 
     function buildPlane(
-        u,
-        v,
-        w,
-        udir,
-        vdir,
-        width,
-        height,
-        depth,
-        gridX,
-        gridY
+        u: string,
+        v: string,
+        w: string,
+        udir: number,
+        vdir: number,
+        width: number,
+        height: number,
+        depth: number,
+        gridX: number,
+        gridY: number
     ) {
         const segmentWidth = width / gridX
         const segmentHeight = height / gridY

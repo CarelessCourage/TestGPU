@@ -3,13 +3,13 @@ import shader from './shader/basic.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
-import { Camera } from './genka/camera.ts'
+import { useCamera } from './genka/camera.ts'
 import { gpuTarget } from './target.ts'
 import { render, initRender, submitPass } from './render.ts'
 
 async function moonBow() {
     const gpu = await gpuTarget()
-    const camera = new Camera()
+    const camera = useCamera(gpu)
 
     const box = cube(gpu)
     // const panel = plane({
@@ -28,8 +28,8 @@ async function moonBow() {
     const pipeline = usePipeline(gpu, {
         shader: shader,
         layout: object.buffer.layout,
-        wireframe: true,
-        uniforms: [time, intensity, camera.uniform(gpu.device)],
+        wireframe: false,
+        uniforms: [time, intensity, camera],
     })
 
     render(1000 / 60, () => {

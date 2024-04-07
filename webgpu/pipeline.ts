@@ -40,12 +40,12 @@ export function usePipeline(
         },
         primitive: {
             topology: wireframe ? 'line-list' : 'triangle-list',
-            //cullMode: "back",
+            //cullMode: 'back',
         },
         // depthStencil: {
-        //   depthWriteEnabled: true,
-        //   depthCompare: "less",
-        //   format: "depth24plus-stencil8",
+        //     depthWriteEnabled: true,
+        //     depthCompare: 'less',
+        //     format: 'depth24plus',
         // },
     })
 
@@ -134,7 +134,7 @@ interface UB {
     update: () => void
 }
 
-interface UBI {
+export interface UBI {
     device: GPUDevice
 }
 
