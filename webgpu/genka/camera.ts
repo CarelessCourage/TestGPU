@@ -3,8 +3,8 @@ import { uniformBuffer } from '../pipeline'
 import type { UBI } from '../pipeline'
 
 export function useCamera(gpu: UBI) {
-    const viewProjection = getViewProjectionMatrix()
-    const mvpMatrix = modelMatrix(viewProjection)
+    const cameraView = cameraMatrix()
+    const mvpMatrix = modelMatrix(cameraView)
 
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
@@ -50,7 +50,7 @@ function modelMatrix(cameraProjectionMatrix: mat4) {
     return mvpMatrix as Float32Array
 }
 
-function getViewProjectionMatrix() {
+function cameraMatrix() {
     const position = vec3.fromValues(5, 5, 5)
     const target = vec3.fromValues(0, 0, 0)
     const up = vec3.fromValues(0, 1, 0)
