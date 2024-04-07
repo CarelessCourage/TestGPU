@@ -5,7 +5,7 @@ import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
 import { useCamera } from './genka/camera.ts'
 import { gpuTarget } from './target.ts'
-import { render, initRender, submitPass } from './render.ts'
+import { render } from './render.ts'
 
 async function moonBow() {
     const gpu = await gpuTarget()
@@ -32,30 +32,21 @@ async function moonBow() {
         uniforms: [time, intensity, camera],
     })
 
-    const depthTexture = gpu.device.createTexture({
-        size: [512, 512],
-        format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    })
-
-    render(1000 / 60, () => {
+    render(gpu).frame(({ pass }) => {
         time.update()
-        const render = initRender(gpu, depthTexture)
 
         // Pass Pipeline
-        render.pass.setPipeline(pipeline.pipeline)
-        render.pass.setBindGroup(0, pipeline.bindGroup)
+        pass.setPipeline(pipeline.pipeline)
+        pass.setBindGroup(0, pipeline.bindGroup)
 
         // Set Geometry
-        render.pass.setVertexBuffer(0, object.buffer.vertices)
-        render.pass.setVertexBuffer(1, object.buffer.normals)
-        render.pass.setVertexBuffer(2, object.buffer.uvs)
+        pass.setVertexBuffer(0, object.buffer.vertices)
+        pass.setVertexBuffer(1, object.buffer.normals)
+        pass.setVertexBuffer(2, object.buffer.uvs)
 
         // Draw Geometry
-        render.pass.setIndexBuffer(object.indices, 'uint16')
-        render.pass.drawIndexed(object.indicesCount, 1, 0, 0, 0)
-
-        submitPass(gpu, render)
+        pass.setIndexBuffer(object.indices, 'uint16')
+        pass.drawIndexed(object.indicesCount, 1, 0, 0, 0)
     })
 }
 
