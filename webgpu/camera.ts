@@ -80,7 +80,7 @@ function cameraMatrix(gpu: GPUTarget, options?: CameraOptions) {
     const up = vec3.fromValues(0, 1, 0)
     const fov = Math.PI / 4 // maybe 2 instead
     const aspect = gpu.canvas.element.width / gpu.canvas.element.height
-    const near = 1
+    const near = 0.1
     const far = 1000.0
 
     const viewMatrix = mat4.create()

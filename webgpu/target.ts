@@ -32,10 +32,11 @@ interface GPUCanvas {
     format: GPUTextureFormat
 }
 
-export function gpuCanvas(device) {
-    const canvas = document.querySelector('canvas')
+export function gpuCanvas(
+    device,
+    canvas: HTMLCanvasElement | null = document.querySelector('canvas')
+): GPUCanvas {
     if (!canvas) throw new Error('No canvas found.')
-
     const context = canvas.getContext('webgpu')
     const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
     if (!context) throw new Error('No context found.')

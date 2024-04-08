@@ -15,7 +15,7 @@
 -   [ ] Image Plane
 -   [ ] Video Plane
 -   [ ] Bend Plane
--   [ ] Deform Gradient Plane
+-   [x] Deform Gradient Plane
 -   [ ] WGSL Bomber
 -   [ ] Tension Shader
 -   [ ] Post Processing
