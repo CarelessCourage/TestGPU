@@ -52,7 +52,11 @@ export function useCamera(gpu: GPUTarget) {
 
 function mvpMatrix(gpu: GPUTarget, options?: CameraOptions) {
     const cameraView = cameraMatrix(gpu, options)
-    return modelMatrix(cameraView)
+    const model = modelMatrix()
+
+    const mvpMatrix = mat4.create()
+    mat4.multiply(mvpMatrix, cameraView, model)
+    return mvpMatrix as Float32Array
 }
 
 interface CameraOptions {
@@ -101,7 +105,7 @@ function optionsFallback(options?: CameraOptions) {
     }
 }
 
-function modelMatrix(cameraProjectionMatrix: mat4) {
+function modelMatrix() {
     const position = vec3.fromValues(0, 0, 0)
     const rotation = vec3.fromValues(0, 0, 0)
     const scale = vec3.fromValues(1, 1, 1)
@@ -119,9 +123,5 @@ function modelMatrix(cameraProjectionMatrix: mat4) {
     // SCALE
     mat4.scale(modelMatrix, modelMatrix, scale)
 
-    const mvpMatrix = mat4.create()
-
-    // PROJECT ON CAMERA
-    mat4.multiply(mvpMatrix, cameraProjectionMatrix, modelMatrix)
-    return mvpMatrix as Float32Array
+    return modelMatrix as Float32Array
 }
