@@ -35,10 +35,11 @@ export function geoBuffer({ device, data, label }: GeoBuffer) {
     let buffer = device.createBuffer({
         label,
         size: data.byteLength,
-        usage: GPUBufferUsage.VERTEX,
+        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         mappedAtCreation: true,
     })
     new Float32Array(buffer.getMappedRange()).set(data)
+
     buffer.unmap()
     return buffer
 }
@@ -82,6 +83,7 @@ export interface ModelOptions {
     position?: number | [number, number, number]
     rotation?: number | [number, number, number]
     size?: number | [number, number, number]
+    resolution?: number | [number, number, number]
 }
 
 function handleOptions(options?: ModelOptions) {

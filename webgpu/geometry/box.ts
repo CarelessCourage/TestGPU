@@ -5,7 +5,6 @@ import type { mat4 } from 'gl-matrix'
 
 interface CubeOptions extends ModelOptions {
     device: GPUDevice
-    resolution?: number | [number, number, number]
 }
 
 export function cube(options: CubeOptions): GeoObject {
@@ -34,10 +33,14 @@ function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
     const normalBuffer = geoBuffer({ device, data: geo.normals })
     const uvBuffer = geoBuffer({ device, data: geo.uvs })
 
-    function update() {
-        device.queue.writeBuffer(vertexBuffer, 0, geo.vertices)
-        device.queue.writeBuffer(normalBuffer, 0, geo.normals)
-        device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
+    function update(options: ModelOptions) {
+        const geo = geoCube(options)
+        const vertices = new Float32Array(geo.vertices)
+        const normals = new Float32Array(geo.normals)
+        const uvs = new Float32Array(geo.uvs)
+        device.queue.writeBuffer(vertexBuffer, 0, vertices.buffer)
+        device.queue.writeBuffer(normalBuffer, 0, normals.buffer)
+        device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
     }
 
     return {
@@ -49,7 +52,7 @@ function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
     }
 }
 
-function geoCube(options?: CubeOptions): Geometry {
+function geoCube(options?: ModelOptions): Geometry {
     const resolution = ensure3Values(options?.resolution ?? 1)
 
     const size = 3

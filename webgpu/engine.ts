@@ -63,9 +63,13 @@ function instance(gpu: GPUTarget, shader: string) {
     })
 
     render(gpu).frame(({ pass }) => {
-        time.update()
-        camera.rotate({ speed: 0.2, distance: 5 })
-        geometry3.update({ position: [0, -1, 0] })
+        //time.update()
+        //camera.rotate({ speed: 0.2, distance: 5 })
+        geometry.update({
+            resolution: 15,
+            size: [1, 0.2, 0.05],
+            position: [0, 0, 0],
+        })
         drawObject(pass, pipeline, geometry)
         drawObject(pass, pipeline, geometry2)
         drawObject(pass, pipeline, geometry3)
