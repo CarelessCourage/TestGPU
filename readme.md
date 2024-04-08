@@ -4,7 +4,7 @@
 -   [x] Plane UV
 -   [x] Plane Mutability
 -   [x] Cube
--   [ ] Multiple Planes
+-   [x] Multiple Planes
 -   [ ] Other Shapes
 -   [ ] DOM Sync
 -   [ ] Proxy Objects

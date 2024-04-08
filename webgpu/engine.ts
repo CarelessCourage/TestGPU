@@ -11,6 +11,20 @@ async function moonBow() {
     const camera = useCamera(gpu)
     const geometry = cube(gpu, {
         resolution: 15,
+        scale: [1, 0.2, 0.05],
+        position: [0, 0, 0],
+    })
+
+    const geometry2 = cube(gpu, {
+        resolution: 15,
+        scale: [1, 0.2, 0.05],
+        position: [0, 1, 0],
+    })
+
+    const geometry3 = cube(gpu, {
+        resolution: 15,
+        scale: [1, 0.2, 0.05],
+        position: [0, -1, 0],
     })
 
     const time = uTime(gpu)
@@ -26,6 +40,8 @@ async function moonBow() {
         time.update()
         camera.rotate({ speed: 0.2, distance: 5 })
         drawObject(pass, pipeline, geometry)
+        drawObject(pass, pipeline, geometry2)
+        drawObject(pass, pipeline, geometry3)
     })
 }
 

@@ -1,6 +1,13 @@
 /// <reference types="@webgpu/types" />
 import { geoBuffer, bufferLayout, indicesBuffer } from './utils.ts'
 import type { GeoObject, GeoBuffers, Geometry } from './utils.ts'
+import { modelMatrix } from '../camera.ts'
+import type { ModelOptions } from '../camera.ts'
+import type { mat4 } from 'gl-matrix'
+
+interface CubeOptions extends ModelOptions {
+    resolution?: number | [number, number, number]
+}
 
 export function cube(
     { device }: { device: GPUDevice },
@@ -43,17 +50,13 @@ function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
     }
 }
 
-interface CubeOptions {
-    size?: number | [number, number, number]
-    resolution?: number | [number, number, number]
-}
-
 function geoCube(options?: CubeOptions): Geometry {
-    const { size, resolution } = fallbackCubeOptions(options)
+    const resolution = ensure3Values(options?.resolution ?? 1)
 
-    const width = size[0]
-    const height = size[1]
-    const depth = size[2]
+    const size = 3
+    const width = size
+    const height = size
+    const depth = size
 
     const widthSegments = resolution[0]
     const heightSegments = resolution[1]
@@ -238,8 +241,20 @@ function geoCube(options?: CubeOptions): Geometry {
         numberOfVertices += vertexCounter
     }
 
+    const transform = modelMatrix(options)
+    const transformedVertices: number[] = []
+    for (let i = 0; i < vertices.length; i += 3) {
+        const vertex: [number, number, number] = [
+            vertices[i],
+            vertices[i + 1],
+            vertices[i + 2],
+        ]
+        const transformedVertex = transformVertex(vertex, transform)
+        transformedVertices.push(...transformedVertex)
+    }
+
     return {
-        vertices: new Float32Array(vertices),
+        vertices: new Float32Array(transformedVertices),
         indices: new Uint16Array(indices),
         colors: new Float32Array(colors),
         normals: new Float32Array(normals),
@@ -259,15 +274,19 @@ class Vector3 {
     }
 }
 
-function ensure3Values(
+export function ensure3Values(
     value: number | [number, number, number]
 ): [number, number, number] {
     if (typeof value !== 'number') return value
     return [value, value, value]
 }
 
-function fallbackCubeOptions(options?: CubeOptions): Required<CubeOptions> {
-    const size = ensure3Values(options?.size ?? 3)
-    const resolution = ensure3Values(options?.resolution ?? 1)
-    return { size, resolution }
+function transformVertex(vertex: [number, number, number], matrix: mat4) {
+    const [x, y, z] = vertex
+    const w = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] // Apply perspective
+    return [
+        (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) / w, // Apply transformation and perspective divide
+        (matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]) / w,
+        (matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]) / w,
+    ]
 }
