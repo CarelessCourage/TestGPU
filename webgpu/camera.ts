@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4, vec3, quat } from 'gl-matrix'
 import { uniformBuffer } from './pipeline'
 import { modelMatrix } from './geometry/utils'
 import type { GPUTarget } from './target'
@@ -25,19 +25,10 @@ export function useCamera(gpu: GPUTarget) {
         update: update,
     })
 
-    let angle = 0 // Define the initial angle of rotation.
-    function rotate({ speed, distance } = { speed: 1, distance: 5 }) {
-        angle += (speed * Math.PI) / 180 // Increment the angle of rotation on every frame.
-        let position = vec3.fromValues(distance, distance, distance) // Current position of the camera.
+    const rot = rotate()
 
-        // Create a rotation matrix.
-        let rotationMatrix = mat4.create()
-        mat4.fromRotation(rotationMatrix, angle, vec3.fromValues(0, 1, 0)) // Assuming rotation around Y-axis.
-
-        // Apply the rotation to the camera position.
-        let newPosition = vec3.create()
-        vec3.transformMat4(newPosition, position, rotationMatrix)
-
+    function rotateY({ speed } = { speed: 1 }) {
+        const newPosition = rot.matrix({ speed })
         update(uniform.buffer, {
             position: [newPosition[0], newPosition[1], newPosition[2]],
             target: [0, 0, 0],
@@ -47,8 +38,32 @@ export function useCamera(gpu: GPUTarget) {
     return {
         ...uniform,
         update: (options?: CameraOptions) => update(uniform.buffer, options),
-        rotate,
+        rotate: rotateY,
     }
+}
+
+function rotate() {
+    let angle = 0 // Define the initial angle of rotation.
+    function matrix({ speed } = { speed: 1 }) {
+        angle += (speed * Math.PI) / 180 // Increment the angle of rotation on every frame.
+        let position = vec3.fromValues(0, 0, 5) // Current position of the camera.
+
+        // Create a quaternion to represent the rotation.
+        let quaternion = quat.create()
+        quat.setAxisAngle(quaternion, vec3.fromValues(1, 0, 0), angle) // Set the rotation around the X-axis.
+
+        // Convert the quaternion to a rotation matrix.
+        let rotationMatrix = mat4.create()
+        mat4.fromQuat(rotationMatrix, quaternion)
+
+        // Apply the rotation to the camera position.
+        let newPosition = vec3.create()
+        vec3.transformMat4(newPosition, position, rotationMatrix)
+
+        return newPosition
+    }
+
+    return { matrix }
 }
 
 function mvpMatrix(gpu: GPUTarget, options?: CameraOptions) {
@@ -66,11 +81,13 @@ interface CameraOptions {
 }
 
 const defaultCameraOptions: CameraOptions = {
-    position: [5, 5, 5],
+    position: [0, 0, 5],
     target: [0, 0, 0],
 }
 
 function cameraMatrix(gpu: GPUTarget, options?: CameraOptions) {
+    console.log('cameraMatrix', options)
+
     const o = optionsFallback(options)
     const p = o.position
     const t = o.target

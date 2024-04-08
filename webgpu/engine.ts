@@ -64,7 +64,11 @@ function instance(gpu: GPUTarget, shader: string) {
 
     render(gpu).frame(({ pass }) => {
         time.update()
-        //camera.rotate({ speed: 0.2, distance: 5 })
+        // camera.update({
+        //     position: [3, 1, 5],
+        //     target: [0, 0, 0],
+        // })
+        camera.rotate()
         geometry.update({
             position: [0, 0, 0],
         })
