@@ -9,7 +9,7 @@ interface CubeOptions extends ModelOptions {
 
 export function cube(options: CubeOptions): GeoObject {
     const geo = geoCube(options)
-    const buffer = cubeBuffer({ device: options.device, geo })
+    const buffer = cubeBuffer({ options, geo })
     return {
         buffer,
         geometry: geo,
@@ -24,29 +24,29 @@ export function cube(options: CubeOptions): GeoObject {
 }
 
 interface CubeBufferProps {
-    device: GPUDevice
+    options: CubeOptions
     geo: Geometry
 }
 
-function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
-    const vertexBuffer = geoBuffer({ device, data: geo.vertices })
-    const normalBuffer = geoBuffer({ device, data: geo.normals })
-    const uvBuffer = geoBuffer({ device, data: geo.uvs })
+function cubeBuffer({ options, geo }: CubeBufferProps): GeoBuffers {
+    const vBuffer = geoBuffer({ device: options.device, data: geo.vertices })
+    const nBuffer = geoBuffer({ device: options.device, data: geo.normals })
+    const uvBuffer = geoBuffer({ device: options.device, data: geo.uvs })
 
-    function update(options: ModelOptions) {
-        const geo = geoCube(options)
+    function update(o: ModelOptions) {
+        const geo = geoCube({ ...options, ...o })
         const vertices = new Float32Array(geo.vertices)
         const normals = new Float32Array(geo.normals)
         const uvs = new Float32Array(geo.uvs)
-        device.queue.writeBuffer(vertexBuffer, 0, vertices.buffer)
-        device.queue.writeBuffer(normalBuffer, 0, normals.buffer)
-        device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
+        options.device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
+        options.device.queue.writeBuffer(nBuffer, 0, normals.buffer)
+        options.device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
     }
 
     return {
         update: update,
-        vertices: vertexBuffer,
-        normals: normalBuffer,
+        vertices: vBuffer,
+        normals: nBuffer,
         uvs: uvBuffer,
         layout: bufferLayout(),
     }
