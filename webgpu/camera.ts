@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { uniformBuffer } from '../pipeline'
-import type { GPUTarget } from '../target'
+import { uniformBuffer } from './pipeline'
+import type { GPUTarget } from './target'
 
 export function useCamera(gpu: GPUTarget) {
     const matrixSize = 4 * 16 // 4x4 matrix
