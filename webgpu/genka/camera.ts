@@ -3,30 +3,82 @@ import { uniformBuffer } from '../pipeline'
 import type { GPUTarget } from '../target'
 
 export function useCamera(gpu: GPUTarget) {
-    const matrix = mvpMatrix(gpu)
-
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
     const uniformBufferSize = offset + matrixSize
 
-    return uniformBuffer(gpu, {
+    function update(buffer: GPUBuffer, options?: CameraOptions) {
+        const matrix = mvpMatrix(gpu, options)
+        gpu.device.queue.writeBuffer(
+            buffer,
+            0,
+            matrix.buffer,
+            0,
+            matrix.byteLength
+        )
+    }
+
+    const uniform = uniformBuffer(gpu, {
         label: 'Camera View/Projection Matrix Buffer',
         size: uniformBufferSize,
-        update: (buffer) => {
-            gpu.device.queue.writeBuffer(
-                buffer,
-                0,
-                matrix.buffer,
-                0,
-                matrix.byteLength
-            )
-        },
+        update: update,
     })
+
+    return {
+        ...uniform,
+        update: (options?: CameraOptions) => update(uniform.buffer, options),
+    }
 }
 
-function mvpMatrix(gpu: GPUTarget) {
-    const cameraView = cameraMatrix(gpu)
+function mvpMatrix(gpu: GPUTarget, options?: CameraOptions) {
+    const cameraView = cameraMatrix(gpu, options)
     return modelMatrix(cameraView)
+}
+
+interface CameraOptions {
+    position: number | [number, number, number]
+    target: [number, number, number]
+}
+
+const defaultCameraOptions: CameraOptions = {
+    position: [5, 5, 5],
+    target: [0, 0, 0],
+}
+
+function cameraMatrix(gpu: GPUTarget, options?: CameraOptions) {
+    const o = optionsFallback(options)
+    const p = o.position
+    const t = o.target
+
+    const position = vec3.fromValues(p[0], p[1], p[2])
+    const target = vec3.fromValues(t[0], t[1], t[2])
+    const up = vec3.fromValues(0, 1, 0)
+    const fov = Math.PI / 4 // maybe 2 instead
+    const aspect = gpu.canvas.element.width / gpu.canvas.element.height
+    const near = 1
+    const far = 1000.0
+
+    const viewMatrix = mat4.create()
+    mat4.lookAt(viewMatrix, position, target, up)
+
+    const projectionMatrix = mat4.create()
+    mat4.perspective(projectionMatrix, fov, aspect, near, far)
+
+    const viewProjectionMatrix = mat4.create()
+    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
+    return viewProjectionMatrix as Float32Array
+}
+
+function optionsFallback(options?: CameraOptions) {
+    const o = options
+        ? { ...defaultCameraOptions, ...options }
+        : defaultCameraOptions
+    const p = o.position
+    if (typeof p !== 'number') return o
+    return {
+        position: [p, p, p],
+        target: o.target,
+    }
 }
 
 function modelMatrix(cameraProjectionMatrix: mat4) {
@@ -52,24 +104,4 @@ function modelMatrix(cameraProjectionMatrix: mat4) {
     // PROJECT ON CAMERA
     mat4.multiply(mvpMatrix, cameraProjectionMatrix, modelMatrix)
     return mvpMatrix as Float32Array
-}
-
-function cameraMatrix(gpu: GPUTarget) {
-    const position = vec3.fromValues(5, 5, 5)
-    const target = vec3.fromValues(0, 0, 0)
-    const up = vec3.fromValues(0, 1, 0)
-    const fov = Math.PI / 4 // maybe 2 instead
-    const aspect = gpu.canvas.element.width / gpu.canvas.element.height
-    const near = 1
-    const far = 1000.0
-
-    const viewMatrix = mat4.create()
-    mat4.lookAt(viewMatrix, position, target, up)
-
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, fov, aspect, near, far)
-
-    const viewProjectionMatrix = mat4.create()
-    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
-    return viewProjectionMatrix as Float32Array
 }

@@ -1,5 +1,6 @@
 //@ts-ignore
 import shader from './shader/shader.wgsl'
+import { vec3, mat4 } from 'gl-matrix'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { plane } from './geometry/plane.ts'
@@ -32,7 +33,27 @@ async function moonBow() {
         uniforms: [time, intensity, camera],
     })
 
+    let angle = 0 // Define the initial angle of rotation.
+
     render(gpu).frame(({ pass }) => {
+        angle += Math.PI / 180 // Increment the angle of rotation on every frame.
+
+        let position = vec3.fromValues(5, 5, 5) // Current position of the camera.
+
+        // Create a rotation matrix.
+        let rotationMatrix = mat4.create()
+        mat4.fromRotation(rotationMatrix, angle, vec3.fromValues(0, 1, 0)) // Assuming rotation around Y-axis.
+
+        // Apply the rotation to the camera position.
+        let newPosition = vec3.create()
+        vec3.transformMat4(newPosition, position, rotationMatrix)
+
+        // Update the camera position with the new position.
+        camera.update({
+            position: [newPosition[0], newPosition[1], newPosition[2]],
+            target: [0, 0, 0],
+        })
+
         time.update()
 
         // Pass Pipeline
