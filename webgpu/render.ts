@@ -5,7 +5,7 @@ import type { GeoObject } from './geometry/utils.ts'
 export function render(gpu: GPUTarget) {
     const canvas = gpu.canvas.element
     const depthTexture = gpu.device.createTexture({
-        size: [canvas.height, canvas.width],
+        size: [canvas.width, canvas.height],
         format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })

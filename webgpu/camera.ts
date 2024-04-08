@@ -19,7 +19,7 @@ export function useCamera(gpu: GPUTarget) {
         )
     }
 
-    const uniform = uniformBuffer(gpu, {
+    const uniform = uniformBuffer(gpu.device, {
         label: 'Camera View/Projection Matrix Buffer',
         size: uniformBufferSize,
         update: update,

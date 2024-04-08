@@ -33,26 +33,29 @@ async function moonBow() {
 
 function instance(gpu: GPUTarget, shader: string) {
     const camera = useCamera(gpu)
-    const geometry = cube(gpu, {
+    const geometry = cube({
+        device: gpu.device,
         resolution: 15,
         scale: [1, 0.2, 0.05],
         position: [0, 0, 0],
     })
 
-    const geometry2 = cube(gpu, {
+    const geometry2 = cube({
+        device: gpu.device,
         resolution: 15,
         scale: [1, 0.2, 0.05],
         position: [0, 1, 0],
     })
 
-    const geometry3 = cube(gpu, {
+    const geometry3 = cube({
+        device: gpu.device,
         resolution: 15,
         scale: [1, 0.2, 0.05],
         position: [0, -1, 0],
     })
 
-    const time = uTime(gpu)
-    const intensity = f32(gpu, 0.01)
+    const time = uTime(gpu.device)
+    const intensity = f32(gpu.device, 0.01)
 
     const pipeline = usePipeline(gpu, {
         shader: shader,

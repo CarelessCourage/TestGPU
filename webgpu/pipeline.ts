@@ -92,40 +92,40 @@ function getEntries(
     }
 }
 
-export function uTime(gpu: UBI) {
+export function uTime(device: GPUDevice) {
     let time = 50
-    return uniformBuffer(gpu, {
+    return uniformBuffer(device, {
         label: 'Time Buffer',
         binding: undefined,
         update: (buffer) => {
             time++
-            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
+            device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
             return time
         },
     })
 }
 
-export const f32 = (gpu: UBI, value: number) =>
-    uniformBuffer(gpu, {
+export const f32 = (device: GPUDevice, value: number) =>
+    uniformBuffer(device, {
         size: 4,
         binding: undefined,
         update: (buffer) => {
-            gpu.device.queue.writeBuffer(buffer, 0, new Float32Array([value]))
+            device.queue.writeBuffer(buffer, 0, new Float32Array([value]))
         },
     })
 
-export const vec3 = (gpu: UBI, value: number) =>
-    uniformBuffer(gpu, {
+export const vec3 = (device: GPUDevice, value: number) =>
+    uniformBuffer(device, {
         size: 12,
         update: (buffer) =>
-            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
+            device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
     })
 
-export const vec4 = (gpu: UBI, value: number) =>
-    uniformBuffer(gpu, {
+export const vec4 = (device: GPUDevice, value: number) =>
+    uniformBuffer(device, {
         size: 16,
         update: (buffer) =>
-            gpu.device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
+            device.queue.writeBuffer(buffer, 0, new Uint32Array([value])),
     })
 
 interface UB {
@@ -147,7 +147,7 @@ interface UBOptions {
     update: (buffer: GPUBuffer) => void
 }
 
-export function uniformBuffer({ device }: UBI, options: UBOptions): UB {
+export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
     const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
     const buffer = device.createBuffer({
         label: options.label,

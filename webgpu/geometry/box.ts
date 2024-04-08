@@ -6,22 +6,23 @@ import type { ModelOptions } from '../camera.ts'
 import type { mat4 } from 'gl-matrix'
 
 interface CubeOptions extends ModelOptions {
+    device: GPUDevice
     resolution?: number | [number, number, number]
 }
 
-export function cube(
-    { device }: { device: GPUDevice },
-    options?: CubeOptions
-): GeoObject {
+export function cube(options: CubeOptions): GeoObject {
     const geo = geoCube(options)
-    const buffer = cubeBuffer({ device, geo })
+    const buffer = cubeBuffer({ device: options.device, geo })
     return {
         buffer,
+        geometry: geo,
+        set: () => buffer.update(),
         vertexCount: geo.vertices.length,
         indicesCount: geo.indices.length,
-        indices: indicesBuffer({ device, indices: geo.indices }),
-        set: () => buffer.update(),
-        geometry: geo,
+        indices: indicesBuffer({
+            device: options.device,
+            indices: geo.indices,
+        }),
     }
 }
 
