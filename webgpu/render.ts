@@ -1,4 +1,6 @@
 import type { GPUTarget } from './target.ts'
+import type { Pipeline } from './pipeline.ts'
+import type { GeoObject } from './geometry/utils.ts'
 
 export function render(gpu: GPUTarget) {
     const canvas = gpu.canvas.element
@@ -55,4 +57,23 @@ function submitPass({ device }: GPUTarget, { encoder, pass }: Renderer) {
     pass.end()
     const commandBuffer = encoder.finish()
     device.queue.submit([commandBuffer])
+}
+
+export function drawObject(
+    pass: GPURenderPassEncoder,
+    pipeline: Pipeline,
+    box: GeoObject
+) {
+    // Pass Pipeline
+    pass.setPipeline(pipeline.pipeline)
+    pass.setBindGroup(0, pipeline.bindGroup)
+
+    // Set Geometry
+    pass.setVertexBuffer(0, box.buffer.vertices)
+    pass.setVertexBuffer(1, box.buffer.normals)
+    pass.setVertexBuffer(2, box.buffer.uvs)
+
+    // Draw Geometry
+    pass.setIndexBuffer(box.indices, 'uint16')
+    pass.drawIndexed(box.indicesCount, 1, 0, 0, 0)
 }

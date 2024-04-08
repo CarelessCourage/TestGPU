@@ -108,7 +108,7 @@ export function uTime(gpu: UBI) {
 export const f32 = (gpu: UBI, value: number) =>
     uniformBuffer(gpu, {
         size: 4,
-        binding: 1,
+        binding: undefined,
         update: (buffer) => {
             gpu.device.queue.writeBuffer(buffer, 0, new Float32Array([value]))
         },
