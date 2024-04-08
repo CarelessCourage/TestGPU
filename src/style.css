@@ -59,6 +59,7 @@ canvas {
     z-index: 1;
     border: #ffffff solid 16px;
     background-color: #242424;
+    max-width: 45vw;
 }
 
 h1 {
