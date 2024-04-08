@@ -44,3 +44,8 @@
 -   [babyloon](https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/core/src/Meshes/Builders/planeBuilder.ts)
 -   [shadergradient](https://www.shadergradient.co/)
 -   [samples](https://webgpu.github.io/webgpu-samples/?sample=rotatingCube#main.ts)
+-   [orillusion](https://orillusion.github.io/orillusion-webgpu-samples/#cubesRenderBundle)
+
+# Resources
+
+-   [orillusion](https://www.youtube.com/watch?v=9O2of-IjJos&list=PLVHfUzm5DIVCZxjmaZsBXEXoohzSqeCnV&index=10)
