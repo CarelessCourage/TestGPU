@@ -1,8 +1,6 @@
 /// <reference types="@webgpu/types" />
-import { geoBuffer, bufferLayout, indicesBuffer } from './utils.ts'
-import type { GeoObject, GeoBuffers, Geometry } from './utils.ts'
-import { modelMatrix } from '../camera.ts'
-import type { ModelOptions } from '../camera.ts'
+import { geoBuffer, bufferLayout, indicesBuffer, modelMatrix } from './utils.ts'
+import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.ts'
 import type { mat4 } from 'gl-matrix'
 
 interface CubeOptions extends ModelOptions {
@@ -16,7 +14,7 @@ export function cube(options: CubeOptions): GeoObject {
     return {
         buffer,
         geometry: geo,
-        set: () => buffer.update(),
+        update: (options: ModelOptions) => buffer.update(options),
         vertexCount: geo.vertices.length,
         indicesCount: geo.indices.length,
         indices: indicesBuffer({

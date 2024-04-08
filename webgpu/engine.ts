@@ -5,11 +5,10 @@ import basic from './shader/basic.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { useCamera } from './camera.ts'
-import { gpuTarget, gpuDevice, gpuCanvas, GPUTarget } from './target.ts'
+import { gpuDevice, gpuCanvas, GPUTarget } from './target.ts'
 import { render, drawObject } from './render.ts'
 
 async function moonBow() {
-    //const gpu = await gpuTarget()
     const target = await gpuDevice()
 
     const gpu1 = {
@@ -36,21 +35,21 @@ function instance(gpu: GPUTarget, shader: string) {
     const geometry = cube({
         device: gpu.device,
         resolution: 15,
-        scale: [1, 0.2, 0.05],
+        size: [1, 0.2, 0.05],
         position: [0, 0, 0],
     })
 
     const geometry2 = cube({
         device: gpu.device,
         resolution: 15,
-        scale: [1, 0.2, 0.05],
+        size: [1, 0.2, 0.05],
         position: [0, 1, 0],
     })
 
     const geometry3 = cube({
         device: gpu.device,
         resolution: 15,
-        scale: [1, 0.2, 0.05],
+        size: [1, 0.2, 0.05],
         position: [0, -1, 0],
     })
 
@@ -66,6 +65,7 @@ function instance(gpu: GPUTarget, shader: string) {
     render(gpu).frame(({ pass }) => {
         time.update()
         camera.rotate({ speed: 0.2, distance: 5 })
+        geometry3.update({ position: [0, -1, 0] })
         drawObject(pass, pipeline, geometry)
         drawObject(pass, pipeline, geometry2)
         drawObject(pass, pipeline, geometry3)

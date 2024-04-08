@@ -1,14 +1,16 @@
+import { mat4, vec3 } from 'gl-matrix'
+import { ensure3Values } from './box'
 export interface GeoObject {
     buffer: GeoBuffers
     vertexCount: number
     indicesCount: number
     indices: GPUBuffer
-    set: (options?: Dim2Options) => void
+    update: (options: ModelOptions) => void
     geometry: Geometry
 }
 
 export interface GeoBuffers {
-    update: (options?: Dim2Options) => void
+    update: (options: ModelOptions) => void
     vertices: GPUBuffer
     normals: GPUBuffer
     uvs: GPUBuffer
@@ -76,29 +78,37 @@ export function bufferLayout(): [
     return [vertexLayout, normalLayout, uvLayout]
 }
 
-export interface Dim2Options {
-    size?: [number, number] | number
-    resolution?: [number, number] | number
-    position?: [number, number] | number
+export interface ModelOptions {
+    position?: number | [number, number, number]
+    rotation?: number | [number, number, number]
+    size?: number | [number, number, number]
 }
 
-export function getOptions(passedOptions?: Dim2Options) {
-    const options = {
-        size: 2,
-        resolution: 1,
-        position: 0,
-        ...passedOptions,
-    }
+function handleOptions(options?: ModelOptions) {
+    const position = ensure3Values(options?.position ?? 0)
+    const rotation = ensure3Values(options?.rotation ?? 0)
+    const scale = ensure3Values(options?.size ?? 1)
     return {
-        size: ensureTwoElementArray(options.size),
-        resolution: ensureTwoElementArray(options.resolution),
-        position: ensureTwoElementArray(options.position),
+        position: vec3.fromValues(...position),
+        rotation: vec3.fromValues(...rotation),
+        scale: vec3.fromValues(...scale),
     }
 }
 
-function ensureTwoElementArray(value: number | number[]): [number, number] {
-    // value could be: n, [n], [n, n]. We want to return [n, n] no matter what.
-    const y = Array.isArray(value) ? value[0] : value
-    const x = Array.isArray(value) ? value[1] || value[0] : value
-    return [x, y]
+export function modelMatrix(options?: ModelOptions) {
+    const { position, rotation, scale } = handleOptions(options)
+    const modelMatrix = mat4.create()
+
+    // TRANSLATE
+    mat4.translate(modelMatrix, modelMatrix, position)
+
+    // ROTATE
+    mat4.rotateX(modelMatrix, modelMatrix, rotation[0])
+    mat4.rotateY(modelMatrix, modelMatrix, rotation[1])
+    mat4.rotateZ(modelMatrix, modelMatrix, rotation[2])
+
+    // SCALE
+    mat4.scale(modelMatrix, modelMatrix, scale)
+
+    return modelMatrix
 }

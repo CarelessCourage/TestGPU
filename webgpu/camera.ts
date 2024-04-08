@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix'
 import { uniformBuffer } from './pipeline'
-import { ensure3Values } from './geometry/box'
+import { modelMatrix } from './geometry/utils'
 import type { GPUTarget } from './target'
 
 export function useCamera(gpu: GPUTarget) {
@@ -104,39 +104,4 @@ function optionsFallback(options?: CameraOptions) {
         position: [p, p, p],
         target: o.target,
     }
-}
-
-export interface ModelOptions {
-    position?: number | [number, number, number]
-    rotation?: number | [number, number, number]
-    scale?: number | [number, number, number]
-}
-
-function handleOptions(options?: ModelOptions) {
-    const position = ensure3Values(options?.position ?? 0)
-    const rotation = ensure3Values(options?.rotation ?? 0)
-    const scale = ensure3Values(options?.scale ?? 1)
-    return {
-        position: vec3.fromValues(...position),
-        rotation: vec3.fromValues(...rotation),
-        scale: vec3.fromValues(...scale),
-    }
-}
-
-export function modelMatrix(options?: ModelOptions) {
-    const { position, rotation, scale } = handleOptions(options)
-    const modelMatrix = mat4.create()
-
-    // TRANSLATE
-    mat4.translate(modelMatrix, modelMatrix, position)
-
-    // ROTATE
-    mat4.rotateX(modelMatrix, modelMatrix, rotation[0])
-    mat4.rotateY(modelMatrix, modelMatrix, rotation[1])
-    mat4.rotateZ(modelMatrix, modelMatrix, rotation[2])
-
-    // SCALE
-    mat4.scale(modelMatrix, modelMatrix, scale)
-
-    return modelMatrix
 }
