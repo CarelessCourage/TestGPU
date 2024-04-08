@@ -30,6 +30,7 @@
 -   Animations (gsap?)
 -   Timeline (gsap?)
 -   Groups
+-   Many Models Performance (instanced)
 -   Materials
 -   Physics
 -   Particles

@@ -245,7 +245,6 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 // const float frequency = 2.0;
 // const float phase = 2.0;
 
-
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var amplitude = 0.2;
