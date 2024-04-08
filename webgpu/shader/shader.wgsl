@@ -239,11 +239,30 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
     return 0.299*rgb.x + 0.587*rgb.y + 0.114*rgb.z;  // standard formula for grayscale
 }
 
+// Gerstner Wave parameters
+// const float amplitude = 0.2;
+// const vec2 direction = vec2(1.0, 0.0);
+// const float frequency = 2.0;
+// const float phase = 2.0;
+
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
+    var amplitude = 0.2;
+    var direction = vec2f(0.2, 0.2);
+    var frequency = 10.0;
+    var phase = 0.1;
+
+    var pos = input.pos;
+
+    var theta = dot(direction, pos.xy) * frequency + phase * f32(time);
+    pos.x += amplitude * direction.x * cos(theta);
+    pos.y += amplitude * direction.y * cos(theta);
+    pos.z += amplitude * sin(theta);
+
     var output: VertexOutput;
-    output.pos = view.matrix * vec4f(input.pos, 1.0);
-    var normalisedpos = input.pos.xy;
+    output.pos = view.matrix * vec4f(pos, 1.0);
+    var normalisedpos = pos.xy;
     output.uv = normalisedpos * 0.5 + 0.5;
     return output;
 }

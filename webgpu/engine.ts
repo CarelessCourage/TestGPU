@@ -9,19 +9,22 @@ import { render, drawObject } from './render.ts'
 async function moonBow() {
     const gpu = await gpuTarget()
     const camera = useCamera(gpu)
-    const geometry = cube(gpu)
+    const geometry = cube(gpu, {
+        resolution: 15,
+    })
 
     const time = uTime(gpu)
-    const intensity = f32(gpu, 0)
+    const intensity = f32(gpu, 0.001)
 
     const pipeline = usePipeline(gpu, {
         shader: shader,
+        wireframe: false,
         uniforms: [time, intensity, camera],
     })
 
     render(gpu).frame(({ pass }) => {
         time.update()
-        camera.rotate({ speed: 1, distance: 5 })
+        camera.rotate({ speed: 0.2, distance: 5 })
         drawObject(pass, pipeline, geometry)
     })
 }
