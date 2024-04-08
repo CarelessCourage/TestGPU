@@ -2,8 +2,11 @@
 import { geoBuffer, bufferLayout, indicesBuffer } from './utils.ts'
 import type { GeoObject, GeoBuffers, Geometry } from './utils.ts'
 
-export function cube({ device }: { device: GPUDevice }): GeoObject {
-    const geo = geoCube()
+export function cube(
+    { device }: { device: GPUDevice },
+    options?: CubeOptions
+): GeoObject {
+    const geo = geoCube(options)
     const buffer = cubeBuffer({ device, geo })
     return {
         buffer,
@@ -40,16 +43,21 @@ function cubeBuffer({ device, geo }: CubeBufferProps): GeoBuffers {
     }
 }
 
-function geoCube(): Geometry {
-    const size = 3
-    const width = size
-    const height = size
-    const depth = size
+interface CubeOptions {
+    size?: number | [number, number, number]
+    resolution?: number | [number, number, number]
+}
 
-    const resolution = 1
-    const widthSegments = resolution
-    const heightSegments = resolution
-    const depthSegments = resolution
+function geoCube(options?: CubeOptions): Geometry {
+    const { size, resolution } = fallbackCubeOptions(options)
+
+    const width = size[0]
+    const height = size[1]
+    const depth = size[2]
+
+    const widthSegments = resolution[0]
+    const heightSegments = resolution[1]
+    const depthSegments = resolution[2]
 
     // geometry data
     const indices: number[] = []
@@ -251,281 +259,15 @@ class Vector3 {
     }
 }
 
-function geoCube2(): Geometry {
-    const size = 0.5
+function ensure3Values(
+    value: number | [number, number, number]
+): [number, number, number] {
+    if (typeof value !== 'number') return value
+    return [value, value, value]
+}
 
-    // const bottomLeftFront  = [-1, -1,  1];
-    // const bottomRightFront = [ 1, -1,  1];
-    // const topLeftFront     = [-1,  1,  1];
-    // const topRightFront    = [ 1,  1,  1];
-    // const bottomLeftBack   = [-1, -1, -1];
-    // const bottomRightBack  = [ 1, -1, -1];
-    // const topLeftBack      = [-1,  1, -1];
-    // const topRightBack     = [ 1,  1, -1];
-
-    const vertices = new Float32Array([
-        // front
-        -1,
-        -1,
-        1, // bottom-left
-        1,
-        -1,
-        1, // bottom-right
-        1,
-        1,
-        1, // top-right
-
-        1,
-        1,
-        1, // top-right
-        -1,
-        1,
-        1, // top-left
-        -1,
-        -1,
-        1, // bottom-left
-
-        // right
-        1,
-        -1,
-        1, // bottom-left
-        1,
-        -1,
-        -1, // bottom-right
-        1,
-        1,
-        -1, // top-right
-
-        1,
-        1,
-        -1, // top-right
-        1,
-        1,
-        1, // top-left
-        1,
-        -1,
-        1, // bottom-left
-
-        // back
-        -1,
-        -1,
-        -1, // bottom-left
-        -1,
-        1,
-        -1, // top-left
-        1,
-        1,
-        -1, // top-right
-
-        1,
-        1,
-        -1, // top-right
-        1,
-        -1,
-        -1, // bottom-right
-        -1,
-        -1,
-        -1, // bottom-left
-
-        // left
-        -1,
-        -1,
-        1, // bottom-right
-        -1,
-        1,
-        1, // top-right
-        -1,
-        1,
-        -1, // top-left
-
-        -1,
-        1,
-        -1, // top-left
-        -1,
-        -1,
-        -1, // bottom-left
-        -1,
-        -1,
-        1, // bottom-right
-
-        // top
-        -1,
-        1,
-        1, // bottom-left
-        1,
-        1,
-        1, // bottom-right
-        1,
-        1,
-        -1, // top-right
-
-        1,
-        1,
-        -1, // top-right
-        -1,
-        1,
-        -1, // top-left
-        -1,
-        1,
-        1, // bottom-left
-
-        // bottom
-        -1,
-        -1,
-        1, // bottom-left
-        -1,
-        -1,
-        -1, // top-left
-        1,
-        -1,
-        -1, // top-right
-
-        1,
-        -1,
-        -1, // top-right
-        1,
-        -1,
-        1, // bottom-right
-        -1,
-        -1,
-        1, // bottom-left
-    ])
-
-    const scaledDownVertices = vertices.map((v) => v * size)
-
-    const indices = new Uint16Array([
-        // front
-        0, 1, 2, 2, 3, 0,
-        // right
-        1, 5, 6, 6, 2, 1,
-        // back
-        4, 7, 6, 6, 5, 4,
-        // left
-        0, 3, 7, 7, 4, 0,
-        // top
-        3, 2, 6, 6, 7, 3,
-        // bottom
-        0, 4, 5, 5, 1, 0,
-    ])
-
-    const colors = new Float32Array([
-        // front - blue
-        0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-        // right - red
-        1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-        //back - yellow
-        1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0,
-        //left - aqua
-        0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1,
-        // top - green
-        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
-        // bottom - fuchsia
-        1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
-    ])
-
-    const normals = new Float32Array([
-        // front
-        0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-        // right
-        1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-        // back
-        0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
-        // left
-        -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-        // top
-        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
-        // bottom
-        0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
-    ])
-
-    const ul = 1
-    const vl = 1
-    const uvs = new Float32Array([
-        //front
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-        //right
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-        //back
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-        //left
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-        //top
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-        //bottom
-        0,
-        0,
-        ul,
-        0,
-        ul,
-        vl,
-        ul,
-        vl,
-        0,
-        vl,
-        0,
-        0,
-    ])
-
-    return {
-        vertices: scaledDownVertices,
-        indices,
-        colors,
-        normals,
-        uvs,
-    }
+function fallbackCubeOptions(options?: CubeOptions): Required<CubeOptions> {
+    const size = ensure3Values(options?.size ?? 3)
+    const resolution = ensure3Values(options?.resolution ?? 1)
+    return { size, resolution }
 }

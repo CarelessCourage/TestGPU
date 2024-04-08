@@ -24,9 +24,29 @@ export function useCamera(gpu: GPUTarget) {
         update: update,
     })
 
+    let angle = 0 // Define the initial angle of rotation.
+    function rotate({ speed, distance } = { speed: 1, distance: 5 }) {
+        angle += (speed * Math.PI) / 180 // Increment the angle of rotation on every frame.
+        let position = vec3.fromValues(distance, distance, distance) // Current position of the camera.
+
+        // Create a rotation matrix.
+        let rotationMatrix = mat4.create()
+        mat4.fromRotation(rotationMatrix, angle, vec3.fromValues(0, 1, 0)) // Assuming rotation around Y-axis.
+
+        // Apply the rotation to the camera position.
+        let newPosition = vec3.create()
+        vec3.transformMat4(newPosition, position, rotationMatrix)
+
+        update(uniform.buffer, {
+            position: [newPosition[0], newPosition[1], newPosition[2]],
+            target: [0, 0, 0],
+        })
+    }
+
     return {
         ...uniform,
         update: (options?: CameraOptions) => update(uniform.buffer, options),
+        rotate,
     }
 }
 
