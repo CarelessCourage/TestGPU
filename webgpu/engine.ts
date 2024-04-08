@@ -21,7 +21,6 @@ async function moonBow() {
 
     const pipeline = usePipeline(gpu, {
         shader: shader,
-        layout: box.buffer.layout,
         wireframe: false,
         uniforms: [time, intensity, camera],
     })

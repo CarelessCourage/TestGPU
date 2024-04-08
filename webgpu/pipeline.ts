@@ -1,9 +1,9 @@
 import type { GPUTarget } from './target.ts'
+import { bufferLayout } from './geometry/utils.ts'
 
 interface PipelineOptions {
     uniforms: UB[]
     shader: string
-    layout: GPUVertexBufferLayout[]
     wireframe?: boolean
 }
 
@@ -14,7 +14,7 @@ export interface Pipeline {
 
 export function usePipeline(
     { device, canvas }: GPUTarget,
-    { uniforms, shader, layout, wireframe = false }: PipelineOptions
+    { uniforms, shader, wireframe = false }: PipelineOptions
 ): Pipeline {
     const entries = getEntries(device, uniforms)
 
@@ -31,7 +31,7 @@ export function usePipeline(
         vertex: {
             module: cellShaderModule,
             entryPoint: 'vertexMain',
-            buffers: layout,
+            buffers: bufferLayout(),
         },
         fragment: {
             module: cellShaderModule,
