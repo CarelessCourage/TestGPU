@@ -1,19 +1,18 @@
-import type { GPUTarget } from './target.ts'
+import type { GPUCanvas } from './target.ts'
 import type { Pipeline } from './pipeline.ts'
 import type { GeoObject } from './geometry/utils.ts'
 
-export function render(gpu: GPUTarget) {
-    const canvas = gpu.canvas.element
-    const depthTexture = gpu.device.createTexture({
-        size: [canvas.width, canvas.height],
+export function render(props: GPUCanvas) {
+    const depthTexture = props.device.createTexture({
+        size: [props.element.width, props.element.height],
         format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
 
     function frame(callback: (render: Renderer) => void) {
-        const render = initRender(gpu, depthTexture)
+        const render = initRender(props, depthTexture)
         callback(render)
-        submitPass(gpu, render)
+        submitPass(props.device, render)
     }
 
     return {
@@ -29,7 +28,7 @@ interface Renderer {
 }
 
 function initRender(
-    { device, canvas }: GPUTarget,
+    { device, context }: GPUCanvas,
     depthTexture: GPUTexture
 ): Renderer {
     const encoder = device.createCommandEncoder()
@@ -37,7 +36,7 @@ function initRender(
         colorAttachments: [
             {
                 // @location(0), see fragment shader
-                view: canvas.context.getCurrentTexture().createView(),
+                view: context.getCurrentTexture().createView(),
                 loadOp: 'clear',
                 clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1 },
                 storeOp: 'store',
@@ -53,7 +52,7 @@ function initRender(
     return { encoder, pass }
 }
 
-function submitPass({ device }: GPUTarget, { encoder, pass }: Renderer) {
+function submitPass(device: GPUDevice, { encoder, pass }: Renderer) {
     pass.end()
     const commandBuffer = encoder.finish()
     device.queue.submit([commandBuffer])

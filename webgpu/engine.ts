@@ -5,47 +5,37 @@ import basic from './shader/basic.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { useCamera } from './camera.ts'
-import { useGPU, gpuCanvas, GPUTarget } from './target.ts'
+import { useGPU, gpuCanvas, GPU } from './target.ts'
 import { render, drawObject } from './render.ts'
 
 async function moonBow() {
     const gpu = await useGPU()
 
-    const target1 = getTarget({
+    instance({
         gpu: gpu,
         canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+        shader: shader,
     })
 
-    const target2 = getTarget({
+    instance({
         gpu: gpu,
         canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+        shader: basic,
     })
-
-    instance(target1, shader)
-    instance(target2, basic)
 }
 
-function getTarget({
-    canvas,
+function instance({
     gpu,
+    canvas,
+    shader,
 }: {
+    gpu: GPU
     canvas: HTMLCanvasElement
-    gpu: {
-        device: GPUDevice
-        adapter: GPUAdapter
-    }
+    shader: string
 }) {
-    return {
-        device: gpu.device,
-        adapter: gpu.adapter,
-        canvas: gpuCanvas(gpu.device, canvas),
-    }
-}
-
-function instance(gpu: GPUTarget, shader: string) {
     const camera = useCamera({
         device: gpu.device,
-        aspect: gpu.canvas.element.width / gpu.canvas.element.height,
+        aspect: canvas.width / canvas.height,
     })
 
     const geometry = cube({
@@ -72,13 +62,17 @@ function instance(gpu: GPUTarget, shader: string) {
     const time = uTime(gpu.device)
     const intensity = f32(gpu.device, 0.01)
 
-    const pipeline = usePipeline(gpu, {
+    const target = gpuCanvas(gpu.device, canvas)
+
+    // Can we package the pipeline and the render function togheter in a way that also lets us decouple them
+
+    const pipeline = usePipeline(target, {
         shader: shader,
         wireframe: true,
         uniforms: [time, intensity, camera],
     })
 
-    render(gpu).frame(({ pass }) => {
+    render(target).frame(({ pass }) => {
         time.update()
         camera.update({
             position: [0, 0, 7],

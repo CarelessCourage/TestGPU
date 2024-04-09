@@ -1,4 +1,4 @@
-import type { GPUTarget } from './target.ts'
+import type { GPUCanvas } from './target.ts'
 import { bufferLayout } from './geometry/utils.ts'
 
 interface PipelineOptions {
@@ -12,8 +12,13 @@ export interface Pipeline {
     bindGroup: GPUBindGroup
 }
 
+interface PipelineProps {
+    device: GPUDevice
+    canvas: GPUCanvas
+}
+
 export function usePipeline(
-    { device, canvas }: GPUTarget,
+    { device, format }: GPUCanvas,
     { uniforms, shader, wireframe = false }: PipelineOptions
 ): Pipeline {
     const entries = getEntries(device, uniforms)
@@ -36,7 +41,7 @@ export function usePipeline(
         fragment: {
             module: cellShaderModule,
             entryPoint: 'fragmentMain',
-            targets: [{ format: canvas.format }],
+            targets: [{ format }],
         },
         primitive: {
             topology: wireframe ? 'line-list' : 'triangle-list',

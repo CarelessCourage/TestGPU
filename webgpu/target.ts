@@ -1,7 +1,10 @@
-export interface GPUTarget {
+interface GPUTarget extends GPU {
+    canvas: GPUCanvas
+}
+
+export interface GPU {
     device: GPUDevice
     adapter: GPUAdapter
-    canvas: GPUCanvas
 }
 
 export async function gpuTarget(): Promise<GPUTarget> {
@@ -26,10 +29,11 @@ export async function useGPU() {
     }
 }
 
-interface GPUCanvas {
+export interface GPUCanvas {
     element: HTMLCanvasElement
     context: GPUCanvasContext
     format: GPUTextureFormat
+    device: GPUDevice
 }
 
 export function gpuCanvas(
@@ -50,5 +54,6 @@ export function gpuCanvas(
         element: canvas,
         context: context,
         format: canvasFormat,
+        device: device,
     }
 }
