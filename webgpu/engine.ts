@@ -24,19 +24,15 @@ async function moonBow() {
     })
 }
 
-function instance({
-    gpu,
-    canvas,
-    shader,
-}: {
+interface Instance {
     gpu: GPU
     canvas: HTMLCanvasElement
     shader: string
-}) {
-    const camera = useCamera({
-        device: gpu.device,
-        aspect: canvas.width / canvas.height,
-    })
+}
+
+function instance({ gpu, canvas, shader }: Instance) {
+    const target = gpuCanvas(gpu.device, canvas)
+    const camera = useCamera(target)
 
     const geometry = cube({
         device: gpu.device,
@@ -62,29 +58,31 @@ function instance({
     const time = uTime(gpu.device)
     const intensity = f32(gpu.device, 0.01)
 
-    const target = gpuCanvas(gpu.device, canvas)
-
     // Can we package the pipeline and the render function togheter in a way that also lets us decouple them
-
     const pipeline = usePipeline(target, {
         shader: shader,
-        wireframe: true,
+        wireframe: false,
         uniforms: [time, intensity, camera],
     })
 
-    render(target).frame(({ pass }) => {
+    // Need to figure out how to decouple when frame is rendered
+
+    // Either pipeline.render, or target.render
+    render(target, pipeline).frame(({ pass }) => {
         time.update()
         camera.update({
             position: [0, 0, 7],
             target: [0, 0, 0],
-            rotation: 1,
+            rotation: 0,
         })
         geometry.update({
             position: [0, 0, 0],
         })
-        drawObject(pass, pipeline, geometry)
-        drawObject(pass, pipeline, geometry2)
-        drawObject(pass, pipeline, geometry3)
+
+        // These could be geometry.draw
+        drawObject(pass, geometry)
+        drawObject(pass, geometry2)
+        drawObject(pass, geometry3)
     })
 }
 

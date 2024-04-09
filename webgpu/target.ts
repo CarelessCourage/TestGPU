@@ -34,6 +34,7 @@ export interface GPUCanvas {
     context: GPUCanvasContext
     format: GPUTextureFormat
     device: GPUDevice
+    aspect: number
 }
 
 export function gpuCanvas(
@@ -55,5 +56,6 @@ export function gpuCanvas(
         context: context,
         format: canvasFormat,
         device: device,
+        aspect: canvas.width / canvas.height,
     }
 }

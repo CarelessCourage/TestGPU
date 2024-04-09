@@ -2,7 +2,7 @@ import type { GPUCanvas } from './target.ts'
 import type { Pipeline } from './pipeline.ts'
 import type { GeoObject } from './geometry/utils.ts'
 
-export function render(props: GPUCanvas) {
+export function render(props: GPUCanvas, pipeline: Pipeline) {
     const depthTexture = props.device.createTexture({
         size: [props.element.width, props.element.height],
         format: 'depth24plus',
@@ -11,6 +11,7 @@ export function render(props: GPUCanvas) {
 
     function frame(callback: (render: Renderer) => void) {
         const render = initRender(props, depthTexture)
+        applyPipeline(render.pass, pipeline)
         callback(render)
         submitPass(props.device, render)
     }
@@ -58,15 +59,7 @@ function submitPass(device: GPUDevice, { encoder, pass }: Renderer) {
     device.queue.submit([commandBuffer])
 }
 
-export function drawObject(
-    pass: GPURenderPassEncoder,
-    pipeline: Pipeline,
-    box: GeoObject
-) {
-    // Pass Pipeline
-    pass.setPipeline(pipeline.pipeline)
-    pass.setBindGroup(0, pipeline.bindGroup)
-
+export function drawObject(pass: GPURenderPassEncoder, box: GeoObject) {
     // Set Geometry
     pass.setVertexBuffer(0, box.buffer.vertices)
     pass.setVertexBuffer(1, box.buffer.normals)
@@ -75,4 +68,10 @@ export function drawObject(
     // Draw Geometry
     pass.setIndexBuffer(box.indices, 'uint16')
     pass.drawIndexed(box.indicesCount, 1, 0, 0, 0)
+}
+
+export function applyPipeline(pass: GPURenderPassEncoder, pipeline: Pipeline) {
+    // Pass Pipeline
+    pass.setPipeline(pipeline.pipeline)
+    pass.setBindGroup(0, pipeline.bindGroup)
 }

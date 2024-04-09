@@ -74,6 +74,8 @@ function geoCube(options?: ModelOptions): Geometry {
     // helper variables
     let numberOfVertices = 0
 
+    // TODO: prop to decide number of faces
+
     // build each side of the box geometry
     buildPlane(
         'z',
