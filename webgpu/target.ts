@@ -33,7 +33,7 @@ interface GPUCanvas {
 }
 
 export function gpuCanvas(
-    device,
+    device: GPUDevice,
     canvas: HTMLCanvasElement | null = document.querySelector('canvas')
 ): GPUCanvas {
     if (!canvas) throw new Error('No canvas found.')

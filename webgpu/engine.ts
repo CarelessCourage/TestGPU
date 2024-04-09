@@ -11,27 +11,43 @@ import { render, drawObject } from './render.ts'
 async function moonBow() {
     const gpu = await useGPU()
 
-    const target1 = {
-        device: gpu.device,
-        adapter: gpu.adapter,
-        canvas: gpuCanvas(gpu.device),
-    }
+    const target1 = getTarget({
+        gpu: gpu,
+        canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+    })
 
-    const target2 = {
-        device: gpu.device,
-        adapter: gpu.adapter,
-        canvas: gpuCanvas(
-            gpu.device,
-            document.querySelector('canvas#two') as HTMLCanvasElement
-        ),
-    }
+    const target2 = getTarget({
+        gpu: gpu,
+        canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+    })
 
     instance(target1, shader)
     instance(target2, basic)
 }
 
+function getTarget({
+    canvas,
+    gpu,
+}: {
+    canvas: HTMLCanvasElement
+    gpu: {
+        device: GPUDevice
+        adapter: GPUAdapter
+    }
+}) {
+    return {
+        device: gpu.device,
+        adapter: gpu.adapter,
+        canvas: gpuCanvas(gpu.device, canvas),
+    }
+}
+
 function instance(gpu: GPUTarget, shader: string) {
-    const camera = useCamera(gpu)
+    const camera = useCamera({
+        device: gpu.device,
+        aspect: gpu.canvas.element.width / gpu.canvas.element.height,
+    })
+
     const geometry = cube({
         device: gpu.device,
         resolution: 15,

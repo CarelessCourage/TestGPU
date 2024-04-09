@@ -16,7 +16,12 @@ interface CameraInput {
     rotation: number | [number, number, number]
 }
 
-export function useCamera(gpu: GPUTarget) {
+interface CameraProps {
+    device: GPUDevice
+    aspect: number
+}
+
+export function useCamera(props: CameraProps) {
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
     const uniformBufferSize = offset + matrixSize
@@ -30,8 +35,8 @@ export function useCamera(gpu: GPUTarget) {
     function update(buffer: GPUBuffer, options?: Partial<CameraInput>) {
         const o = optionsFallback(options)
         const appliedRotation = rotateCamera(o)
-        const matrix = mvpMatrix(gpu, appliedRotation)
-        gpu.device.queue.writeBuffer(
+        const matrix = mvpMatrix(props.aspect, appliedRotation)
+        props.device.queue.writeBuffer(
             buffer,
             0,
             matrix.buffer,
@@ -40,7 +45,7 @@ export function useCamera(gpu: GPUTarget) {
         )
     }
 
-    const uniform = uniformBuffer(gpu.device, {
+    const uniform = uniformBuffer(props.device, {
         label: 'Camera View/Projection Matrix Buffer',
         size: uniformBufferSize,
         update: update,
@@ -53,8 +58,8 @@ export function useCamera(gpu: GPUTarget) {
     }
 }
 
-function mvpMatrix(gpu: GPUTarget, options: CameraOptions) {
-    const cameraView = cameraMatrix(gpu, options)
+function mvpMatrix(aspect: number, options: CameraOptions) {
+    const cameraView = cameraMatrix(aspect, options)
     const model = modelMatrix()
 
     const mvpMatrix = mat4.create()
@@ -62,13 +67,12 @@ function mvpMatrix(gpu: GPUTarget, options: CameraOptions) {
     return mvpMatrix as Float32Array
 }
 
-function cameraMatrix(gpu: GPUTarget, options: CameraOptions) {
+function cameraMatrix(aspect: number, options: CameraOptions) {
     const position = options.position
     const target = options.target
 
     const up = vec3.fromValues(0, 1, 0)
     const fov = Math.PI / 4 // maybe 2 instead
-    const aspect = gpu.canvas.element.width / gpu.canvas.element.height
     const near = 0.1
     const far = 1000.0
 
