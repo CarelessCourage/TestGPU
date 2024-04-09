@@ -74,7 +74,7 @@ function instance(gpu: GPUTarget, shader: string) {
 
     const pipeline = usePipeline(gpu, {
         shader: shader,
-        wireframe: false,
+        wireframe: true,
         uniforms: [time, intensity, camera],
     })
 

@@ -1,7 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix'
 import { uniformBuffer } from './pipeline'
 import { modelMatrix } from './geometry/utils'
-import type { GPUTarget } from './target'
 import { quaternion, rotationSetting } from './rotate'
 
 interface CameraOptions {
@@ -99,15 +98,17 @@ function optionsFallback(options?: Partial<CameraInput>) {
         : defaultCameraOptions
 
     const p = o.position
-    if (typeof p !== 'number')
+    if (typeof p !== 'number') {
         return {
             position: vec3.fromValues(p[0], p[1], p[2]),
             target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
             rotation: rotationSetting(o.rotation),
         }
-    return {
-        position: vec3.fromValues(p, p, p),
-        target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
-        rotation: rotationSetting(o.rotation),
+    } else {
+        return {
+            position: vec3.fromValues(p, p, p),
+            target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
+            rotation: rotationSetting(o.rotation),
+        }
     }
 }
