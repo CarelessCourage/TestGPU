@@ -5,7 +5,7 @@ export interface GPUTarget {
 }
 
 export async function gpuTarget(): Promise<GPUTarget> {
-    const { device, adapter } = await gpuDevice()
+    const { device, adapter } = await useGPU()
     const canvas = gpuCanvas(device)
     return {
         device: device,
@@ -14,7 +14,7 @@ export async function gpuTarget(): Promise<GPUTarget> {
     }
 }
 
-export async function gpuDevice() {
+export async function useGPU() {
     if (!navigator.gpu) throw new Error('WebGPU not supported on this browser.')
     const adapter = await navigator.gpu.requestAdapter()
     if (!adapter) throw new Error('No appropriate GPUAdapter found.')

@@ -1,15 +1,36 @@
-import { mat4, vec3, quat } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { uniformBuffer } from './pipeline'
 import { modelMatrix } from './geometry/utils'
 import type { GPUTarget } from './target'
+import { quaternion, rotationSetting } from './rotate'
+
+interface CameraOptions {
+    position: vec3
+    target: vec3
+    rotation: vec3
+}
+
+interface CameraInput {
+    position: number | [number, number, number]
+    target: number | [number, number, number]
+    rotation: number | [number, number, number]
+}
 
 export function useCamera(gpu: GPUTarget) {
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
     const uniformBufferSize = offset + matrixSize
 
-    function update(buffer: GPUBuffer, options?: CameraOptions) {
-        const matrix = mvpMatrix(gpu, options)
+    // Classes contain state
+    const angle = new quaternion()
+    function rotateCamera(options: CameraOptions) {
+        return angle.rotate(options) as CameraOptions
+    }
+
+    function update(buffer: GPUBuffer, options?: Partial<CameraInput>) {
+        const o = optionsFallback(options)
+        const appliedRotation = rotateCamera(o)
+        const matrix = mvpMatrix(gpu, appliedRotation)
         gpu.device.queue.writeBuffer(
             buffer,
             0,
@@ -25,48 +46,14 @@ export function useCamera(gpu: GPUTarget) {
         update: update,
     })
 
-    const rot = rotate()
-
-    function rotateY({ speed } = { speed: 1 }) {
-        const newPosition = rot.matrix({ speed })
-        update(uniform.buffer, {
-            position: [newPosition[0], newPosition[1], newPosition[2]],
-            target: [0, 0, 0],
-        })
-    }
-
+    // Basically overwrites the generic update prop so we can pass in the camera options
     return {
         ...uniform,
-        update: (options?: CameraOptions) => update(uniform.buffer, options),
-        rotate: rotateY,
+        update: (options?: CameraInput) => update(uniform.buffer, options),
     }
 }
 
-function rotate() {
-    let angle = 0 // Define the initial angle of rotation.
-    function matrix({ speed } = { speed: 1 }) {
-        angle += (speed * Math.PI) / 180 // Increment the angle of rotation on every frame.
-        let position = vec3.fromValues(0, 0, 5) // Current position of the camera.
-
-        // Create a quaternion to represent the rotation.
-        let quaternion = quat.create()
-        quat.setAxisAngle(quaternion, vec3.fromValues(1, 0, 0), angle) // Set the rotation around the X-axis.
-
-        // Convert the quaternion to a rotation matrix.
-        let rotationMatrix = mat4.create()
-        mat4.fromQuat(rotationMatrix, quaternion)
-
-        // Apply the rotation to the camera position.
-        let newPosition = vec3.create()
-        vec3.transformMat4(newPosition, position, rotationMatrix)
-
-        return newPosition
-    }
-
-    return { matrix }
-}
-
-function mvpMatrix(gpu: GPUTarget, options?: CameraOptions) {
+function mvpMatrix(gpu: GPUTarget, options: CameraOptions) {
     const cameraView = cameraMatrix(gpu, options)
     const model = modelMatrix()
 
@@ -75,25 +62,10 @@ function mvpMatrix(gpu: GPUTarget, options?: CameraOptions) {
     return mvpMatrix as Float32Array
 }
 
-interface CameraOptions {
-    position: number | [number, number, number]
-    target: [number, number, number]
-}
+function cameraMatrix(gpu: GPUTarget, options: CameraOptions) {
+    const position = options.position
+    const target = options.target
 
-const defaultCameraOptions: CameraOptions = {
-    position: [0, 0, 5],
-    target: [0, 0, 0],
-}
-
-function cameraMatrix(gpu: GPUTarget, options?: CameraOptions) {
-    console.log('cameraMatrix', options)
-
-    const o = optionsFallback(options)
-    const p = o.position
-    const t = o.target
-
-    const position = vec3.fromValues(p[0], p[1], p[2])
-    const target = vec3.fromValues(t[0], t[1], t[2])
     const up = vec3.fromValues(0, 1, 0)
     const fov = Math.PI / 4 // maybe 2 instead
     const aspect = gpu.canvas.element.width / gpu.canvas.element.height
@@ -111,14 +83,27 @@ function cameraMatrix(gpu: GPUTarget, options?: CameraOptions) {
     return viewProjectionMatrix as Float32Array
 }
 
-function optionsFallback(options?: CameraOptions) {
+const defaultCameraOptions: CameraInput = {
+    position: [0, 0, 5],
+    target: [0, 0, 0],
+    rotation: 0,
+}
+
+function optionsFallback(options?: Partial<CameraInput>) {
     const o = options
         ? { ...defaultCameraOptions, ...options }
         : defaultCameraOptions
+
     const p = o.position
-    if (typeof p !== 'number') return o
+    if (typeof p !== 'number')
+        return {
+            position: vec3.fromValues(p[0], p[1], p[2]),
+            target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
+            rotation: rotationSetting(o.rotation),
+        }
     return {
-        position: [p, p, p],
-        target: o.target,
+        position: vec3.fromValues(p, p, p),
+        target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
+        rotation: rotationSetting(o.rotation),
     }
 }

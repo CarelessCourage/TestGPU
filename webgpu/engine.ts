@@ -5,29 +5,29 @@ import basic from './shader/basic.wgsl'
 import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { useCamera } from './camera.ts'
-import { gpuDevice, gpuCanvas, GPUTarget } from './target.ts'
+import { useGPU, gpuCanvas, GPUTarget } from './target.ts'
 import { render, drawObject } from './render.ts'
 
 async function moonBow() {
-    const target = await gpuDevice()
+    const gpu = await useGPU()
 
-    const gpu1 = {
-        device: target.device,
-        adapter: target.adapter,
-        canvas: gpuCanvas(target.device),
+    const target1 = {
+        device: gpu.device,
+        adapter: gpu.adapter,
+        canvas: gpuCanvas(gpu.device),
     }
 
-    const gpu2 = {
-        device: target.device,
-        adapter: target.adapter,
+    const target2 = {
+        device: gpu.device,
+        adapter: gpu.adapter,
         canvas: gpuCanvas(
-            target.device,
+            gpu.device,
             document.querySelector('canvas#two') as HTMLCanvasElement
         ),
     }
 
-    instance(gpu1, shader)
-    instance(gpu2, basic)
+    instance(target1, shader)
+    instance(target2, basic)
 }
 
 function instance(gpu: GPUTarget, shader: string) {
@@ -64,11 +64,11 @@ function instance(gpu: GPUTarget, shader: string) {
 
     render(gpu).frame(({ pass }) => {
         time.update()
-        // camera.update({
-        //     position: [3, 1, 5],
-        //     target: [0, 0, 0],
-        // })
-        camera.rotate()
+        camera.update({
+            position: [0, 0, 7],
+            target: [0, 0, 0],
+            rotation: 1,
+        })
         geometry.update({
             position: [0, 0, 0],
         })
