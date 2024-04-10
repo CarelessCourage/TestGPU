@@ -6,7 +6,7 @@ import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { useCamera } from './camera.ts'
 import { useGPU, gpuCanvas, GPU } from './target.ts'
-import { render, drawObject } from './render.ts'
+import { render } from './render.ts'
 
 async function moonBow() {
     const gpu = await useGPU()
@@ -69,8 +69,7 @@ function instance({ gpu, canvas, shader }: Instance) {
 
     let rot = 0
 
-    // Either pipeline.render, or target.render
-    render(target, pipeline).frame(({ pass }) => {
+    target.render(pipeline).frame(({ pass }) => {
         time.update()
         rot += 0.05
         camera.update({

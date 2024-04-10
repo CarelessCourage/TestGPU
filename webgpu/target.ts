@@ -1,3 +1,6 @@
+import { render } from './render.ts'
+import type { RenderOutput } from './render.ts'
+import type { Pipeline } from './pipeline.ts'
 interface GPUTarget extends GPU {
     canvas: GPUCanvas
 }
@@ -35,27 +38,44 @@ export interface GPUCanvas {
     format: GPUTextureFormat
     device: GPUDevice
     aspect: number
+    render: (pipeline: Pipeline) => RenderOutput
 }
 
 export function gpuCanvas(
     device: GPUDevice,
-    canvas: HTMLCanvasElement | null = document.querySelector('canvas')
+    canvasQuery: HTMLCanvasElement | null = document.querySelector('canvas')
 ): GPUCanvas {
+    const { context, format, canvas } = preflightChecks(canvasQuery)
+
+    context.configure({
+        device: device,
+        format: format,
+    })
+
+    const target = {
+        element: canvas,
+        context: context,
+        format: format,
+        device: device,
+        aspect: canvas.width / canvas.height,
+        render: r,
+    }
+
+    function r(pipeline: Pipeline) {
+        return render(target, pipeline)
+    }
+
+    return target
+}
+
+function preflightChecks(canvas: HTMLCanvasElement | null) {
     if (!canvas) throw new Error('No canvas found.')
     const context = canvas.getContext('webgpu')
     const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
     if (!context) throw new Error('No context found.')
-
-    context.configure({
-        device: device,
-        format: canvasFormat,
-    })
-
     return {
-        element: canvas,
+        canvas: canvas,
         context: context,
         format: canvasFormat,
-        device: device,
-        aspect: canvas.width / canvas.height,
     }
 }

@@ -12,11 +12,6 @@ export interface Pipeline {
     bindGroup: GPUBindGroup
 }
 
-interface PipelineProps {
-    device: GPUDevice
-    canvas: GPUCanvas
-}
-
 export function usePipeline(
     { device, format }: GPUCanvas,
     { uniforms, shader, wireframe = false }: PipelineOptions

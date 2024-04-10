@@ -1,8 +1,11 @@
 import type { GPUCanvas } from './target.ts'
 import type { Pipeline } from './pipeline.ts'
-import type { GeoObject } from './geometry/utils.ts'
 
-export function render(props: GPUCanvas, pipeline: Pipeline) {
+export interface RenderOutput {
+    frame: (callback: (render: Renderer) => void) => void
+}
+
+export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
     const depthTexture = props.device.createTexture({
         size: [props.element.width, props.element.height],
         format: 'depth24plus',
