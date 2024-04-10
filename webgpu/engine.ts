@@ -91,10 +91,9 @@ function instance({ gpu, canvas, shader }: Instance) {
             rotation: [0, rot - 0.8, 0],
         })
 
-        // These could be geometry.draw
-        drawObject(pass, geometry)
-        drawObject(pass, geometry2)
-        drawObject(pass, geometry3)
+        geometry.draw(pass)
+        geometry2.draw(pass)
+        geometry3.draw(pass)
     })
 }
 

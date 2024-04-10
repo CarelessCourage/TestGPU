@@ -59,15 +59,23 @@ function submitPass(device: GPUDevice, { encoder, pass }: Renderer) {
     device.queue.submit([commandBuffer])
 }
 
-export function drawObject(pass: GPURenderPassEncoder, box: GeoObject) {
+interface Object {
+    vertices: GPUBuffer
+    normals: GPUBuffer
+    uvs: GPUBuffer
+    indices: GPUBuffer
+    indicesCount: number
+}
+
+export function drawObject(pass: GPURenderPassEncoder, object: Object) {
     // Set Geometry
-    pass.setVertexBuffer(0, box.buffer.vertices)
-    pass.setVertexBuffer(1, box.buffer.normals)
-    pass.setVertexBuffer(2, box.buffer.uvs)
+    pass.setVertexBuffer(0, object.vertices)
+    pass.setVertexBuffer(1, object.normals)
+    pass.setVertexBuffer(2, object.uvs)
 
     // Draw Geometry
-    pass.setIndexBuffer(box.indices, 'uint16')
-    pass.drawIndexed(box.indicesCount, 1, 0, 0, 0)
+    pass.setIndexBuffer(object.indices, 'uint16')
+    pass.drawIndexed(object.indicesCount, 1, 0, 0, 0)
 }
 
 export function applyPipeline(pass: GPURenderPassEncoder, pipeline: Pipeline) {

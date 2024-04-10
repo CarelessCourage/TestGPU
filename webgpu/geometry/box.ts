@@ -8,6 +8,7 @@ import {
     ensure3Values,
 } from './utils.ts'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.ts'
+import { drawObject } from '../render.ts'
 
 interface CubeOptions extends ModelOptions {
     device: GPUDevice
@@ -16,16 +17,32 @@ interface CubeOptions extends ModelOptions {
 export function cube(options: CubeOptions): GeoObject {
     const geo = geoCube(options)
     const buffer = cubeBuffer({ options, geo })
+    const indices = indicesBuffer({
+        device: options.device,
+        indices: geo.indices,
+    })
+
+    function draw(pass: GPURenderPassEncoder) {
+        drawObject(pass, {
+            vertices: buffer.vertices,
+            normals: buffer.normals,
+            uvs: buffer.uvs,
+            indices: indices,
+            indicesCount: geo.indices.length,
+        })
+    }
+
     return {
         buffer,
         geometry: geo,
-        update: (options: ModelOptions) => buffer.update(options),
         vertexCount: geo.vertices.length,
         indicesCount: geo.indices.length,
-        indices: indicesBuffer({
-            device: options.device,
-            indices: geo.indices,
-        }),
+        indices: indices,
+        draw: draw,
+        update: (options: ModelOptions) => {
+            buffer.update(options)
+            return { draw }
+        },
     }
 }
 

@@ -5,8 +5,11 @@ export interface GeoObject {
     vertexCount: number
     indicesCount: number
     indices: GPUBuffer
-    update: (options: ModelOptions) => void
     geometry: Geometry
+    draw: (pass: GPURenderPassEncoder) => void
+    update: (options: ModelOptions) => {
+        draw: (pass: GPURenderPassEncoder) => void
+    }
 }
 
 export interface GeoBuffers {
