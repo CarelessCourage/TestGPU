@@ -3,6 +3,9 @@ import type { Pipeline } from './pipeline.ts'
 
 export interface RenderOutput {
     frame: (callback: (render: Renderer) => void) => void
+    scene: (callback: (render: Renderer) => void) => {
+        draw: () => void
+    }
 }
 
 export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
@@ -12,7 +15,11 @@ export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
 
-    function frame(callback: (render: Renderer) => void) {
+    const scene = (callback: (render: Renderer) => void) => ({
+        draw: () => draw(callback),
+    })
+
+    function draw(callback: (render: Renderer) => void) {
         const render = initRender(props, depthTexture)
         applyPipeline(render.pass, pipeline)
         callback(render)
@@ -20,10 +27,15 @@ export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
     }
 
     return {
+        scene: scene,
         frame: (callback: (render: Renderer) => void) => {
-            setInterval(() => frame(callback), 1000 / 60)
+            setInterval(() => scene(callback).draw(), 1000 / 60)
         },
     }
+}
+
+function frame(callback: (render: Renderer) => void) {
+    setInterval(() => callback, 1000 / 60)
 }
 
 interface Renderer {

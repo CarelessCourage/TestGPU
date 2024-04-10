@@ -6,7 +6,6 @@ import { usePipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
 import { useCamera } from './camera.ts'
 import { useGPU, gpuCanvas, GPU } from './target.ts'
-import { render } from './render.ts'
 
 async function moonBow() {
     const gpu = await useGPU()
@@ -67,11 +66,8 @@ function instance({ gpu, canvas, shader }: Instance) {
         uniforms: [time, intensity, camera],
     })
 
-    // Need to figure out how to decouple when frame is rendered
-
     let rot = 0
-
-    target.render(pipeline).frame(({ pass }) => {
+    const scene = target.render(pipeline).scene(({ pass }) => {
         time.update()
         rot += 0.05
 
@@ -87,6 +83,8 @@ function instance({ gpu, canvas, shader }: Instance) {
             rotation: [0, rot - 0.8, 0],
         })
     })
+
+    setInterval(() => scene.draw(), 1000 / 60)
 }
 
 moonBow()
