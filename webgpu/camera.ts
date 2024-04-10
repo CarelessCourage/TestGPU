@@ -15,23 +15,26 @@ interface CameraInput {
     rotation: number | [number, number, number]
 }
 
-interface CameraProps {
+interface CameraTarget {
     device: GPUDevice
     aspect: number
 }
 
-export function useCamera(props: CameraProps) {
+export function useCamera(
+    target: CameraTarget,
+    options?: Partial<CameraInput>
+) {
     const matrixSize = 4 * 16 // 4x4 matrix
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
     const uniformBufferSize = offset + matrixSize
 
     function update(buffer: GPUBuffer, options?: Partial<CameraInput>) {
         const o = optionsFallback(options)
-        const matrix = mvpMatrix(props.aspect, {
+        const matrix = mvpMatrix(target.aspect, {
             ...o,
             position: quaternion(o),
         })
-        props.device.queue.writeBuffer(
+        target.device.queue.writeBuffer(
             buffer,
             0,
             matrix.buffer,
@@ -40,11 +43,15 @@ export function useCamera(props: CameraProps) {
         )
     }
 
-    const uniform = uniformBuffer(props.device, {
+    const uniform = uniformBuffer(target.device, {
         label: 'Camera View/Projection Matrix Buffer',
         size: uniformBufferSize,
         update: update,
     })
+
+    if (options) {
+        update(uniform.buffer, options)
+    }
 
     // Basically overwrites the generic update prop so we can pass in the camera options
     return {
@@ -83,7 +90,7 @@ function cameraMatrix(aspect: number, options: CameraOptions) {
 }
 
 const defaultCameraOptions: CameraInput = {
-    position: [0, 0, 5],
+    position: [0, 0, 7],
     target: [0, 0, 0],
     rotation: 0,
 }

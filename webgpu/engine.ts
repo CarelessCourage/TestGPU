@@ -32,7 +32,9 @@ interface Instance {
 
 function instance({ gpu, canvas, shader }: Instance) {
     const target = gpuCanvas(gpu.device, canvas)
-    const camera = useCamera(target)
+    const camera = useCamera(target, {
+        position: [0, 0, 7],
+    })
 
     const geometry = cube({
         device: gpu.device,
@@ -72,11 +74,6 @@ function instance({ gpu, canvas, shader }: Instance) {
     target.render(pipeline).frame(({ pass }) => {
         time.update()
         rot += 0.05
-        camera.update({
-            position: [0, 0, 7],
-            target: [0, 0, 0],
-            rotation: [0, 0, 0],
-        })
 
         geometry2.set(pass, {
             rotation: [0, rot, 0],
