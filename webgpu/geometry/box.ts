@@ -32,12 +32,18 @@ export function cube(options: CubeOptions): GeoObject {
         })
     }
 
+    function set(pass: GPURenderPassEncoder, options: ModelOptions) {
+        buffer.update(options)
+        draw(pass)
+    }
+
     return {
         buffer,
         geometry: geo,
         vertexCount: geo.vertices.length,
         indicesCount: geo.indices.length,
         indices: indices,
+        set: set,
         draw: draw,
         update: (options: ModelOptions) => {
             buffer.update(options)

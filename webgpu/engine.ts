@@ -79,21 +79,17 @@ function instance({ gpu, canvas, shader }: Instance) {
             rotation: [0, 0, 0],
         })
 
-        geometry2.update({
+        geometry2.set(pass, {
             rotation: [0, rot, 0],
         })
 
-        geometry.update({
+        geometry.set(pass, {
             rotation: [0, rot - 0.4, 0],
         })
 
-        geometry3.update({
+        geometry3.set(pass, {
             rotation: [0, rot - 0.8, 0],
         })
-
-        geometry.draw(pass)
-        geometry2.draw(pass)
-        geometry3.draw(pass)
     })
 }
 

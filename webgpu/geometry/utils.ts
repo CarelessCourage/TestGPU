@@ -6,6 +6,7 @@ export interface GeoObject {
     indicesCount: number
     indices: GPUBuffer
     geometry: Geometry
+    set: (pass: GPURenderPassEncoder, options: ModelOptions) => void
     draw: (pass: GPURenderPassEncoder) => void
     update: (options: ModelOptions) => {
         draw: (pass: GPURenderPassEncoder) => void
