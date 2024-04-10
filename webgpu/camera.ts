@@ -25,16 +25,12 @@ export function useCamera(props: CameraProps) {
     const offset = 256 // uniformBindGroup offset must be 256-byte aligned
     const uniformBufferSize = offset + matrixSize
 
-    // Classes contain state
-    const angle = new quaternion()
-    function rotateCamera(options: CameraOptions) {
-        return angle.rotate(options) as CameraOptions
-    }
-
     function update(buffer: GPUBuffer, options?: Partial<CameraInput>) {
         const o = optionsFallback(options)
-        const appliedRotation = rotateCamera(o)
-        const matrix = mvpMatrix(props.aspect, appliedRotation)
+        const matrix = mvpMatrix(props.aspect, {
+            ...o,
+            position: quaternion(o),
+        })
         props.device.queue.writeBuffer(
             buffer,
             0,

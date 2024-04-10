@@ -5,33 +5,28 @@ interface RotateOptions {
     position: vec3
 }
 
-export class quaternion {
-    public degree = 0
-    public rotate(options: RotateOptions) {
-        this.degree += (options.rotation[1] * Math.PI) / 180
+//this.degree += (options.rotation[1] * Math.PI) / 180
+export function quaternion(options: RotateOptions) {
+    let quaternion = quat.create()
 
-        let quaternion = quat.create()
-        quat.setAxisAngle(
-            quaternion,
-            vec3.fromValues(
-                valueHAstoBe1or0(options.rotation[0]),
-                valueHAstoBe1or0(options.rotation[1]),
-                valueHAstoBe1or0(options.rotation[2])
-            ),
-            this.degree
-        )
+    let quatX = quat.create()
+    let quatY = quat.create()
+    let quatZ = quat.create()
 
-        let rotationMatrix = mat4.create()
-        mat4.fromQuat(rotationMatrix, quaternion)
+    quat.setAxisAngle(quatX, vec3.fromValues(1, 0, 0), options.rotation[0])
+    quat.setAxisAngle(quatY, vec3.fromValues(0, 1, 0), options.rotation[1])
+    quat.setAxisAngle(quatZ, vec3.fromValues(0, 0, 1), 0) // Bro, what the fuck would rotating around z even be
 
-        let newPosition = vec3.create()
-        vec3.transformMat4(newPosition, options.position, rotationMatrix)
+    quat.multiply(quaternion, quatX, quatY)
+    quat.multiply(quaternion, quaternion, quatZ)
 
-        return {
-            ...options,
-            position: newPosition,
-        }
-    }
+    let rotationMatrix = mat4.create()
+    mat4.fromQuat(rotationMatrix, quaternion)
+
+    let newPosition = vec3.create()
+    vec3.transformMat4(newPosition, options.position, rotationMatrix)
+
+    return newPosition
 }
 
 export function rotationSetting(value: number | [number, number, number]) {

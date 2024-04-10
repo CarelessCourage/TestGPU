@@ -37,21 +37,21 @@ function instance({ gpu, canvas, shader }: Instance) {
     const geometry = cube({
         device: gpu.device,
         resolution: 15,
-        size: [1, 0.2, 0.05],
+        size: [1, 0.335, 0.05],
         position: [0, 0, 0],
     })
 
     const geometry2 = cube({
         device: gpu.device,
         resolution: 15,
-        size: [1, 0.2, 0.05],
+        size: [1, 0.335, 0.05],
         position: [0, 1, 0],
     })
 
     const geometry3 = cube({
         device: gpu.device,
         resolution: 15,
-        size: [1, 0.2, 0.05],
+        size: [1, 0.335, 0.05],
         position: [0, -1, 0],
     })
 
@@ -67,16 +67,28 @@ function instance({ gpu, canvas, shader }: Instance) {
 
     // Need to figure out how to decouple when frame is rendered
 
+    let rot = 0
+
     // Either pipeline.render, or target.render
     render(target, pipeline).frame(({ pass }) => {
         time.update()
+        rot += 0.05
         camera.update({
             position: [0, 0, 7],
             target: [0, 0, 0],
-            rotation: 0,
+            rotation: [0, 0, 0],
         })
+
+        geometry2.update({
+            rotation: [0, rot, 0],
+        })
+
         geometry.update({
-            position: [0, 0, 0],
+            rotation: [0, rot - 0.4, 0],
+        })
+
+        geometry3.update({
+            rotation: [0, rot - 0.8, 0],
         })
 
         // These could be geometry.draw

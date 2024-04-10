@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { ensure3Values } from './box'
+import { rotationSetting } from '../rotate'
 export interface GeoObject {
     buffer: GeoBuffers
     vertexCount: number
@@ -88,12 +88,12 @@ export interface ModelOptions {
 
 function handleOptions(options?: ModelOptions) {
     const position = ensure3Values(options?.position ?? 0)
-    const rotation = ensure3Values(options?.rotation ?? 0)
+    const rotation = rotationSetting(options?.rotation ?? 0)
     const scale = ensure3Values(options?.size ?? 1)
     return {
-        position: vec3.fromValues(...position),
-        rotation: vec3.fromValues(...rotation),
-        scale: vec3.fromValues(...scale),
+        position: position,
+        rotation: rotation,
+        scale: scale,
     }
 }
 
@@ -113,4 +113,9 @@ export function modelMatrix(options?: ModelOptions) {
     mat4.scale(modelMatrix, modelMatrix, scale)
 
     return modelMatrix
+}
+
+export function ensure3Values(value: number | [number, number, number]) {
+    if (typeof value !== 'number') return vec3.fromValues(...value)
+    return vec3.fromValues(value, value, value)
 }

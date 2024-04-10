@@ -1,7 +1,13 @@
 /// <reference types="@webgpu/types" />
-import { geoBuffer, bufferLayout, indicesBuffer, modelMatrix } from './utils.ts'
+import { mat4 } from 'gl-matrix'
+import {
+    geoBuffer,
+    bufferLayout,
+    indicesBuffer,
+    modelMatrix,
+    ensure3Values,
+} from './utils.ts'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.ts'
-import type { mat4 } from 'gl-matrix'
 
 interface CubeOptions extends ModelOptions {
     device: GPUDevice
@@ -38,6 +44,7 @@ function cubeBuffer({ options, geo }: CubeBufferProps): GeoBuffers {
         const vertices = new Float32Array(geo.vertices)
         const normals = new Float32Array(geo.normals)
         const uvs = new Float32Array(geo.uvs)
+
         options.device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
         options.device.queue.writeBuffer(nBuffer, 0, normals.buffer)
         options.device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
@@ -276,13 +283,6 @@ class Vector3 {
         this.y = y
         this.z = z
     }
-}
-
-export function ensure3Values(
-    value: number | [number, number, number]
-): [number, number, number] {
-    if (typeof value !== 'number') return value
-    return [value, value, value]
 }
 
 function transformVertex(vertex: [number, number, number], matrix: mat4) {
