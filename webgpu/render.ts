@@ -1,8 +1,10 @@
 import type { GPUCanvas } from './target.ts'
 import type { Pipeline } from './pipeline.ts'
+import type { GeoBuffers } from './geometry/utils.ts'
 
 export interface RenderOutput {
     frame: (callback: (render: Renderer) => void) => void
+    draw: (callback: (render: Renderer) => void) => void
     scene: (callback: (render: Renderer) => void) => {
         draw: () => void
     }
@@ -27,6 +29,7 @@ export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
     }
 
     return {
+        draw: draw,
         scene: scene,
         frame: (callback: (render: Renderer) => void) => {
             setInterval(() => scene(callback).draw(), 1000 / 60)
@@ -82,15 +85,15 @@ interface Object {
     indicesCount: number
 }
 
-export function drawObject(pass: GPURenderPassEncoder, object: Object) {
+export function drawObject(pass: GPURenderPassEncoder, buffer: GeoBuffers) {
     // Set Geometry
-    pass.setVertexBuffer(0, object.vertices)
-    pass.setVertexBuffer(1, object.normals)
-    pass.setVertexBuffer(2, object.uvs)
+    pass.setVertexBuffer(0, buffer.vertices)
+    pass.setVertexBuffer(1, buffer.normals)
+    pass.setVertexBuffer(2, buffer.uvs)
 
     // Draw Geometry
-    pass.setIndexBuffer(object.indices, 'uint16')
-    pass.drawIndexed(object.indicesCount, 1, 0, 0, 0)
+    pass.setIndexBuffer(buffer.indices, 'uint16')
+    pass.drawIndexed(buffer.indicesCount, 1, 0, 0, 0)
 }
 
 export function applyPipeline(pass: GPURenderPassEncoder, pipeline: Pipeline) {

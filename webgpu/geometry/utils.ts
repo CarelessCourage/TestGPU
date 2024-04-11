@@ -2,9 +2,6 @@ import { mat4, vec3 } from 'gl-matrix'
 import { rotationSetting } from '../rotate'
 export interface GeoObject {
     buffer: GeoBuffers
-    vertexCount: number
-    indicesCount: number
-    indices: GPUBuffer
     geometry: Geometry
     set: (pass: GPURenderPassEncoder, options: ModelOptions) => void
     draw: (pass: GPURenderPassEncoder) => void
@@ -16,6 +13,8 @@ export interface GeoObject {
 export interface GeoBuffers {
     update: (options: ModelOptions) => void
     vertices: GPUBuffer
+    indices: GPUBuffer
+    indicesCount: number
     normals: GPUBuffer
     uvs: GPUBuffer
     layout: GPUVertexBufferLayout[]
@@ -27,6 +26,8 @@ export interface Geometry {
     colors: Float32Array
     normals: Float32Array
     uvs: Float32Array
+    vertexCount: number
+    indicesCount: number
 }
 
 interface GeoBuffer {

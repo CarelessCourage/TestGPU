@@ -10,29 +10,15 @@ import {
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.ts'
 import { drawObject } from '../render.ts'
 
-interface CubeOptions extends ModelOptions {
-    device: GPUDevice
-}
-
-export function cube(options: CubeOptions): GeoObject {
+export function cube(device: GPUDevice, options: ModelOptions): GeoObject {
     const geo = geoCube(options)
-    const buffer = cubeBuffer({ options, geo })
-    const indices = indicesBuffer({
-        device: options.device,
-        indices: geo.indices,
-    })
+    const buffer = cubeBuffer(device, options, geo)
 
-    function draw(pass: GPURenderPassEncoder) {
-        drawObject(pass, {
-            vertices: buffer.vertices,
-            normals: buffer.normals,
-            uvs: buffer.uvs,
-            indices: indices,
-            indicesCount: geo.indices.length,
-        })
-    }
+    const draw = (pass: GPURenderPassEncoder) => drawObject(pass, buffer)
 
     function set(pass: GPURenderPassEncoder, options: ModelOptions) {
+        // Lets you set the options and draw the object in one call
+        // Usefull for when the options change each draw
         buffer.update(options)
         draw(pass)
     }
@@ -40,9 +26,6 @@ export function cube(options: CubeOptions): GeoObject {
     return {
         buffer,
         geometry: geo,
-        vertexCount: geo.vertices.length,
-        indicesCount: geo.indices.length,
-        indices: indices,
         set: set,
         draw: draw,
         update: (options: ModelOptions) => {
@@ -52,15 +35,19 @@ export function cube(options: CubeOptions): GeoObject {
     }
 }
 
-interface CubeBufferProps {
-    options: CubeOptions
+function cubeBuffer(
+    device: GPUDevice,
+    options: ModelOptions,
     geo: Geometry
-}
+): GeoBuffers {
+    const vBuffer = geoBuffer({ device, data: geo.vertices })
+    const nBuffer = geoBuffer({ device, data: geo.normals })
+    const uvBuffer = geoBuffer({ device, data: geo.uvs })
 
-function cubeBuffer({ options, geo }: CubeBufferProps): GeoBuffers {
-    const vBuffer = geoBuffer({ device: options.device, data: geo.vertices })
-    const nBuffer = geoBuffer({ device: options.device, data: geo.normals })
-    const uvBuffer = geoBuffer({ device: options.device, data: geo.uvs })
+    const indices = indicesBuffer({
+        device: device,
+        indices: geo.indices,
+    })
 
     function update(o: ModelOptions) {
         const geo = geoCube({ ...options, ...o })
@@ -68,14 +55,16 @@ function cubeBuffer({ options, geo }: CubeBufferProps): GeoBuffers {
         const normals = new Float32Array(geo.normals)
         const uvs = new Float32Array(geo.uvs)
 
-        options.device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
-        options.device.queue.writeBuffer(nBuffer, 0, normals.buffer)
-        options.device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
+        device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
+        device.queue.writeBuffer(nBuffer, 0, normals.buffer)
+        device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
     }
 
     return {
         update: update,
         vertices: vBuffer,
+        indices: indices,
+        indicesCount: geo.indicesCount,
         normals: nBuffer,
         uvs: uvBuffer,
         layout: bufferLayout(),
@@ -293,6 +282,8 @@ function geoCube(options?: ModelOptions): Geometry {
         colors: new Float32Array(colors),
         normals: new Float32Array(normals),
         uvs: new Float32Array(uvs),
+        vertexCount: transformedVertices.length,
+        indicesCount: indices.length,
     }
 }
 

@@ -20,7 +20,7 @@ interface CameraTarget {
     aspect: number
 }
 
-export function getCamera(
+export function gpuCamera(
     target: CameraTarget,
     options?: Partial<CameraInput>
 ) {
@@ -49,9 +49,8 @@ export function getCamera(
         update: update,
     })
 
-    if (options) {
-        update(uniform.buffer, options)
-    }
+    // Lets you set the camera options immediately
+    if (options) update(uniform.buffer, options)
 
     // Basically overwrites the generic update prop so we can pass in the camera options
     return {
