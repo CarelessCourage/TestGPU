@@ -20,7 +20,7 @@ interface CameraTarget {
     aspect: number
 }
 
-export function useCamera(
+export function getCamera(
     target: CameraTarget,
     options?: Partial<CameraInput>
 ) {

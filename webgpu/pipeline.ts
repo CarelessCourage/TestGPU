@@ -12,7 +12,7 @@ export interface Pipeline {
     bindGroup: GPUBindGroup
 }
 
-export function usePipeline(
+export function getPipeline(
     { device, format }: GPUCanvas,
     { uniforms, shader, wireframe = false }: PipelineOptions
 ): Pipeline {

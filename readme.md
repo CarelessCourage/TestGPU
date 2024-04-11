@@ -50,3 +50,4 @@
 # Resources
 
 -   [orillusion](https://www.youtube.com/watch?v=9O2of-IjJos&list=PLVHfUzm5DIVCZxjmaZsBXEXoohzSqeCnV&index=10)
+-   [performance](https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html)

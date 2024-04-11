@@ -2,38 +2,13 @@
 import shader from './shader/shader.wgsl'
 //@ts-ignore
 import basic from './shader/basic.wgsl'
-import { usePipeline, uTime, f32 } from './pipeline.ts'
+import { getPipeline, uTime, f32 } from './pipeline.ts'
 import { cube } from './geometry/box.ts'
-import { useCamera } from './camera.ts'
+import { getCamera } from './camera.ts'
 import { useGPU, gpuCanvas, GPU } from './target.ts'
 
 async function moonBow() {
     const gpu = await useGPU()
-
-    instance({
-        gpu: gpu,
-        canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
-        shader: shader,
-    })
-
-    instance({
-        gpu: gpu,
-        canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
-        shader: basic,
-    })
-}
-
-interface Instance {
-    gpu: GPU
-    canvas: HTMLCanvasElement
-    shader: string
-}
-
-function instance({ gpu, canvas, shader }: Instance) {
-    const target = gpuCanvas(gpu.device, canvas)
-    const camera = useCamera(target, {
-        position: [0, 0, 7],
-    })
 
     const geometry = cube({
         device: gpu.device,
@@ -57,34 +32,58 @@ function instance({ gpu, canvas, shader }: Instance) {
     })
 
     const time = uTime(gpu.device)
-    const intensity = f32(gpu.device, 0.01)
-
-    // Can we package the pipeline and the render function togheter in a way that also lets us decouple them
-    const pipeline = usePipeline(target, {
-        shader: shader,
-        wireframe: false,
-        uniforms: [time, intensity, camera],
-    })
+    const intensity = f32(gpu.device, 0.1)
 
     let rot = 0
-    const scene = target.render(pipeline).scene(({ pass }) => {
+    function animate(pass: GPURenderPassEncoder) {
+        geometry2.set(pass, { rotation: [0, rot, 0] })
+        geometry.set(pass, { rotation: [0, rot - 0.4, 0] })
+        geometry3.set(pass, { rotation: [0, rot - 0.8, 0] })
+    }
+
+    const scene1 = instance(
+        {
+            gpu,
+            shader: shader,
+            uniforms: { time, intensity },
+            canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+        },
+        animate
+    )
+
+    const scene2 = instance(
+        {
+            gpu,
+            shader: basic,
+            uniforms: { time, intensity },
+            canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+        },
+        animate
+    )
+
+    setInterval(() => {
+        rot += 0.0005
         time.update()
-        rot += 0.05
+        scene1.draw()
+        scene2.draw()
+    }, 1000 / 60)
+}
 
-        geometry2.set(pass, {
-            rotation: [0, rot, 0],
-        })
+interface Instance {
+    gpu: GPU
+    canvas: HTMLCanvasElement
+    shader: string
+}
 
-        geometry.set(pass, {
-            rotation: [0, rot - 0.4, 0],
-        })
-
-        geometry3.set(pass, {
-            rotation: [0, rot - 0.8, 0],
-        })
+function instance({ uniforms, gpu, canvas, shader }, callback) {
+    const target = gpuCanvas(gpu.device, canvas)
+    const camera = getCamera(target)
+    const pipeline = getPipeline(target, {
+        shader: shader,
+        uniforms: [uniforms.time, uniforms.intensity, camera],
     })
 
-    setInterval(() => scene.draw(), 1000 / 60)
+    return target.render(pipeline).scene(({ pass }) => callback(pass))
 }
 
 moonBow()

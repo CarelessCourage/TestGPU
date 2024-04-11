@@ -58,11 +58,7 @@ export function gpuCanvas(
         format: format,
         device: device,
         aspect: canvas.width / canvas.height,
-        render: r,
-    }
-
-    function r(pipeline: Pipeline) {
-        return render(target, pipeline)
+        render: (pipeline: Pipeline) => render(target, pipeline),
     }
 
     return target
