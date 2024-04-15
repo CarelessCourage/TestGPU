@@ -7,6 +7,7 @@ export function instance(device, { uniforms, canvas, shader }) {
   const camera = gpuCamera(target)
   const pipeline = gpuPipeline(target, {
     shader: shader,
+    wireframe: false,
     uniforms: [uniforms.time, uniforms.intensity, camera]
   })
   return target.render(pipeline)
