@@ -7,7 +7,7 @@ import { useGPU, uTime, f32, instance, cube } from '../moonbow'
 
 function spinningPlanks(device: GPUDevice) {
   const resolution = 30
-  const size: [number, number, number] = [1.0, 1.0, 0.05]
+  const size: [number, number, number] = [2.5, 2.5, 0.05]
 
   const middlePlank = cube(device, {
     size,

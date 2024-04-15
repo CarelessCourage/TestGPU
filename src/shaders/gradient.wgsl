@@ -255,11 +255,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     var amplitude = 1.1;
     var direction = vec2f(-0.2, 0.2);
     var frequency = 4.0;
-    var phase = 0.1;
+    var speed = 0.05;
 
     var pos = input.pos;
 
-    var theta = dot(direction, pos.xy) * frequency + phase * f32(time);
+    var theta = dot(direction, pos.xy) * frequency + speed * f32(time);
     //pos.x += amplitude * direction.x * cos(theta);
     //pos.y += amplitude * direction.y * cos(theta);
     pos.z += amplitude * sin(theta);
@@ -271,31 +271,27 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     return output;
 }
 
-
-
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var wave = 0.5 + 0.5 * cos(input.theta);
-    return vec4f(wave, wave, wave, 1.0);
-}
-
-// @fragment
-// fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-//     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
-//     var color = vec4f(input.uv, input.uv.y, 1.0);
-//     var perlin = perlinPack(input.uv);
-//     var grain_amount = 0.1;
-//     var simplex = simplexNoise2(input.uv * grain_amount) * 0.1;
-
-//     var layer1 = mix(color, vec4f(0.2, 1.0, 1.0, 1.0), perlin);
-//     let intense = rgb_to_intensity(layer1.xyz);
-
-//     var remap1 = palette1(intense + simplex);
-//     var remap2 = palette2(intense + simplex);
-//     var remap3 = palette3(intense + simplex);
-//     var remap4 = palette4(intense + simplex);
+    var wave4 = vec3f(wave, wave, wave);
     
-//     var output = vec4f(remap1, 1.0);
+    var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
+    var color = vec4f(input.uv, input.uv.y, 1.0);
+    var perlin = perlinPack(input.uv);
+    var grain_amount = 0.1;
+    var simplex = simplexNoise2(input.uv * grain_amount) * 0.1;
 
-//     return output;
-// }
+    var layer1 = mix(color, vec4f(0.2, 1.0, 1.0, 1.0), perlin);
+    let intense = rgb_to_intensity(layer1.xyz);
+
+    var remap1 = palette1(intense + simplex);
+    var remap2 = palette2(intense + simplex);
+    var remap3 = palette3(intense + simplex);
+    var remap4 = palette4(intense + simplex);
+
+    var mix1 = mix(remap1, remap2, wave);
+    var output = vec4f(mix1.xyz - (wave / 1.3), 1.0);
+
+    return output;
+}
