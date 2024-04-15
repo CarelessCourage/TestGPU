@@ -1,19 +1,13 @@
 <script lang="ts" setup>
 // @ts-ignore
-import shader from '../shaders/shader.wgsl'
+import shader from '../shaders/gradient.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
 import { useGPU, uTime, f32, instance, cube } from '../moonbow'
 
 function spinningPlanks(device: GPUDevice) {
   const resolution = 15
-  const size: [number, number, number] = [1, 1 / 4, 0.05]
-
-  const topPlank = cube(device, {
-    size,
-    resolution,
-    position: [0, 1, 0]
-  })
+  const size: [number, number, number] = [2, 2, 0.05]
 
   const middlePlank = cube(device, {
     size,
@@ -21,16 +15,8 @@ function spinningPlanks(device: GPUDevice) {
     position: [0, 0, 0]
   })
 
-  const bottomPlank = cube(device, {
-    size,
-    resolution,
-    position: [0, -1, 0]
-  })
-
-  function render(pass: GPURenderPassEncoder, rotation: number) {
-    topPlank.set(pass, { rotation: [0, rotation, 0] })
-    middlePlank.set(pass, { rotation: [0, rotation - 0.4, 0] })
-    bottomPlank.set(pass, { rotation: [0, rotation - 0.8, 0] })
+  function render(pass: GPURenderPassEncoder) {
+    middlePlank.set(pass, { rotation: [0, 0, 0] })
   }
 
   return { render }
@@ -55,12 +41,10 @@ async function init() {
     canvas: document.querySelector('canvas#two') as HTMLCanvasElement
   })
 
-  let rotation = 0
   setInterval(() => {
-    rotation += 0.05
     time.update()
-    scene1.draw(({ pass }) => model.render(pass, rotation))
-    scene2.draw(({ pass }) => model.render(pass, rotation))
+    scene1.draw(({ pass }) => model.render(pass))
+    scene2.draw(({ pass }) => model.render(pass))
   }, 1000 / 60)
 }
 

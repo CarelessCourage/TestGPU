@@ -24,29 +24,6 @@ struct ViewProjectionMatrix {
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
-
-    var viewMatrix: mat4x4<f32> = mat4x4<f32>(
-        vec4<f32>(2.4, 0.0, 0.0, 0.0), // Right vector
-        vec4<f32>(0.0, 2.4, 0.0, 0.0), // Up vector
-        vec4<f32>(0.0, 0.0, -1.0, -1.0), // Forward vector
-        vec4<f32>(0.0, 0.0, 5.0, 5.0)  // Translation / Position
-    );
-
-    // 1.3763818740844727, 0, 0, 0,
-    // 0, 1.3763818740844727, 0, 0,
-    // 0, 0, -1.0020020008087158, -1,
-    // 0, 0, -2.002002000808716, 0
-
-    // [1.3763818740844727, 0, 0, 0 ],
-    // [ 0, 1.3763818740844727, 0, 0 ],
-    // [ 0, 0, -1, -1 ],
-    // [ 0, 0, 0, 0 ]
-
-    // [ 2.4142136573791504, 0, 0, 0 ],
-    // [ 0, 2.4142136573791504, 0, 0 ],
-    // [ 0, 0, -1, -1 ],
-    // [ 0, 0, 5, 5 ]
-
     var position = view.matrix * vec4f(input.pos, 1.0);
     var transformedPosition: vec4<f32> = position;
     var output: VertexOutput;
