@@ -5,32 +5,18 @@ import shader from '../shaders/shader.wgsl'
 import basic from '../shaders/basic.wgsl'
 import { useGPU, uTime, f32, instance, cube } from '../moonbow'
 
-function spinningPlanks(device: GPUDevice) {
+function spinningCube(device: GPUDevice) {
   const resolution = 15
-  const size: [number, number, number] = [1, 1 / 4, 0.05]
+  const size: [number, number, number] = [1, 1, 1]
 
-  const topPlank = cube(device, {
-    size,
-    resolution,
-    position: [0, 1, 0]
-  })
-
-  const middlePlank = cube(device, {
+  const object = cube(device, {
     size,
     resolution,
     position: [0, 0, 0]
   })
 
-  const bottomPlank = cube(device, {
-    size,
-    resolution,
-    position: [0, -1, 0]
-  })
-
   function render(pass: GPURenderPassEncoder, rotation: number) {
-    topPlank.set(pass, { rotation: [0, rotation, 0] })
-    middlePlank.set(pass, { rotation: [0, rotation - 0.4, 0] })
-    bottomPlank.set(pass, { rotation: [0, rotation - 0.8, 0] })
+    object.set(pass, { rotation: [0.5, rotation, 0] })
   }
 
   return { render }
@@ -41,7 +27,7 @@ async function init() {
 
   const time = uTime(device)
   const intensity = f32(device, 0.1)
-  const model = spinningPlanks(device)
+  const model = spinningCube(device)
 
   const scene1 = instance(device, {
     shader: shader,
@@ -57,7 +43,7 @@ async function init() {
 
   let rotation = 0
   setInterval(() => {
-    rotation += 0.05
+    rotation += 0.005
     time.update()
     scene1.draw(({ pass }) => model.render(pass, rotation))
     scene2.draw(({ pass }) => model.render(pass, rotation))
