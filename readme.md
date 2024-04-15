@@ -1,53 +1,39 @@
-# TODO:
+# VueGPU
 
--   [x] Plane position
--   [x] Plane UV
--   [x] Plane Mutability
--   [x] Cube
--   [x] Multiple Planes
--   [ ] Other Shapes
--   [ ] DOM Sync
--   [ ] Proxy Objects
--   [ ] Vue Integration for Proxy Objects
--   [x] TS Conversion
--   [ ] Scroll Hook
--   [ ] Mouse Hook
--   [ ] Image Plane
--   [ ] Video Plane
--   [ ] Bend Plane
--   [x] Deform Gradient Plane
--   [ ] WGSL Bomber
--   [ ] Tension Shader
--   [ ] Post Processing
--   [ ] Compute Shaders
--   [ ] Frame Buffer Tools
+This template should help get you started developing with Vue 3 in Vite.
 
-# Future Considerations:
+## Recommended IDE Setup
 
--   Lights
--   VR
--   Models
--   Animations (gsap?)
--   Timeline (gsap?)
--   Groups
--   Many Models Performance (instanced)
--   Materials
--   Physics
--   Particles
--   Audio
--   HMR
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-# Inspiration
+## Type Support for `.vue` Imports in TS
 
--   [usegpu](usegpu.live/)
--   [athena](athena.js.org)
--   [three](threejs.org/docs/)
--   [babyloon](https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/core/src/Meshes/Builders/planeBuilder.ts)
--   [shadergradient](https://www.shadergradient.co/)
--   [samples](https://webgpu.github.io/webgpu-samples/?sample=rotatingCube#main.ts)
--   [orillusion](https://orillusion.github.io/orillusion-webgpu-samples/#cubesRenderBundle)
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
 
-# Resources
+## Customize configuration
 
--   [orillusion](https://www.youtube.com/watch?v=9O2of-IjJos&list=PLVHfUzm5DIVCZxjmaZsBXEXoohzSqeCnV&index=10)
--   [performance](https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html)
+See [Vite Configuration Reference](https://vitejs.dev/config/).
+
+## Project Setup
+
+```sh
+pnpm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+pnpm dev
+```
+
+### Type-Check, Compile and Minify for Production
+
+```sh
+pnpm build
+```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+pnpm lint
+```
