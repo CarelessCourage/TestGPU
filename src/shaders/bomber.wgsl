@@ -69,7 +69,7 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     let uvmap = vec4<f32>(input.uv, 0.0, 1.0);
 
     let mix1 = mix(fade3, fade, fade.a);
-    let mix2 = mix(fade2, mix1, mix1.a);
+    let mix2 = mix(mix1, fade2, fade2.a);
 
     return mix2;
 }
