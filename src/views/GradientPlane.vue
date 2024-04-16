@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { onMounted } from 'vue'
 // @ts-ignore
 import shader from '../shaders/gradient.wgsl'
 // @ts-ignore
@@ -22,7 +23,7 @@ function spinningPlanks(device: GPUDevice) {
   return { render }
 }
 
-async function init() {
+onMounted(async () => {
   const { device } = await useGPU()
 
   const time = uTime(device)
@@ -46,16 +47,14 @@ async function init() {
     scene1.draw(({ pass }) => model.render(pass))
     scene2.draw(({ pass }) => model.render(pass))
   }, 1000 / 60)
-}
-
-init()
+})
 </script>
 
 <template>
   <div class="canvas-wrapper">
     <canvas id="one" width="700" height="700"></canvas>
     <canvas id="two" width="700" height="700"></canvas>
-    <h1>Gradient</h1>
+    <h1>Northern Lights</h1>
   </div>
   <h1 class="display">WebGPU</h1>
 </template>

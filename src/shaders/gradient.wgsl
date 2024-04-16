@@ -189,9 +189,9 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var definition = 4.00;
-    var scale = 3.0; // Some more gold
-    var seed = vec2f(0.0, 0.0);
+    var definition = 8.00;
+    var scale = 1.0; // Some more gold
+    var seed = vec2f(sin(f32(time) * 0.01), cos(f32(time) * 0.01));
     return perlinNoise2((uv + seed) * scale) * definition;
 }
 
@@ -253,16 +253,19 @@ fn rgb_to_intensity(rgb: vec3<f32>) -> f32 {
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var amplitude = 1.1;
-    var direction = vec2f(-0.2, 0.2);
     var frequency = 4.0;
     var speed = 0.05;
+    var direction1 = vec2f(-0.2, 0.2);
+    var direction2 = vec2f(0.0, -0.4);
 
     var pos = input.pos;
 
-    var theta = dot(direction, pos.xy) * frequency + speed * f32(time);
+    var theta = dot(direction1, pos.xy) * frequency + speed * f32(time);
+    var theta2 = dot(direction2, pos.xy) * frequency + speed * f32(time);
     //pos.x += amplitude * direction.x * cos(theta);
     //pos.y += amplitude * direction.y * cos(theta);
     pos.z += amplitude * sin(theta);
+    pos.z += amplitude * sin(theta2);
 
     var output: VertexOutput;
     output.pos = view.matrix * vec4f(pos, 1.0);
@@ -271,10 +274,14 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     return output;
 }
 
+fn clamp01(x: f32) -> f32 {
+    return min(1.0, max(0.0, x));
+}
+
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    var wave = 0.5 + 0.5 * cos(input.theta);
-    var wave4 = vec3f(wave, wave, wave);
+    var wave = 0.5 + 0.5 * cos(input.theta); // -1 - 1
+    var rim = clamp01(cos(input.theta) * 0.9 - 0.7); // 0 - 1
     
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
     var color = vec4f(input.uv, input.uv.y, 1.0);
@@ -291,7 +298,7 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var remap4 = palette4(intense + simplex);
 
     var mix1 = mix(remap1, remap2, wave);
-    var output = vec4f(mix1.xyz - (wave / 1.3), 1.0);
+    var output = vec4f(mix1.xyz - (wave / 1.6), 1.0);
 
     return output;
 }
