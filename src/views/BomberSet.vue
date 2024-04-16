@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { onMounted } from 'vue'
 // @ts-ignore
-import shader from '../shaders/gradient.wgsl'
+import shader from '../shaders/bomber.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
 import { useGPU, uTime, f32, instance, cube } from '../moonbow'
 
 function spinningPlanks(device: GPUDevice) {
   const resolution = 30
-  const size: [number, number, number] = [2.5, 2.5, 0.05]
+  const size: [number, number, number] = [1.6, 1.6, 0.05]
 
   const middlePlank = cube(device, {
     size,
