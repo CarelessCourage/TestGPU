@@ -1,21 +1,19 @@
 //Structs are like TS interfaces
 struct VertexInput {
-    @location(0) pos: vec3<f32>,
-    @location(1) norm : vec3<f32>,
-    @location(2) uv : vec2<f32>,
+    @location(0) pos: vec3f,
+    @location(1) norm : vec3f,
+    @location(2) uv : vec2f,
 };
 
 // output struct of this vertex shader
 struct VertexOutput {
-    @builtin(position) pos : vec4<f32>,
-    @location(1) norm : vec3<f32>,
-    @location(2) uv : vec2<f32>,
+    @builtin(position) pos : vec4f,
+    @location(1) norm : vec3f,
+    @location(2) uv : vec2f,
 };
 
-//@binding(0) @group(0) var<uniform> modelViewProjectionMatrix: mat4x4<f32>;
-
 struct ViewProjectionMatrix {
-    matrix: mat4x4<f32>
+    matrix: mat4x4f
 };
 
 @group(0) @binding(0) var<uniform> time: u32;
@@ -32,18 +30,18 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     return output;
 }
 
-fn circle(uv: vec2<f32>, center: vec2<f32>, radius: f32, falloff: f32) -> f32 {
+fn circle(uv: vec2f, center: vec2f, radius: f32, falloff: f32) -> f32 {
     let localUV = (uv - center) / radius;
     let dist = distance(uv, center);
     return smoothstep(radius, radius - falloff, dist);
 }
 
-fn coloredCircle(uv: vec2<f32>, center: vec2<f32>, radius: f32, falloff: f32) -> vec4<f32> {
+fn coloredCircle(uv: vec2f, center: vec2f, radius: f32, falloff: f32) -> vec4f {
     let centeredUV = (uv - 0.5) * 2.0;
-    let localUV = (centeredUV / radius) + center;
+    let localUV = (centeredUV / radius) + center * -3.0; // would be nice to know why -3.0. Dunno.  2.0 makes sense. 3.0? -?
     let remappedValue = (localUV + 1.0) / 2.0; // Remap the value to be between 0 and 1 instead of -1 and 1
     let fade = circle(centeredUV, center, radius, falloff);
-    return vec4<f32>(remappedValue.r, remappedValue.g, remappedValue.g, fade) * fade;
+    return vec4f(remappedValue.r, remappedValue.g, remappedValue.g, fade) * fade;
 }
 
 fn exampleLoop() {
@@ -62,14 +60,14 @@ fn exampleLoop() {
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    let fade = coloredCircle(input.uv, vec2f(0.0, 0.0), 0.25, 0.02);
-    let fade2 = coloredCircle(input.uv, vec2f(0.4, 0.0), 0.25, 0.02);
-    let fade3 = coloredCircle(input.uv, vec2f(-0.4, 0.0), 0.25, 0.02);
+    let fade3 = coloredCircle(input.uv, vec2f(0.4, 0.0), 0.25, 0.02);
+    let fade2 = coloredCircle(input.uv, vec2f(0.0, 0.0), 0.25, 0.02);
+    let fade1 = coloredCircle(input.uv, vec2f(-0.4, 0.0), 0.25, 0.02);
 
-    let uvmap = vec4<f32>(input.uv, 0.0, 1.0);
+    let uvmap = vec4f(input.uv, input.uv.y, 1.0);
 
-    let mix1 = mix(fade3, fade, fade.a);
-    let mix2 = mix(mix1, fade2, fade2.a);
+    let mix1 = mix(fade1, fade2, fade2.a);
+    let mix2 = mix(mix1, fade3, fade3.a);
 
     return mix2;
 }
