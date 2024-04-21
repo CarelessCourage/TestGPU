@@ -278,8 +278,7 @@ fn clamp01(x: f32) -> f32 {
     return min(1.0, max(0.0, x));
 }
 
-@fragment
-fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+fn northlights(input: VertexOutput) -> vec4<f32> {
     var wave = 0.5 + 0.5 * cos(input.theta); // -1 - 1
     var rim = clamp01(cos(input.theta) * 0.9 - 0.7); // 0 - 1
     
@@ -301,4 +300,9 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var output = vec4f(mix1.xyz - (wave / 1.6), 1.0);
 
     return output;
+}
+
+@fragment
+fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+    return northlights(input);
 }

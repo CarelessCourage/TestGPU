@@ -6,8 +6,8 @@ import shader from '../shaders/bomber.wgsl'
 import basic from '../shaders/basic.wgsl'
 import { useGPU, uTime, f32, instance, cube } from '../moonbow'
 
-function spinningPlanks(device: GPUDevice) {
-  const resolution = 30
+function surface(device: GPUDevice) {
+  const resolution = 1
   const size: [number, number, number] = [1.6, 1.6, 0.05]
 
   const middlePlank = cube(device, {
@@ -28,7 +28,7 @@ onMounted(async () => {
 
   const time = uTime(device)
   const intensity = f32(device, 0.1)
-  const model = spinningPlanks(device)
+  const model = surface(device)
 
   const scene1 = instance(device, {
     shader: shader,
@@ -54,7 +54,7 @@ onMounted(async () => {
   <div class="canvas-wrapper">
     <canvas id="one" width="700" height="700"></canvas>
     <canvas id="two" width="700" height="700"></canvas>
-    <h1>Northern Lights</h1>
+    <h1>Spider Eyes</h1>
   </div>
   <h1 class="display">WebGPU</h1>
 </template>

@@ -190,10 +190,22 @@ fn perlinNoise2(P: vec2f) -> f32 {
 }
 
 fn perlinPack(uv: vec2f) -> f32 {
-    var definition = 0.2;
-    var scale = 3.8; // Some more gold
-    var seed = vec2f(sin(f32(time) * 0.001), cos(f32(time) * 0.001));
+    var definition = 8.00;
+    var scale = 1.0; // Some more gold
+    var seed = vec2f(sin(f32(time) * 0.01), cos(f32(time) * 0.01));
     return perlinNoise2((uv + seed) * scale) * definition;
+}
+
+fn acidZebra(uv: vec2f) -> f32 {
+    var vibe = 0.9 + sin(f32(time) * 0.001) * 0.9;
+    var frequency = 5.0;
+    return bandNoise(vec3f(uv, vibe * frequency)) * intensity; //Gold
+}
+
+fn vibeGlass(uv: vec2f) -> f32 {
+    var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
+    var zebra = acidZebra(uv);
+    return perlinPack(uv) * zebra * vibe;
 }
 
 // cosine based palette, 4 vec3 params
@@ -243,19 +255,38 @@ fn clamp01(x: f32) -> f32 {
     return min(1.0, max(0.0, x));
 }
 
-fn northlights(uv: vec2f) -> vec3f {
+fn getThetha(input: VertexOutput) -> f32 {
+    var amplitude = 1.1;
+    var frequency = 4.0;
+    var speed = 0.05;
+    var direction1 = vec2f(-0.2, 0.2);
+    var direction2 = vec2f(0.0, -0.4);
+    return dot(direction1, input.pos.xy) * frequency + speed * f32(time);
+}
+
+fn northlights(input: VertexOutput) -> vec3f {
+    var theta = getThetha(input);
+    var wave = 0.5 + 0.5 * cos(theta); // -1 - 1
+    var rim = clamp01(cos(theta) * 0.9 - 0.7); // 0 - 1
+    
     var vibe = 1.0 + sin(f32(time) * 0.1) * 0.5;
-    var color = vec4f(uv, uv.y, 1.0);
-    var perlin = perlinPack(uv);
-    var grain_amount = 0.0000001;
-    var simplex = simplexNoise2(uv * grain_amount) * 0.1;
+    var color = vec4f(input.uv, input.uv.y, 1.0);
+    var perlin = perlinPack(input.uv);
+    var grain_amount = 0.1;
+    var simplex = simplexNoise2(input.uv * grain_amount) * 0.1;
 
     var layer1 = mix(color, vec4f(0.2, 1.0, 1.0, 1.0), perlin);
     let intense = rgb_to_intensity(layer1.xyz);
 
     var remap1 = palette1(intense + simplex);
-    return vec3f(remap1.xyz);
+    var remap2 = palette2(intense + simplex);
+    var remap3 = palette3(intense + simplex);
+    var remap4 = palette4(intense + simplex);
+
+    var mix1 = mix(remap1, remap2, wave);
+    return vec3f(mix1.xyz - (wave / 1.6));
 }
+
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
@@ -273,18 +304,14 @@ fn circle(uv: vec2f, center: vec2f, radius: f32, falloff: f32) -> f32 {
     return smoothstep(radius, radius - falloff, dist);
 }
 
-fn coloredCircle(uv: vec2f, center: vec2f, radius: f32) -> vec4f {
-    let falloff = 0.3;
-
-    let centeredUV = (uv - 0.5) * 2.0;
-    let localUV = (centeredUV / radius) + center * -2.0; // would be nice to know why -3.0. Dunno.  2.0 makes sense. 3.0? -?
+fn coloredCircle(input: VertexOutput, center: vec2f, radius: f32, falloff: f32) -> vec4f {
+    let peril = northlights(input);
+    let centeredUV = (input.uv - 0.5) * 2.0;
+    let localUV = (centeredUV / radius) + center * -3.0; // would be nice to know why -3.0. Dunno.  2.0 makes sense. 3.0? -?
     let remappedValue = (localUV + 1.0) / 2.0; // Remap the value to be between 0 and 1 instead of -1 and 1
     let fade = circle(centeredUV, center, radius, falloff);
-    let smoosh = fade * 0.9;
-    let perilcolor = northlights(remappedValue + smoosh);
-    let fp = vec3f(fade);
-    let uvcolor = vec3f(remappedValue.rg, remappedValue.g);
-    return vec4f(perilcolor, fade) * fade;
+    let color = vec3f(remappedValue.rg, remappedValue.g);
+    return vec4f(peril, fade) * fade;
 }
 
 fn exampleLoop() {
@@ -303,9 +330,9 @@ fn exampleLoop() {
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    let fade3 = coloredCircle(input.uv, vec2f(1.0, 0.0), 0.45);
-    let fade2 = coloredCircle(input.uv, vec2f(0.0, 0.0), 0.45);
-    let fade1 = coloredCircle(input.uv, vec2f(-1.0, 0.0), 0.45);
+    let fade3 = coloredCircle(input, vec2f(1.0, 0.0), 0.45, 0.08);
+    let fade2 = coloredCircle(input, vec2f(0.0, 0.0), 0.45, 0.08);
+    let fade1 = coloredCircle(input, vec2f(-1.0, 0.0), 0.45, 0.08);
 
     let uvmap = vec4f(input.uv, input.uv.y, 1.0);
 
