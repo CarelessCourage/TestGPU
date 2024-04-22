@@ -10,5 +10,6 @@ export function instance(device, { uniforms, canvas, shader }) {
     wireframe: false,
     uniforms: [uniforms.time, uniforms.intensity, camera]
   })
+
   return target.render(pipeline)
 }

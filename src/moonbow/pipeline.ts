@@ -105,14 +105,16 @@ export function uTime(device: GPUDevice) {
   })
 }
 
-export const f32 = (device: GPUDevice, value: number) =>
-  uniformBuffer(device, {
-    size: 4,
+export const f32 = (device: GPUDevice, value: number[]) => {
+  const data = new Float32Array(value)
+  return uniformBuffer(device, {
+    size: data.byteLength,
     binding: undefined,
     update: (buffer) => {
-      device.queue.writeBuffer(buffer, 0, new Float32Array([value]))
+      device.queue.writeBuffer(buffer, 0, data)
     }
   })
+}
 
 export const vec3 = (device: GPUDevice, value: number) =>
   uniformBuffer(device, {

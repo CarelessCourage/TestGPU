@@ -74,14 +74,6 @@ function submitPass(device: GPUDevice, { encoder, pass }: Renderer) {
   device.queue.submit([commandBuffer])
 }
 
-interface Object {
-  vertices: GPUBuffer
-  normals: GPUBuffer
-  uvs: GPUBuffer
-  indices: GPUBuffer
-  indicesCount: number
-}
-
 export function drawObject(pass: GPURenderPassEncoder, buffer: GeoBuffers) {
   // Set Geometry
   pass.setVertexBuffer(0, buffer.vertices)

@@ -5,6 +5,7 @@ import GradientPlane from '@/views/GradientPlane.vue'
 import MoonbowBasic from '@/views/MoonbowBasic.vue'
 import AnimatedPlanks from '@/views/AnimatedPlanks.vue'
 import BomberSet from '@/views/BomberSet.vue'
+import MarblePlane from '@/views/MarblePlane.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +34,11 @@ const router = createRouter({
       path: '/bomber',
       name: 'Bomber',
       component: BomberSet
+    },
+    {
+      path: '/marbles',
+      name: 'Marbles',
+      component: MarblePlane
     }
   ]
 })

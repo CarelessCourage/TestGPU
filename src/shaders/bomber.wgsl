@@ -279,11 +279,23 @@ fn coloredCircle(uv: vec2f, center: vec2f, radius: f32) -> vec4f {
     let centeredUV = (uv - 0.5) * 2.0;
     let localUV = (centeredUV / radius) + center * -2.0; // would be nice to know why -3.0. Dunno.  2.0 makes sense. 3.0? -?
     let remappedValue = (localUV + 1.0) / 2.0; // Remap the value to be between 0 and 1 instead of -1 and 1
+    
     let fade = circle(centeredUV, center, radius, falloff);
     let smoosh = fade * 0.9;
-    let perilcolor = northlights(remappedValue + smoosh);
+    let smoshedUV = remappedValue - smoosh;
+    
+    var perilcolor = northlights(smoshedUV);
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+    // perilcolor = perilcolor * smoosh;
+
     let fp = vec3f(fade);
-    let uvcolor = vec3f(remappedValue.rg, remappedValue.g);
+
+    //let uvcolor = vec3f(smoshedUV.rg, smoshedUV.g);
     return vec4f(perilcolor, fade) * fade;
 }
 

@@ -9,6 +9,7 @@ import { RouterView, RouterLink } from 'vue-router'
       <RouterLink to="/" activeClass="active">Moonbow</RouterLink>
       <RouterLink to="/planks" activeClass="active">Planks</RouterLink>
       <RouterLink to="/gradient" activeClass="active">Gradient</RouterLink>
+      <RouterLink to="/marbles" activeClass="active">Marbles</RouterLink>
       <RouterLink to="/bomber" activeClass="active">Bomber</RouterLink>
     </nav>
   </header>
