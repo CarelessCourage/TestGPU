@@ -66,22 +66,59 @@ function pingpong(device, options) {
   }
 }
 
-function getEntries(device, uniforms) {
-  const entries = uniforms.map((uniform, index) => ({
+function getX(device, uniforms) {
+  const entries = getEntries(uniforms)
+  const bindGroups = getBindGroups(device, entries)
+}
+
+function getBindGroups(device, entries) {
+  const layout = device.createBindGroupLayout({
+    label: 'Uniforms Bind Group Layout',
+    entries: entries
+  })
+
+  const bindGroupA = device.createBindGroup({
+    label: 'Uniforms Bind Group - ping',
+    layout,
+    entries,
+  })
+
+  const bindGroupB = device.createBindGroup({
+    label: 'Uniforms Bind Group - pong',
+    layout,
+    entries,
+  })
+
+  return {
+    layout,
+    bindGroups: [bindGroupA, bindGroupB]
+  }
+}
+
+function getEntries(uniforms) {
+  return uniforms.map((uniform, index) => ({
     binding: uniform.binding === undefined ? index : uniform.binding,
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
     buffer: { type: uniform.type },
     resource: { buffer: uniform.buffer }
   }))
+}
 
-  const bindGroupLayout = device.createBindGroupLayout({
+function getBindGroup(device, entries) {
+  const layout = device.createBindGroupLayout({
     label: 'Uniforms Bind Group Layout',
     entries: entries
   })
 
+  const bindGroup = device.createBindGroup({
+    label: 'Uniforms Bind Group - ping',
+    layout,
+    entries,
+  })
+
   return {
-    layout: bindGroupLayout,
-    bindGroup: entries
+    layout,
+    bindGroup
   }
 }
 
