@@ -19,46 +19,50 @@ function uniformBuffer(device, options): UB {
 const cellstate = pingpong()
 const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
 
-function setPing(buffer) {
+const store = pingpong(device, {
+  size: cellStateArray.byteLength,
+})
+
+store.ping.update((buffer) => {
   for (let i = 0; i < cellStateArray.length; ++i) {
     cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
   }
   device.queue.writeBuffer(buffer, 0, cellStateArray)
-}
+})
 
-function setPong(buffer) {
+store.pong.update((buffer) => {
   for (let i = 0; i < cellStateArray.length; i++) {
     cellStateArray[i] = i % 2
   }
   device.queue.writeBuffer(buffer, 0, cellStateArray)
-}
-
-pingpong(device, {
-  size: cellStateArray.byteLength,
-  update: (ping, pong) => {
-    setPing(ping)
-    setPong(pong)
-  }
 })
 
 function pingpong(device, options) {
-  const stateA = device.createBuffer({
+  const pingBuffer = device.createBuffer({
     label: 'Ping Storage',
     size: options.size,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   })
 
-  const stateB = device.createBuffer({
+  const pongbuffer = device.createBuffer({
     label: 'Pong Storage',
     size: options.size,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   })
 
   return {
-    binding: 2,
-    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-    buffer: stateA,
-    update: () => options.update(buffer)
+    ping: {
+      binding: options.binding || 2,
+      visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+      buffer: pingBuffer,
+      update: () => options.update(pingBuffer)
+    },
+    pong: {
+      binding: options.binding + 1 || 3,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: pongbuffer,
+      update: () => options.update(pongbuffer)
+    }
   }
 }
 
@@ -84,7 +88,6 @@ function getEntries(device, uniforms) {
 const bindGroups = [
   device.createBindGroup({
     label: 'Cell renderer bind group A',
-    //layout: cellPipeline.getBindGroupLayout(0), //@group(0) in shader - this just auto generates the layout from the cellPipeline
     layout: bindGroupLayout, // No longer auto generating it
     entries: [
       {
@@ -103,7 +106,6 @@ const bindGroups = [
   }),
   device.createBindGroup({
     label: 'Cell renderer bind group B',
-    //layout: cellPipeline.getBindGroupLayout(0),
     layout: bindGroupLayout, // No longer auto generating it
     entries: [
       {
@@ -129,7 +131,6 @@ const bindGroupLayout = device.createBindGroupLayout({
   entries: [
     {
       binding: 0,
-      // Add GPUShaderStage.FRAGMENT here if you are using the `grid` uniform in the fragment shader.
       visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
       buffer: {} // Grid uniform buffer
     },
