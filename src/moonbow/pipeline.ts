@@ -155,6 +155,7 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   })
 
+  // Passes the buffer to the update callback
   options.update(buffer)
   return {
     binding: options.binding,

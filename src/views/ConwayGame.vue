@@ -15,7 +15,7 @@ function getPlane(device) {
 
 onMounted(async () => {
   //Config
-  const GRID_SIZE = 10
+  const GRID_SIZE = 100
   const UPDATE_INTERVAL = 30 // Update every 200ms (5 times/sec)
 
   const { device } = await useGPU()
