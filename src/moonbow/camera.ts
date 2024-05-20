@@ -103,12 +103,14 @@ function optionsFallback(options?: Partial<CameraInput>) {
     if (typeof p !== 'number') {
         return {
             position: vec3.fromValues(p[0], p[1], p[2]),
+            //@ts-ignore
             target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
             rotation: rotationSetting(o.rotation),
         }
     } else {
         return {
             position: vec3.fromValues(p, p, p),
+            //@ts-ignore
             target: vec3.fromValues(o.target[0], o.target[1], o.target[2]),
             rotation: rotationSetting(o.rotation),
         }
