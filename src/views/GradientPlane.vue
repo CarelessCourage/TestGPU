@@ -27,7 +27,7 @@ onMounted(async () => {
   const { device } = await useGPU()
 
   const time = uTime(device)
-  const intensity = f32(device, 0.1)
+  const intensity = f32(device, [0.1])
   const model = spinningPlanks(device)
 
   const scene1 = instance(device, {

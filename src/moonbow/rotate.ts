@@ -7,11 +7,11 @@ interface RotateOptions {
 
 //this.degree += (options.rotation[1] * Math.PI) / 180
 export function quaternion(options: RotateOptions) {
-    let quaternion = quat.create()
+    const quaternion = quat.create()
 
-    let quatX = quat.create()
-    let quatY = quat.create()
-    let quatZ = quat.create()
+    const quatX = quat.create()
+    const quatY = quat.create()
+    const quatZ = quat.create()
 
     quat.setAxisAngle(quatX, vec3.fromValues(1, 0, 0), options.rotation[0])
     quat.setAxisAngle(quatY, vec3.fromValues(0, 1, 0), options.rotation[1])
@@ -20,10 +20,10 @@ export function quaternion(options: RotateOptions) {
     quat.multiply(quaternion, quatX, quatY)
     quat.multiply(quaternion, quaternion, quatZ)
 
-    let rotationMatrix = mat4.create()
+    const rotationMatrix = mat4.create()
     mat4.fromQuat(rotationMatrix, quaternion)
 
-    let newPosition = vec3.create()
+    const newPosition = vec3.create()
     vec3.transformMat4(newPosition, options.position, rotationMatrix)
 
     return newPosition

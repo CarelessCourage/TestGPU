@@ -2,6 +2,7 @@ import { gpuPipeline } from './pipeline.js'
 import { gpuCamera } from './camera.js'
 import { gpuCanvas } from './target.js'
 
+// @ts-ignore
 export function instance(device, { uniforms, canvas, shader }) {
   const target = gpuCanvas(device, canvas)
   const camera = gpuCamera(target)
