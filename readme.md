@@ -62,6 +62,8 @@
 -   [vulkan](https://docs.google.com/presentation/d/1AUfD0xq5GG3SwIoG8JricAzhpHnmTt90MMl-TodWXxU/edit#slide=id.g1617b7e08ed_0_2)
 -   [firebase](https://www.youtube.com/watch?v=r5NQecwZs1A)
 -   [architecture](https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2023-0/sycl-thread-mapping-and-gpu-occupancy.html)
+-   [best webgl intro](https://www.youtube.com/watch?v=f4s1h2YETNY&t=20s)
+-   [bookofshaders](https://thebookofshaders.com/)
 
 # Factoids
 - 24 cores is the current upper limit for CPU due to exponential heat mangagment and complexity: M2 Ultra, I9 Intel
