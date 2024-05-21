@@ -61,11 +61,14 @@
 -   [CIS 565 GPU Programming](https://www.youtube.com/watch?v=41pC1MLMVdA)
 -   [vulkan](https://docs.google.com/presentation/d/1AUfD0xq5GG3SwIoG8JricAzhpHnmTt90MMl-TodWXxU/edit#slide=id.g1617b7e08ed_0_2)
 -   [firebase](https://www.youtube.com/watch?v=r5NQecwZs1A)
+-   [architecture](https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2023-0/sycl-thread-mapping-and-gpu-occupancy.html)
 
 # Factoids
 - 24 cores is the current upper limit for CPU due to exponential heat mangagment and complexity: M2 Ultra, I9 Intel
 - RTX 4080 has 9700 cores
 - TPU (Tensor GPU) vs DPU (data CPU) vs QPU (bits vs cubits)
+
+- "Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long — Fabian says it takes a couple hundred clock cycles. These couple hundred cycles could be spent on computation instead. To make use of these otherwise idle cycles, each EU is heavily oversubscribed with work. Whenever an EU would end up idling (e.g. to wait for a value from memory), it instead switches to another work item and will only switch back once the new work item needs to wait for something. This is the key trick how GPUs optimize for throughput at the cost of latency: Individual work items will take longer as a switch to another work item might stop execution for longer than necessary, but the overall utilization is higher and results in a higher throughput. The GPU strives to always have work queued up to keep EUs busy at all times." - [source](https://surma.dev/things/webgpu/)
 
 # History
 - [tweet](https://x.com/MorkSamuel/status/1777250185791312119)
