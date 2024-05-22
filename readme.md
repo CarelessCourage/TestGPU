@@ -74,3 +74,4 @@
 
 # History
 - [tweet](https://x.com/MorkSamuel/status/1777250185791312119)
+- [stackblitz shoutout of v1](https://x.com/stackblitz/status/1792935768664527274)
