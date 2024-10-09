@@ -1,4 +1,4 @@
-import { gpuPipeline, uTime, f32 } from './pipeline.js'
+import { gpuPipeline, gpuComputePipeline, uTime, f32 } from './pipeline.js'
 import { cube } from './geometry/box.js'
 import { plane } from './geometry/plane.js'
 import { gpuCamera } from './camera.js'
@@ -8,6 +8,7 @@ import { bufferLayout } from './geometry/utils.js'
 
 export {
   gpuPipeline,
+  gpuComputePipeline,
   uTime,
   f32,
   cube,

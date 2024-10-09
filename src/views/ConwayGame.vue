@@ -1,15 +1,26 @@
-<script setup>
+<script setup lang="ts">
+// @ts-ignore
 import ConwayShader from '../shaders/conway.wgsl'
+// @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, gpuPipeline, uTime, f32, plane, bufferLayout } from '../moonbow'
+import {
+  useGPU,
+  gpuCanvas,
+  gpuPipeline,
+  uTime,
+  f32,
+  plane,
+  bufferLayout,
+  gpuComputePipeline
+} from '../moonbow'
 
-function getPlane(device) {
+function getPlane(device: GPUDevice) {
   const surface = plane(device)
   return {
     buffer: surface.buffer,
     geometry: surface.geometry,
-    render: (pass) => surface.set(pass, { rotation: [0.0, 0.0, 0] })
+    render: (pass: GPURenderPassEncoder) => surface.set(pass, { rotation: [0.0, 0.0, 0] })
   }
 }
 
@@ -56,8 +67,8 @@ onMounted(async () => {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
 
-    // Set each cell to a random state, then copy the JavaScript array
-    // into the storage buffer.
+    // Set each cell to a random state,
+    // then copy the JavaScript array into the storage buffer.
     for (let i = 0; i < cellStateArray.length; ++i) {
       cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
     }
@@ -89,7 +100,7 @@ onMounted(async () => {
         binding: 0,
         // Add GPUShaderStage.FRAGMENT here if you are using the `grid` uniform in the fragment shader.
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-        buffer: {} // Grid uniform buffer
+        buffer: { type: 'uniform' } // Grid uniform buffer
       },
       {
         binding: 1,
@@ -128,6 +139,12 @@ onMounted(async () => {
     }
   })
 
+  const pipeline = gpuComputePipeline(target, {
+    shader: ConwayShader,
+    wireframe: false,
+    uniforms: []
+  })
+
   const WORKGROUP_SIZE = 8
   // Create the compute shader that will process the simulation.
   const simulationShaderModule = device.createShaderModule({
@@ -150,8 +167,7 @@ onMounted(async () => {
   const bindGroups = [
     device.createBindGroup({
       label: 'Cell renderer bind group A',
-      //layout: cellPipeline.getBindGroupLayout(0), //@group(0) in shader - this just auto generates the layout from the cellPipeline
-      layout: bindGroupLayout, // No longer auto generating it
+      layout: bindGroupLayout,
       entries: [
         {
           binding: 0, //@binding(0) in shader
@@ -169,8 +185,7 @@ onMounted(async () => {
     }),
     device.createBindGroup({
       label: 'Cell renderer bind group B',
-      //layout: cellPipeline.getBindGroupLayout(0),
-      layout: bindGroupLayout, // No longer auto generating it
+      layout: bindGroupLayout,
       entries: [
         {
           binding: 0,

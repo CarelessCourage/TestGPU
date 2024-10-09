@@ -1,6 +1,5 @@
 import type { GPUCanvas } from './target.js'
 import { bufferLayout } from './geometry/utils.js'
-
 interface PipelineOptions {
   uniforms: UB[]
   shader: string
@@ -12,11 +11,17 @@ export interface Pipeline {
   bindGroup: GPUBindGroup
 }
 
+export interface ComputePipeline {
+  pipeline: GPURenderPipeline
+  simulationPipeline: GPUComputePipeline
+  bindGroup: GPUBindGroup
+}
+
 export function gpuPipeline(
   { device, format }: GPUCanvas,
   { uniforms, shader, wireframe = false }: PipelineOptions
 ): Pipeline {
-  const entries = getEntries(device, uniforms)
+  const entries = getUniformEntries(device, uniforms)
 
   const cellShaderModule = device.createShaderModule({
     label: 'Cell shader',
@@ -63,7 +68,72 @@ export function gpuPipeline(
   }
 }
 
-function getEntries(
+export function gpuComputePipeline(
+  { device, format }: GPUCanvas,
+  { uniforms, shader, wireframe = false }: PipelineOptions
+): ComputePipeline {
+  const entries = getUniformEntries(device, uniforms)
+
+  // Create the compute shader that will process the simulation.
+  const simulationShaderModule = device.createShaderModule({
+    label: 'Game of Life simulation shader',
+    code: shader
+  })
+
+  const pipelineLayout = device.createPipelineLayout({
+    label: 'Pipeline Layout',
+    bindGroupLayouts: [entries.layout]
+  })
+
+  const pipeline = device.createRenderPipeline({
+    label: 'Cell pipeline',
+    layout: pipelineLayout,
+    vertex: {
+      module: simulationShaderModule,
+      entryPoint: 'vertexMain',
+      buffers: bufferLayout()
+    },
+    fragment: {
+      module: simulationShaderModule,
+      entryPoint: 'fragmentMain',
+      targets: [{ format }]
+    },
+    primitive: {
+      topology: wireframe ? 'line-list' : 'triangle-list',
+      cullMode: 'back' // ensures backfaces dont get rendered
+    },
+    depthStencil: {
+      // this makes sure that faces get rendered in the correct order.
+      depthWriteEnabled: true,
+      depthCompare: 'less',
+      format: 'depth24plus'
+    }
+  })
+  // Create a compute pipeline that updates the game state.
+  const simulationPipeline = device.createComputePipeline({
+    label: 'Simulation pipeline',
+    layout: pipelineLayout,
+    compute: {
+      module: simulationShaderModule,
+      entryPoint: 'computeMain'
+    }
+  })
+
+  // This is where we attach the uniform to the shader through the pipeline
+  const bindGroup = device.createBindGroup({
+    label: 'Cell renderer bind group',
+    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
+    entries: entries.bindGroup
+  })
+
+  return {
+    pipeline: pipeline,
+    simulationPipeline: simulationPipeline,
+    bindGroup: bindGroup
+  }
+}
+
+function getUniformEntries(
   device: GPUDevice,
   uniforms: UB[]
 ): {
@@ -82,7 +152,7 @@ function getEntries(
     entries: entries.map((entry) => ({
       binding: entry.binding,
       visibility: entry.visibility,
-      buffer: { type: 'uniform' }
+      buffer: entry.buffer
     }))
   })
 
