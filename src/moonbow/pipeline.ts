@@ -71,7 +71,7 @@ export function gpuPipeline(
 export function gpuComputePipeline(
   { device, format }: GPUCanvas,
   { uniforms, shader, computeShader, storage, wireframe = false }: PipelineOptions
-): ComputePipeline {
+) {
   const entries = getUniformEntries({ device, uniforms })
   const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
   const layout = getBindGroupLayout(device, [...entries, ...storageEntries])
@@ -127,19 +127,46 @@ export function gpuComputePipeline(
     }
   })
 
-  // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup = device.createBindGroup({
-    label: 'Cell renderer bind group',
-    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: [...entries, ...storageEntries]
-  })
+  const bindGroups = [
+    device.createBindGroup({
+      label: 'Cell renderer bind group A',
+      layout: layout,
+      entries: [
+        ...entries,
+        {
+          binding: 1, //@binding(1) in shader
+          resource: storageEntries[0].resource
+        },
+        {
+          binding: 2,
+          resource: storageEntries[1].resource
+        }
+      ]
+    }),
+    device.createBindGroup({
+      label: 'Cell renderer bind group B',
+      layout: layout,
+      entries: [
+        ...entries,
+        {
+          binding: 1,
+          resource: storageEntries[1].resource
+        },
+        {
+          binding: 2,
+          resource: storageEntries[0].resource
+        }
+      ]
+    })
+  ]
 
   return {
     pipeline: cellPipeline,
     simulationPipeline: simulationPipeline,
-    bindGroup: bindGroup
+    bindGroups: bindGroups
   }
 }
+
 type UniformEntries = ReturnType<typeof getUniformEntries>
 
 function getUniformEntries(props: { device: GPUDevice; uniforms: UB[] }) {
