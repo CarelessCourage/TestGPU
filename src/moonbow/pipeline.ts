@@ -221,7 +221,7 @@ export const vec4 = (device: GPUDevice, value: number) =>
     update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
   })
 
-interface UB {
+export interface UB {
   binding?: number
   visibility?: number
   buffer: GPUBuffer

@@ -5,6 +5,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
 import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline, storageBuffer } from '../moonbow'
+import { cellPong } from '../moonbow/storage/cellPong'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -21,55 +22,10 @@ onMounted(async () => {
   const UPDATE_INTERVAL = 30 // Update every 200ms (5 times/sec)
 
   const { device } = await useGPU()
-  const canvas = document.querySelector('canvas')
-  const target = gpuCanvas(device, canvas)
+  const target = gpuCanvas(device, document.querySelector('canvas'))
   const model = getPlane(device)
 
-  // target.render((pass) => {
-  //   model.render(pass)
-  // })
-
-  const grid = f32(device, [GRID_SIZE, GRID_SIZE])
-
-  // Create an array representing the active state of each cell.
-  // Storage buffers are more flexible and much bigger than uniform buffers
-  // but uniform buffers are sometimes prioritised by the GPU so they might be faster depending on the GPU
-
-  const cellstate = pingpong()
-
-  function pingpong() {
-    const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
-
-    const stateA = storageBuffer(device, {
-      label: 'Cell - State A',
-      size: cellStateArray.byteLength,
-      update: () => console.log('rex')
-    })
-
-    const stateB = storageBuffer(device, {
-      label: 'Cell - State B',
-      size: cellStateArray.byteLength,
-      update: () => console.log('rex')
-    })
-
-    // Set each cell to a random state,
-    // then copy the JavaScript array into the storage buffer.
-    for (let i = 0; i < cellStateArray.length; ++i) {
-      cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
-    }
-    device.queue.writeBuffer(stateA.buffer, 0, cellStateArray)
-
-    // Mark every other cell of the second grid as active.
-    for (let i = 0; i < cellStateArray.length; i++) {
-      cellStateArray[i] = i % 2 // We are saving memory by reusing the same array
-    }
-    device.queue.writeBuffer(stateB.buffer, 0, cellStateArray)
-
-    return {
-      a: stateA.buffer,
-      b: stateB.buffer
-    }
-  }
+  const cellstate = cellPong(device, GRID_SIZE)
 
   const pipeline = gpuComputePipeline(target, {
     shader: ConwayShader,
@@ -79,7 +35,7 @@ onMounted(async () => {
       {
         binding: 0,
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-        buffer: grid.buffer, // Grid uniform buffer
+        buffer: cellstate.grid.buffer, // Grid uniform buffer
         bufferType: 'uniform', // Grid uniform buffer
         update: () => console.log('rex')
       }
