@@ -103,12 +103,6 @@ export function gpuComputePipeline(
       topology: 'line-list',
       cullMode: 'back' // ensures backfaces dont get rendered
     }
-    // depthStencil: {
-    //   // this makes sure that faces get rendered in the correct order.
-    //   depthWriteEnabled: true,
-    //   depthCompare: 'less',
-    //   format: 'depth24plus'
-    // }
   })
 
   // Create the compute shader that will process the simulation.
@@ -244,15 +238,17 @@ interface UBOptions {
   size?: number
   binding?: number
   visibility?: number
+  usage?: GPUBufferUsageFlags
   update: (buffer: GPUBuffer) => void
 }
 
 export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
+  const defaultUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   const buffer = device.createBuffer({
     label: options.label,
     size: options.size || 4,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    usage: options.usage || defaultUsage
   })
 
   // Passes the buffer to the update callback
@@ -260,6 +256,23 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
   return {
     binding: options.binding,
     visibility: options.visibility || defaultVisibility,
+    buffer: buffer,
+    update: () => options.update(buffer)
+  }
+}
+
+export function storageBuffer(device: GPUDevice, options: UBOptions): UB {
+  const buffer = device.createBuffer({
+    label: options.label,
+    size: options.size || 4,
+    usage: options.usage || GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  })
+
+  // Passes the buffer to the update callback
+  options.update(buffer)
+  return {
+    binding: options.binding,
+    visibility: options.visibility,
     buffer: buffer,
     update: () => options.update(buffer)
   }

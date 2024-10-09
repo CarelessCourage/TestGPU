@@ -4,7 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline } from '../moonbow'
+import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline, storageBuffer } from '../moonbow'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -40,16 +40,16 @@ onMounted(async () => {
   function pingpong() {
     const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
 
-    const stateA = device.createBuffer({
+    const stateA = storageBuffer(device, {
       label: 'Cell - State A',
       size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+      update: () => console.log('rex')
     })
 
-    const stateB = device.createBuffer({
+    const stateB = storageBuffer(device, {
       label: 'Cell - State B',
       size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+      update: () => console.log('rex')
     })
 
     // Set each cell to a random state,
@@ -57,17 +57,17 @@ onMounted(async () => {
     for (let i = 0; i < cellStateArray.length; ++i) {
       cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
     }
-    device.queue.writeBuffer(stateA, 0, cellStateArray)
+    device.queue.writeBuffer(stateA.buffer, 0, cellStateArray)
 
     // Mark every other cell of the second grid as active.
     for (let i = 0; i < cellStateArray.length; i++) {
       cellStateArray[i] = i % 2 // We are saving memory by reusing the same array
     }
-    device.queue.writeBuffer(stateB, 0, cellStateArray)
+    device.queue.writeBuffer(stateB.buffer, 0, cellStateArray)
 
     return {
-      a: stateA,
-      b: stateB
+      a: stateA.buffer,
+      b: stateB.buffer
     }
   }
 
