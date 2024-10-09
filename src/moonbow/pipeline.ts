@@ -6,6 +6,13 @@ interface PipelineOptions {
   wireframe?: boolean
 }
 
+interface PipelineOptions2 {
+  uniforms: UB[]
+  storage: [SB, SB]
+  shader: string
+  wireframe?: boolean
+}
+
 export interface Pipeline {
   pipeline: GPURenderPipeline
   bindGroup: GPUBindGroup
@@ -16,12 +23,17 @@ export interface ComputePipeline {
   simulationPipeline: GPUComputePipeline
   bindGroup: GPUBindGroup
 }
+interface ComputePipeline2 {
+  pipeline: GPURenderPipeline
+  simulationPipeline: GPUComputePipeline
+  bindGroups: [GPUBindGroup, GPUBindGroup]
+}
 
 export function gpuPipeline(
   { device, format }: GPUCanvas,
   { uniforms, shader, wireframe = false }: PipelineOptions
 ): Pipeline {
-  const entries = getUniformEntries(device, uniforms)
+  const entries = getUniformEntries(device, uniforms, [])
 
   const cellShaderModule = device.createShaderModule({
     label: 'Cell shader',
@@ -70,9 +82,9 @@ export function gpuPipeline(
 
 export function gpuComputePipeline(
   { device, format }: GPUCanvas,
-  { uniforms, shader, wireframe = false }: PipelineOptions
-): ComputePipeline {
-  const entries = getUniformEntries(device, uniforms)
+  { uniforms, storage, shader, wireframe = false }: PipelineOptions2
+): ComputePipeline2 {
+  const entries = getUniformEntries(device, uniforms, storage)
 
   // Create the compute shader that will process the simulation.
   const simulationShaderModule = device.createShaderModule({
@@ -109,6 +121,7 @@ export function gpuComputePipeline(
       format: 'depth24plus'
     }
   })
+
   // Create a compute pipeline that updates the game state.
   const simulationPipeline = device.createComputePipeline({
     label: 'Simulation pipeline',
@@ -119,37 +132,73 @@ export function gpuComputePipeline(
     }
   })
 
-  // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup = device.createBindGroup({
-    label: 'Cell renderer bind group',
-    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: entries.bindGroup
-  })
+  const bindGroups: [GPUBindGroup, GPUBindGroup] = [
+    device.createBindGroup({
+      label: 'Cell renderer bind group A',
+      layout: entries.layout,
+      entries: [
+        ...entries.bindGroup,
+        {
+          binding: 1,
+          resource: entries.storageBindGroup[0].resource
+        },
+        {
+          binding: 2,
+          resource: entries.storageBindGroup[1].resource
+        }
+      ]
+    }),
+    device.createBindGroup({
+      label: 'Cell renderer bind group B',
+      layout: entries.layout,
+      entries: [
+        ...entries.bindGroup,
+        {
+          binding: 1,
+          resource: entries.storageBindGroup[1].resource
+        },
+        {
+          binding: 2,
+          resource: entries.storageBindGroup[0].resource
+        }
+      ]
+    })
+  ]
 
   return {
     pipeline: pipeline,
     simulationPipeline: simulationPipeline,
-    bindGroup: bindGroup
+    bindGroups: bindGroups
   }
 }
 
 function getUniformEntries(
   device: GPUDevice,
-  uniforms: UB[]
+  uniforms: UB[],
+  storage: SB[]
 ): {
   layout: GPUBindGroupLayout
   bindGroup: GPUBindGroupEntry[]
+  storageBindGroup: GPUBindGroupEntry[]
 } {
+  const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE
   const entries = uniforms.map((uniform, index) => ({
     binding: uniform.binding === undefined ? index : uniform.binding,
-    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-    buffer: { type: 'uniform' as GPUBufferBindingType },
+    visibility: uniform.visibility || defaultVisibility,
+    buffer: { type: uniform.bufferType || ('uniform' as GPUBufferBindingType) },
+    resource: { buffer: uniform.buffer }
+  }))
+
+  const storageEntries = storage.map((uniform, index) => ({
+    binding: uniform.binding === undefined ? index : uniform.binding,
+    visibility: uniform.visibility || defaultVisibility,
+    buffer: { type: uniform.bufferType || ('storage' as GPUBufferBindingType) },
     resource: { buffer: uniform.buffer }
   }))
 
   const bindGroupLayout = device.createBindGroupLayout({
     label: 'Uniforms Bind Group Layout',
-    entries: entries.map((entry) => ({
+    entries: [...entries, ...storageEntries].map((entry) => ({
       binding: entry.binding,
       visibility: entry.visibility,
       buffer: entry.buffer
@@ -158,7 +207,8 @@ function getUniformEntries(
 
   return {
     layout: bindGroupLayout,
-    bindGroup: entries
+    bindGroup: entries,
+    storageBindGroup: storageEntries
   }
 }
 
@@ -198,11 +248,19 @@ export const vec4 = (device: GPUDevice, value: number) =>
     update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
   })
 
+interface SB {
+  binding?: number
+  buffer: GPUBuffer
+  bufferType?: GPUBufferBindingType
+  visibility?: number
+}
+
 interface UB {
   binding?: number
-  visibility?: number
   buffer: GPUBuffer
-  update: () => void
+  bufferType?: GPUBufferBindingType
+  visibility?: number
+  update?: () => void
 }
 
 export interface UBI {
@@ -217,7 +275,7 @@ interface UBOptions {
   update: (buffer: GPUBuffer) => void
 }
 
-export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
+export function uniformBuffer(device: GPUDevice, options: UBOptions): Required<UB> {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
   const buffer = device.createBuffer({
     label: options.label,
@@ -228,9 +286,10 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
   // Passes the buffer to the update callback
   options.update(buffer)
   return {
-    binding: options.binding,
+    binding: options.binding || 0,
     visibility: options.visibility || defaultVisibility,
     buffer: buffer,
+    bufferType: 'uniform',
     update: () => options.update(buffer)
   }
 }

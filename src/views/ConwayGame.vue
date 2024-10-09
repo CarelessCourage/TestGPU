@@ -1,19 +1,8 @@
 <script setup lang="ts">
 // @ts-ignore
 import ConwayShader from '../shaders/conway.wgsl'
-// @ts-ignore
-import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import {
-  useGPU,
-  gpuCanvas,
-  gpuPipeline,
-  uTime,
-  f32,
-  plane,
-  bufferLayout,
-  gpuComputePipeline
-} from '../moonbow'
+import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline } from '../moonbow'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -36,12 +25,6 @@ onMounted(async () => {
 
   // target.render((pass) => {
   //   model.render(pass)
-  // })
-
-  // const pipeline = gpuPipeline(target, {
-  //   shader: shader,
-  //   wireframe: false,
-  //   uniforms: [uniforms.time, uniforms.intensity, camera]
   // })
 
   const grid = f32(device, [GRID_SIZE, GRID_SIZE])
@@ -86,122 +69,34 @@ onMounted(async () => {
     }
   }
 
-  const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader',
-    code: ConwayShader
-  })
-
-  // We create this layout because we are sharing the same bindlayout between two diffirent shaders - and one shader might use a diffirent amount of stuff from the layout than another shader.
-  // Normally we could just auto it bit because of this variation we need to define what the layout is
-  const bindGroupLayout = device.createBindGroupLayout({
-    label: 'Cell Bind Group Layout',
-    entries: [
+  const pipeline = gpuComputePipeline(target, {
+    shader: ConwayShader,
+    wireframe: false,
+    uniforms: [
       {
         binding: 0,
-        // Add GPUShaderStage.FRAGMENT here if you are using the `grid` uniform in the fragment shader.
+        bufferType: 'uniform',
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-        buffer: { type: 'uniform' } // Grid uniform buffer
-      },
+        buffer: grid.buffer
+      }
+    ],
+    storage: [
       {
         binding: 1,
+        buffer: cellstate.a,
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
-        buffer: { type: 'read-only-storage' } // Cell state input buffer
+        bufferType: 'read-only-storage' // Cell state input buffer
       },
       {
         binding: 2,
+        buffer: cellstate.b,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'storage' } // Cell state output buffer
+        bufferType: 'storage' // Cell state output buffer
       }
     ]
   })
 
-  const pipelineLayout = device.createPipelineLayout({
-    label: 'Pipeline Layout',
-    bindGroupLayouts: [bindGroupLayout]
-  })
-
-  const cellPipeline = device.createRenderPipeline({
-    label: 'Cell pipeline',
-    layout: pipelineLayout, // No longer auto generating it
-    vertex: {
-      module: cellShaderModule,
-      entryPoint: 'vertexMain',
-      buffers: bufferLayout()
-    },
-    fragment: {
-      module: cellShaderModule,
-      entryPoint: 'fragmentMain',
-      targets: [target]
-    },
-    primitive: {
-      topology: 'line-list',
-      cullMode: 'back' // ensures backfaces dont get rendered
-    }
-  })
-
-  const pipeline = gpuComputePipeline(target, {
-    shader: ConwayShader,
-    wireframe: false,
-    uniforms: []
-  })
-
   const WORKGROUP_SIZE = 8
-  // Create the compute shader that will process the simulation.
-  const simulationShaderModule = device.createShaderModule({
-    label: 'Game of Life simulation shader',
-    code: ConwayCompute
-  })
-
-  // Create a compute pipeline that updates the game state.
-  const simulationPipeline = device.createComputePipeline({
-    label: 'Simulation pipeline',
-    layout: pipelineLayout,
-    compute: {
-      module: simulationShaderModule,
-      entryPoint: 'computeMain'
-    }
-  })
-
-  // This is where we attach the uniform to the shader through the pipeline
-  // Its doubbled up because we are using the ping-pong buffer pattern
-  const bindGroups = [
-    device.createBindGroup({
-      label: 'Cell renderer bind group A',
-      layout: bindGroupLayout,
-      entries: [
-        {
-          binding: 0, //@binding(0) in shader
-          resource: { buffer: grid.buffer } //Buffer resource assigned to this binding
-        },
-        {
-          binding: 1, //@binding(1) in shader
-          resource: { buffer: cellstate.a }
-        },
-        {
-          binding: 2,
-          resource: { buffer: cellstate.b }
-        }
-      ]
-    }),
-    device.createBindGroup({
-      label: 'Cell renderer bind group B',
-      layout: bindGroupLayout,
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: grid.buffer }
-        },
-        {
-          binding: 1,
-          resource: { buffer: cellstate.b }
-        },
-        {
-          binding: 2,
-          resource: { buffer: cellstate.a }
-        }
-      ]
-    })
-  ]
 
   let step = 0 // Track how many simulation steps have been run
 
@@ -210,8 +105,8 @@ onMounted(async () => {
     const computePass = encoder.beginComputePass()
 
     // Compute work
-    computePass.setPipeline(simulationPipeline)
-    computePass.setBindGroup(0, bindGroups[step % 2])
+    computePass.setPipeline(pipeline.simulationPipeline)
+    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
 
     const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
     computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
@@ -234,13 +129,13 @@ onMounted(async () => {
       ]
     })
 
-    pass.setPipeline(cellPipeline)
+    pass.setPipeline(pipeline.pipeline)
 
     pass.setVertexBuffer(0, model.buffer.vertices)
     pass.setVertexBuffer(1, model.buffer.normals)
     pass.setVertexBuffer(2, model.buffer.uvs)
 
-    pass.setBindGroup(0, bindGroups[step % 2]) // Makes sure the bind group with all the uniform stuff is actually being used in the pass
+    pass.setBindGroup(0, pipeline.bindGroups[step % 2]) // Makes sure the bind group with all the uniform stuff is actually being used in the pass
     // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
     // You're saying that each @binding that's part of @group(0) uses the resources in this bind group.
 
