@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // @ts-ignore
 import ConwayShader from '../shaders/conway.wgsl'
+// @ts-ignore
+import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
 import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline } from '../moonbow'
 
@@ -71,6 +73,7 @@ onMounted(async () => {
 
   const pipeline = gpuComputePipeline(target, {
     shader: ConwayShader,
+    computeShader: ConwayCompute,
     wireframe: false,
     uniforms: [
       {

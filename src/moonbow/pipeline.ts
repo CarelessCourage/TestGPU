@@ -10,6 +10,7 @@ interface PipelineOptions2 {
   uniforms: UB[]
   storage: [SB, SB]
   shader: string
+  computeShader: string
   wireframe?: boolean
 }
 
@@ -82,7 +83,7 @@ export function gpuPipeline(
 
 export function gpuComputePipeline(
   { device, format }: GPUCanvas,
-  { uniforms, storage, shader, wireframe = false }: PipelineOptions2
+  { uniforms, storage, shader, computeShader, wireframe = false }: PipelineOptions2
 ): ComputePipeline2 {
   const entries = getUniformEntries(device, uniforms, storage)
 
@@ -127,8 +128,11 @@ export function gpuComputePipeline(
     label: 'Simulation pipeline',
     layout: pipelineLayout,
     compute: {
-      module: simulationShaderModule,
-      entryPoint: 'computeMain'
+      entryPoint: 'computeMain',
+      module: device.createShaderModule({
+        label: 'Game of Life simulation shader',
+        code: computeShader
+      })
     }
   })
 
@@ -190,7 +194,7 @@ function getUniformEntries(
   }))
 
   const storageEntries = storage.map((uniform, index) => ({
-    binding: uniform.binding === undefined ? index : uniform.binding,
+    binding: uniform.binding === undefined ? uniforms.length + index : uniform.binding,
     visibility: uniform.visibility || defaultVisibility,
     buffer: { type: uniform.bufferType || ('storage' as GPUBufferBindingType) },
     resource: { buffer: uniform.buffer }
