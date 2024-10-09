@@ -2,14 +2,13 @@ import type { GPUCanvas } from './target.js'
 import { bufferLayout } from './geometry/utils.js'
 interface PipelineOptions {
   uniforms: UB[]
+  storage?: [UB, UB]
   shader: string
+  computeShader?: string
   wireframe?: boolean
 }
 
-export interface Pipeline {
-  pipeline: GPURenderPipeline
-  bindGroup: GPUBindGroup
-}
+export type Pipeline = ReturnType<typeof gpuPipeline>
 
 export interface ComputePipeline {
   pipeline: GPURenderPipeline
@@ -20,8 +19,9 @@ export interface ComputePipeline {
 export function gpuPipeline(
   { device, format }: GPUCanvas,
   { uniforms, shader, wireframe = false }: PipelineOptions
-): Pipeline {
-  const entries = getUniformEntries(device, uniforms)
+) {
+  const entries = getUniformEntries({ device, uniforms })
+  const layout = getBindGroupLayout(device, entries)
 
   const cellShaderModule = device.createShaderModule({
     label: 'Cell shader',
@@ -31,7 +31,7 @@ export function gpuPipeline(
   const pipeline = device.createRenderPipeline({
     label: 'Cell pipeline',
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [entries.layout]
+      bindGroupLayouts: [layout]
     }),
     vertex: {
       module: cellShaderModule,
@@ -58,8 +58,8 @@ export function gpuPipeline(
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = device.createBindGroup({
     label: 'Cell renderer bind group',
-    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: entries.bindGroup
+    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
+    entries: entries
   })
 
   return {
@@ -70,45 +70,53 @@ export function gpuPipeline(
 
 export function gpuComputePipeline(
   { device, format }: GPUCanvas,
-  { uniforms, shader, wireframe = false }: PipelineOptions
+  { uniforms, shader, computeShader, storage, wireframe = false }: PipelineOptions
 ): ComputePipeline {
-  const entries = getUniformEntries(device, uniforms)
-
-  // Create the compute shader that will process the simulation.
-  const simulationShaderModule = device.createShaderModule({
-    label: 'Game of Life simulation shader',
-    code: shader
-  })
+  const entries = getUniformEntries({ device, uniforms })
+  const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
+  const layout = getBindGroupLayout(device, [...entries, ...storageEntries])
 
   const pipelineLayout = device.createPipelineLayout({
     label: 'Pipeline Layout',
-    bindGroupLayouts: [entries.layout]
+    bindGroupLayouts: [layout]
   })
 
-  const pipeline = device.createRenderPipeline({
+  const cellShaderModule = device.createShaderModule({
+    label: 'Cell shader',
+    code: shader
+  })
+
+  const cellPipeline = device.createRenderPipeline({
     label: 'Cell pipeline',
     layout: pipelineLayout,
     vertex: {
-      module: simulationShaderModule,
+      module: cellShaderModule,
       entryPoint: 'vertexMain',
       buffers: bufferLayout()
     },
     fragment: {
-      module: simulationShaderModule,
+      module: cellShaderModule,
       entryPoint: 'fragmentMain',
       targets: [{ format }]
     },
     primitive: {
-      topology: wireframe ? 'line-list' : 'triangle-list',
+      topology: 'line-list',
       cullMode: 'back' // ensures backfaces dont get rendered
-    },
-    depthStencil: {
-      // this makes sure that faces get rendered in the correct order.
-      depthWriteEnabled: true,
-      depthCompare: 'less',
-      format: 'depth24plus'
     }
+    // depthStencil: {
+    //   // this makes sure that faces get rendered in the correct order.
+    //   depthWriteEnabled: true,
+    //   depthCompare: 'less',
+    //   format: 'depth24plus'
+    // }
   })
+
+  // Create the compute shader that will process the simulation.
+  const simulationShaderModule = device.createShaderModule({
+    label: 'Game of Life simulation shader',
+    code: computeShader || ''
+  })
+
   // Create a compute pipeline that updates the game state.
   const simulationPipeline = device.createComputePipeline({
     label: 'Simulation pipeline',
@@ -122,31 +130,29 @@ export function gpuComputePipeline(
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = device.createBindGroup({
     label: 'Cell renderer bind group',
-    layout: entries.layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: entries.bindGroup
+    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
+    entries: [...entries, ...storageEntries]
   })
 
   return {
-    pipeline: pipeline,
+    pipeline: cellPipeline,
     simulationPipeline: simulationPipeline,
     bindGroup: bindGroup
   }
 }
+type UniformEntries = ReturnType<typeof getUniformEntries>
 
-function getUniformEntries(
-  device: GPUDevice,
-  uniforms: UB[]
-): {
-  layout: GPUBindGroupLayout
-  bindGroup: GPUBindGroupEntry[]
-} {
-  const entries = uniforms.map((uniform, index) => ({
+function getUniformEntries(props: { device: GPUDevice; uniforms: UB[] }) {
+  const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE
+  return props.uniforms.map((uniform, index) => ({
     binding: uniform.binding === undefined ? index : uniform.binding,
-    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-    buffer: { type: 'uniform' as GPUBufferBindingType },
+    visibility: uniform.visibility || defaultVisibility,
+    buffer: { type: uniform.bufferType || ('uniform' as GPUBufferBindingType) },
     resource: { buffer: uniform.buffer }
   }))
+}
 
+function getBindGroupLayout(device: GPUDevice, entries: UniformEntries) {
   const bindGroupLayout = device.createBindGroupLayout({
     label: 'Uniforms Bind Group Layout',
     entries: entries.map((entry) => ({
@@ -155,11 +161,7 @@ function getUniformEntries(
       buffer: entry.buffer
     }))
   })
-
-  return {
-    layout: bindGroupLayout,
-    bindGroup: entries
-  }
+  return bindGroupLayout
 }
 
 export function uTime(device: GPUDevice) {
@@ -202,6 +204,7 @@ interface UB {
   binding?: number
   visibility?: number
   buffer: GPUBuffer
+  bufferType?: GPUBufferBindingType
   update: () => void
 }
 

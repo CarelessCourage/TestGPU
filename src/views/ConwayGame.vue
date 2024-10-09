@@ -38,12 +38,6 @@ onMounted(async () => {
   //   model.render(pass)
   // })
 
-  // const pipeline = gpuPipeline(target, {
-  //   shader: shader,
-  //   wireframe: false,
-  //   uniforms: [uniforms.time, uniforms.intensity, camera]
-  // })
-
   const grid = f32(device, [GRID_SIZE, GRID_SIZE])
 
   // Create an array representing the active state of each cell.
@@ -86,11 +80,6 @@ onMounted(async () => {
     }
   }
 
-  const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader',
-    code: ConwayShader
-  })
-
   // We create this layout because we are sharing the same bindlayout between two diffirent shaders - and one shader might use a diffirent amount of stuff from the layout than another shader.
   // Normally we could just auto it bit because of this variation we need to define what the layout is
   const bindGroupLayout = device.createBindGroupLayout({
@@ -115,52 +104,38 @@ onMounted(async () => {
     ]
   })
 
-  const pipelineLayout = device.createPipelineLayout({
-    label: 'Pipeline Layout',
-    bindGroupLayouts: [bindGroupLayout]
-  })
-
-  const cellPipeline = device.createRenderPipeline({
-    label: 'Cell pipeline',
-    layout: pipelineLayout, // No longer auto generating it
-    vertex: {
-      module: cellShaderModule,
-      entryPoint: 'vertexMain',
-      buffers: bufferLayout()
-    },
-    fragment: {
-      module: cellShaderModule,
-      entryPoint: 'fragmentMain',
-      targets: [target]
-    },
-    primitive: {
-      topology: 'line-list',
-      cullMode: 'back' // ensures backfaces dont get rendered
-    }
-  })
-
   const pipeline = gpuComputePipeline(target, {
     shader: ConwayShader,
+    computeShader: ConwayCompute,
     wireframe: false,
-    uniforms: []
+    uniforms: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+        buffer: grid.buffer, // Grid uniform buffer
+        bufferType: 'uniform', // Grid uniform buffer
+        update: () => console.log('rex')
+      }
+    ],
+    storage: [
+      {
+        binding: 1,
+        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
+        buffer: cellstate.a, // Cell state input buffer
+        bufferType: 'read-only-storage', // Cell state input buffer
+        update: () => console.log('rex')
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: cellstate.b, // Cell state output buffer
+        bufferType: 'storage', // Cell state output buffer
+        update: () => console.log('rex')
+      }
+    ]
   })
 
   const WORKGROUP_SIZE = 8
-  // Create the compute shader that will process the simulation.
-  const simulationShaderModule = device.createShaderModule({
-    label: 'Game of Life simulation shader',
-    code: ConwayCompute
-  })
-
-  // Create a compute pipeline that updates the game state.
-  const simulationPipeline = device.createComputePipeline({
-    label: 'Simulation pipeline',
-    layout: pipelineLayout,
-    compute: {
-      module: simulationShaderModule,
-      entryPoint: 'computeMain'
-    }
-  })
 
   // This is where we attach the uniform to the shader through the pipeline
   // Its doubbled up because we are using the ping-pong buffer pattern
@@ -210,7 +185,7 @@ onMounted(async () => {
     const computePass = encoder.beginComputePass()
 
     // Compute work
-    computePass.setPipeline(simulationPipeline)
+    computePass.setPipeline(pipeline.simulationPipeline)
     computePass.setBindGroup(0, bindGroups[step % 2])
 
     const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
@@ -234,7 +209,7 @@ onMounted(async () => {
       ]
     })
 
-    pass.setPipeline(cellPipeline)
+    pass.setPipeline(pipeline.pipeline)
 
     pass.setVertexBuffer(0, model.buffer.vertices)
     pass.setVertexBuffer(1, model.buffer.normals)
