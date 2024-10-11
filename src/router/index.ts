@@ -6,6 +6,7 @@ import MoonbowBasic from '@/views/MoonbowBasic.vue'
 import AnimatedPlanks from '@/views/AnimatedPlanks.vue'
 import BomberSet from '@/views/BomberSet.vue'
 import MarblePlane from '@/views/MarblePlane.vue'
+import ImpactPlane from '@/views/ImpactPlane.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,11 @@ const router = createRouter({
       path: '/marbles',
       name: 'Marbles',
       component: MarblePlane
+    },
+    {
+      path: '/impact',
+      name: 'Impact',
+      component: ImpactPlane
     }
   ]
 })

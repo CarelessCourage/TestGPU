@@ -59,8 +59,8 @@ async function init() {
   setInterval(() => {
     rotation += 0.05
     time.update()
-    scene1.draw(({ pass }) => model.render(pass, rotation))
-    scene2.draw(({ pass }) => model.render(pass, rotation))
+    scene1.draw(({ passEncoder }) => model.render(passEncoder, rotation))
+    scene2.draw(({ passEncoder }) => model.render(passEncoder, rotation))
   }, 1000 / 60)
 }
 

@@ -1,6 +1,12 @@
 /// <reference types="@webgpu/types" />
 import { mat4 } from 'gl-matrix'
-import { geoBuffer, bufferLayout, indicesBuffer, modelMatrix, ensure3Values } from './utils.js'
+import {
+  geoBuffer,
+  bufferVertexLayout,
+  indicesBuffer,
+  modelMatrix,
+  ensure3Values
+} from './utils.js'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { drawObject } from '../render.js'
 
@@ -57,7 +63,7 @@ function cubeBuffer(device: GPUDevice, options: ModelOptions, geo: Geometry): Ge
     indicesCount: geo.indicesCount,
     normals: nBuffer,
     uvs: uvBuffer,
-    layout: bufferLayout()
+    layout: bufferVertexLayout()
   }
 }
 

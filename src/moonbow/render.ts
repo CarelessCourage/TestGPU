@@ -2,35 +2,44 @@ import type { GPUCanvas } from './target.js'
 import type { Pipeline } from './pipeline.js'
 import type { GeoBuffers } from './geometry/utils.js'
 
-export interface RenderOutput {
-  frame: (callback: (render: Renderer) => void) => void
-  draw: (callback: (render: Renderer) => void) => void
-  scene: (callback: (render: Renderer) => void) => {
-    draw: () => void
-  }
-}
-
-export function render(props: GPUCanvas, pipeline: Pipeline): RenderOutput {
-  const depthTexture = props.device.createTexture({
-    size: [props.element.width, props.element.height],
+function getDepthStencil(
+  device: GPUDevice,
+  element: Pick<HTMLCanvasElement, 'height' | 'width'>
+): GPURenderPassDepthStencilAttachment {
+  const depthTexture = device.createTexture({
+    size: [element.width, element.height],
     format: 'depth24plus',
     usage: GPUTextureUsage.RENDER_ATTACHMENT
   })
+
+  return {
+    view: depthTexture.createView(),
+    depthClearValue: 1.0,
+    depthLoadOp: 'clear',
+    depthStoreOp: 'store'
+  }
+}
+
+export type RenderOutput = ReturnType<typeof render>
+
+export function render(props: GPUCanvas, pipeline: Pipeline) {
+  const depthStencil = getDepthStencil(props.device, props.context.canvas)
 
   const scene = (callback: (render: Renderer) => void) => ({
     draw: () => draw(callback)
   })
 
-  function draw(callback: (render: Renderer) => void) {
-    const render = initRender(props, depthTexture)
-    applyPipeline(render.pass, pipeline)
-    callback(render)
+  function draw(callback?: (render: Renderer) => void) {
+    const render = initRender(props, depthStencil)
+    applyPipeline(render.passEncoder, pipeline)
+    callback?.(render)
     submitPass(props.device, render)
   }
 
   return {
     draw: draw,
     scene: scene,
+    pipeline: pipeline,
     frame: (callback: (render: Renderer) => void) => {
       setInterval(() => scene(callback).draw(), 1000 / 60)
     }
@@ -41,52 +50,47 @@ function frame(callback: (render: Renderer) => void) {
   setInterval(() => callback, 1000 / 60)
 }
 
-interface Renderer {
-  encoder: GPUCommandEncoder
-  pass: GPURenderPassEncoder
-}
+type Renderer = ReturnType<typeof initRender>
 
-function initRender({ device, context }: GPUCanvas, depthTexture: GPUTexture): Renderer {
-  const encoder = device.createCommandEncoder()
-  const pass = encoder.beginRenderPass({
+function initRender(
+  { device, context }: GPUCanvas,
+  depthStencilAttachment: GPURenderPassDepthStencilAttachment
+) {
+  const commandEncoder = device.createCommandEncoder()
+  const passEncoder = commandEncoder.beginRenderPass({
+    depthStencilAttachment: depthStencilAttachment,
     colorAttachments: [
       {
         // @location(0), see fragment shader
         view: context.getCurrentTexture().createView(),
+        clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
         loadOp: 'clear',
-        clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1 },
         storeOp: 'store'
       }
-    ],
-    depthStencilAttachment: {
-      view: depthTexture.createView(),
-      depthClearValue: 1.0,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store'
-    }
+    ]
   })
-  return { encoder, pass }
+  return { commandEncoder, passEncoder }
 }
 
-function submitPass(device: GPUDevice, { encoder, pass }: Renderer) {
-  pass.end()
-  const commandBuffer = encoder.finish()
+export function submitPass(device: GPUDevice, { commandEncoder, passEncoder }: Renderer) {
+  passEncoder.end()
+  const commandBuffer = commandEncoder.finish()
   device.queue.submit([commandBuffer])
 }
 
-export function drawObject(pass: GPURenderPassEncoder, buffer: GeoBuffers) {
+export function drawObject(passEncoder: GPURenderPassEncoder, buffer: GeoBuffers) {
   // Set Geometry
-  pass.setVertexBuffer(0, buffer.vertices)
-  pass.setVertexBuffer(1, buffer.normals)
-  pass.setVertexBuffer(2, buffer.uvs)
+  passEncoder.setVertexBuffer(0, buffer.vertices)
+  passEncoder.setVertexBuffer(1, buffer.normals)
+  passEncoder.setVertexBuffer(2, buffer.uvs)
 
   // Draw Geometry
-  pass.setIndexBuffer(buffer.indices, 'uint16')
-  pass.drawIndexed(buffer.indicesCount, 1, 0, 0, 0)
+  passEncoder.setIndexBuffer(buffer.indices, 'uint16')
+  passEncoder.drawIndexed(buffer.indicesCount, 1, 0, 0, 0)
 }
 
-export function applyPipeline(pass: GPURenderPassEncoder, pipeline: Pipeline) {
+export function applyPipeline(passEncoder: GPURenderPassEncoder, pipeline: Pipeline) {
   // Pass Pipeline
-  pass.setPipeline(pipeline.pipeline)
-  pass.setBindGroup(0, pipeline.bindGroup)
+  passEncoder.setPipeline(pipeline.pipeline)
+  passEncoder.setBindGroup(0, pipeline.bindGroup)
 }

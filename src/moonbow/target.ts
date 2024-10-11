@@ -1,23 +1,10 @@
 import { render } from './render.js'
 import type { RenderOutput } from './render.js'
 import type { Pipeline } from './pipeline.js'
-interface GPUTarget extends GPU {
-  canvas: GPUCanvas
-}
 
 export interface GPU {
   device: GPUDevice
   adapter: GPUAdapter
-}
-
-export async function gpuTarget(): Promise<GPUTarget> {
-  const { device, adapter } = await useGPU()
-  const canvas = gpuCanvas(device)
-  return {
-    device: device,
-    adapter: adapter,
-    canvas: canvas
-  }
 }
 
 export async function useGPU() {
@@ -41,10 +28,7 @@ export interface GPUCanvas {
   render: (pipeline: Pipeline) => RenderOutput
 }
 
-export function gpuCanvas(
-  device: GPUDevice,
-  canvasQuery: HTMLCanvasElement | null = document.querySelector('canvas')
-): GPUCanvas {
+export function gpuCanvas(device: GPUDevice, canvasQuery: HTMLCanvasElement | null): GPUCanvas {
   const { context, format, canvas } = preflightChecks(canvasQuery)
 
   context.configure({
@@ -64,11 +48,11 @@ export function gpuCanvas(
   return target
 }
 
-function preflightChecks(canvas: HTMLCanvasElement | null) {
-  if (!canvas) throw new Error('No canvas found.')
+function preflightChecks(canvas = document.querySelector('canvas')) {
+  if (!canvas) throw new Error('No webgpu canvas found.')
   const context = canvas.getContext('webgpu')
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
-  if (!context) throw new Error('No context found.')
+  if (!context) throw new Error('WebGPU context not available')
   return {
     canvas: canvas,
     context: context,

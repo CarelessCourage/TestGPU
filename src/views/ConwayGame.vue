@@ -84,8 +84,8 @@ onMounted(async () => {
         {
           //@location(0), see fragment shader
           view: target.context.getCurrentTexture().createView(),
+          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1.0 },
           loadOp: 'clear',
-          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
           storeOp: 'store'
         }
       ]

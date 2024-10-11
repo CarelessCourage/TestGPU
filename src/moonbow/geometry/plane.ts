@@ -1,5 +1,5 @@
 /// <reference types="@webgpu/types" />
-import { geoBuffer, bufferLayout, indicesBuffer } from './utils.js'
+import { geoBuffer, bufferVertexLayout, indicesBuffer } from './utils.js'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { drawObject } from '../render.js'
 
@@ -56,7 +56,7 @@ function cubeBuffer(device: GPUDevice, geo: Geometry): GeoBuffers {
     indicesCount: geo.indicesCount,
     normals: nBuffer,
     uvs: uvBuffer,
-    layout: bufferLayout()
+    layout: bufferVertexLayout()
   }
 }
 

@@ -1,11 +1,12 @@
 import type { GPUCanvas } from './target.js'
-import { bufferLayout } from './geometry/utils.js'
+import { bufferVertexLayout } from './geometry/utils.js'
 interface PipelineOptions {
   uniforms: UB[]
   storage?: [UB, UB]
   shader: string
   computeShader?: string
   wireframe?: boolean
+  model?: boolean
 }
 
 export type Pipeline = ReturnType<typeof gpuPipeline>
@@ -18,7 +19,7 @@ export interface ComputePipeline {
 
 export function gpuPipeline(
   { device, format }: GPUCanvas,
-  { uniforms, shader, wireframe = false }: PipelineOptions
+  { uniforms, shader, wireframe = false, model = true }: PipelineOptions
 ) {
   const entries = getUniformEntries({ device, uniforms })
   const layout = getBindGroupLayout(device, entries)
@@ -36,7 +37,7 @@ export function gpuPipeline(
     vertex: {
       module: cellShaderModule,
       entryPoint: 'vertexMain',
-      buffers: bufferLayout()
+      buffers: model ? bufferVertexLayout() : undefined
     },
     fragment: {
       module: cellShaderModule,
@@ -47,12 +48,14 @@ export function gpuPipeline(
       topology: wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
     },
-    depthStencil: {
-      // this makes sure that faces get rendered in the correct order.
-      depthWriteEnabled: true,
-      depthCompare: 'less',
-      format: 'depth24plus'
-    }
+    depthStencil: model
+      ? {
+          // this makes sure that faces get rendered in the correct order.
+          depthWriteEnabled: true,
+          depthCompare: 'less',
+          format: 'depth24plus'
+        }
+      : undefined
   })
 
   // This is where we attach the uniform to the shader through the pipeline
@@ -92,7 +95,7 @@ export function gpuComputePipeline(
     vertex: {
       module: cellShaderModule,
       entryPoint: 'vertexMain',
-      buffers: bufferLayout()
+      buffers: bufferVertexLayout()
     },
     fragment: {
       module: cellShaderModule,
@@ -193,6 +196,19 @@ export function uTime(device: GPUDevice) {
     update: (buffer) => {
       time++
       device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
+      return time
+    }
+  })
+}
+
+export function fTime(device: GPUDevice) {
+  let time = 50
+  return uniformBuffer(device, {
+    label: 'Time Buffer',
+    binding: undefined,
+    update: (buffer) => {
+      time += 0.02
+      device.queue.writeBuffer(buffer, 0, new Float32Array([time]))
       return time
     }
   })

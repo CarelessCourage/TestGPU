@@ -11,6 +11,7 @@ import { RouterView, RouterLink } from 'vue-router'
       <RouterLink to="/gradient" activeClass="active">Gradient</RouterLink>
       <RouterLink to="/marbles" activeClass="active">Marbles</RouterLink>
       <RouterLink to="/bomber" activeClass="active">Bomber</RouterLink>
+      <RouterLink to="/impact" activeClass="active">Impact</RouterLink>
     </nav>
   </header>
   <RouterView />

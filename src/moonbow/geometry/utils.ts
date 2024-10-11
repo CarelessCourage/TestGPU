@@ -64,7 +64,7 @@ export function indicesBuffer({ device, indices }: IndicesBuffer) {
   return buffer
 }
 
-export function bufferLayout(): [
+export function bufferVertexLayout(): [
   GPUVertexBufferLayout,
   GPUVertexBufferLayout,
   GPUVertexBufferLayout

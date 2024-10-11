@@ -44,8 +44,8 @@ onMounted(async () => {
 
   setInterval(() => {
     time.update()
-    scene1.draw(({ pass }) => model.render(pass))
-    scene2.draw(({ pass }) => model.render(pass))
+    scene1.draw(({ passEncoder }) => model.render(passEncoder))
+    scene2.draw(({ passEncoder }) => model.render(passEncoder))
   }, 1000 / 60)
 })
 </script>

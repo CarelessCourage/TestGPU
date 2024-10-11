@@ -1,15 +1,20 @@
-import { gpuPipeline, gpuComputePipeline, uTime, f32, storageBuffer } from './pipeline.js'
-import { cube } from './geometry/box.js'
-import { plane } from './geometry/plane.js'
-import { gpuCamera } from './camera.js'
-import { useGPU, gpuCanvas } from './target.js'
-import { instance } from './engine.js'
-import { bufferLayout } from './geometry/utils.js'
+import { gpuPipeline, gpuComputePipeline, uTime, fTime, f32, storageBuffer } from './pipeline'
+import type { UB } from './pipeline'
+import { cube } from './geometry/box'
+import { plane } from './geometry/plane'
+import { gpuCamera } from './camera'
+import { useGPU, gpuCanvas } from './target'
+import { instance } from './engine'
+import { bufferVertexLayout } from './geometry/utils'
+import type { GPUCanvas } from './target'
+import { applyPipeline, submitPass } from './render'
+import type { Pipeline } from './pipeline'
 
 export {
   gpuPipeline,
   gpuComputePipeline,
   uTime,
+  fTime,
   f32,
   cube,
   plane,
@@ -17,6 +22,10 @@ export {
   useGPU,
   gpuCanvas,
   instance,
-  bufferLayout,
-  storageBuffer
+  bufferVertexLayout,
+  storageBuffer,
+  applyPipeline,
+  submitPass
 }
+
+export type { UB, GPUCanvas, Pipeline }
