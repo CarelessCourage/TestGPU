@@ -1,5 +1,6 @@
 
 @group(0) @binding(0) var<uniform> time: f32;
+const size = f32(0.7);
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -64,7 +65,7 @@ fn SineCrazyWrapper(p: vec3<f32>) -> f32 {
 fn scene(p: vec3<f32>) -> f32 {
     let p1 = rotate(p, vec3<f32>(1.0, 1.0, 1.0), time) / 2.0;
     let box = sdBox(p1, vec3<f32>(0.4));
-    let sphere = sphere(p, 0.7);
+    let sphere = sphere(p, size);
     let sine = SineCrazyWrapper(p1);
 
     return max(sphere, sine);
@@ -90,6 +91,18 @@ fn GetColorAmount(p: vec3<f32>) -> vec3<f32> {
     return col * amount;
 }
 
+fn palette(t: f32, a: vec3<f32>, b: vec3<f32>, c: vec3<f32>, d: vec3<f32>) -> vec3<f32> {
+    return a + b * cos(6.283185 * (c * t + d));
+}
+
+fn getNewColor(t: f32) -> vec3<f32> {
+    let a = vec3<f32>(0.5, 0.5, 0.5);
+    let b = vec3<f32>(0.5, 0.5, 0.5);
+    let c = vec3<f32>(1.0, 1.0, 1.0);
+    let d = vec3<f32>(0.0, 0.10, 0.20);
+    return palette(t, a, b, c, d);
+}
+
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
     let newUV = vec3<f32>(input.uv - vec2<f32>(0.5), -1.0);
@@ -103,7 +116,7 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
     var rayLen = 0.0;
 
     let definition = 0.8;
-    let brightness = 0.1;
+    let brightness = 0.15;
     let light = vec3<f32>(1.0, 2.0, 1.5);
     var color = vec3<f32>(0.0);
 
@@ -116,12 +129,12 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
         if (abs(curDist) < 0.001) {
             let n = getNormal(rayPos);
             let diff = dot(n, light) + 1.0;
-            let colorPosition = length(rayPos) * 0.5 + 1.0;
+            let colorPosition = length(rayPos * diff) * 0.5 + 1.0;
 
-            if (length(rayPos) > 0.499) {
-                color = GetColor(length(rayPos)) * diff;
+            if (length(rayPos) > size) {
+                color = GetColor(length(rayPos)) * diff + rayPos;
             } else {
-                color = GetColor(colorPosition / 0.8) * diff / 2.0;
+                color = getNewColor(colorPosition) * diff;
             }
             break;
         }
