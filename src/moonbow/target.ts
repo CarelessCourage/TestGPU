@@ -29,33 +29,24 @@ export interface GPUCanvas {
 }
 
 export function gpuCanvas(device: GPUDevice, canvasQuery: HTMLCanvasElement | null): GPUCanvas {
-  const { context, format, canvas } = preflightChecks(canvasQuery)
+  if (!canvasQuery) throw new Error('No webgpu canvas found.')
+  const context = canvasQuery.getContext('webgpu')
+  const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
+  if (!context) throw new Error('WebGPU context not available')
 
   context.configure({
     device: device,
-    format: format
+    format: canvasFormat
   })
 
   const target = {
-    element: canvas,
+    element: canvasQuery,
     context: context,
-    format: format,
+    format: canvasFormat,
     device: device,
-    aspect: canvas.width / canvas.height,
+    aspect: canvasQuery.width / canvasQuery.height,
     render: (pipeline: Pipeline) => render(target, pipeline)
   }
 
   return target
-}
-
-function preflightChecks(canvas = document.querySelector('canvas')) {
-  if (!canvas) throw new Error('No webgpu canvas found.')
-  const context = canvas.getContext('webgpu')
-  const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
-  if (!context) throw new Error('WebGPU context not available')
-  return {
-    canvas: canvas,
-    context: context,
-    format: canvasFormat
-  }
 }

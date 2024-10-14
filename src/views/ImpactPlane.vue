@@ -1,19 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, useTemplateRef, onMounted } from 'vue'
 // @ts-ignore
 import shaderSource from '../shaders/impact.wgsl'
-import { useGPU, fTime, submitPass, gpuPipeline, applyPipeline, gpuCanvas } from '../moonbow'
-import type { UB, GPUCanvas } from '../moonbow'
+import { useGPU, fTime, gpuPipeline, gpuCanvas } from '../moonbow'
+import type { GPUCanvas, Pipeline } from '../moonbow'
 
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-
-interface InstanceType {
-  uniforms: UB[]
-  canvas: HTMLCanvasElement
-  shader: string
-}
-
-function initRender({ device, context }: Pick<GPUCanvas, 'device' | 'context'>) {
+function renderFrame({ device, context }: Pick<GPUCanvas, 'device' | 'context'>) {
   const commandEncoder = device.createCommandEncoder()
   const passEncoder = commandEncoder.beginRenderPass({
     colorAttachments: [
@@ -26,16 +18,39 @@ function initRender({ device, context }: Pick<GPUCanvas, 'device' | 'context'>) 
       }
     ]
   })
-  return { commandEncoder, passEncoder }
+
+  function drawPass(pipeline: Pipeline) {
+    passEncoder.setPipeline(pipeline.pipeline)
+    passEncoder.setBindGroup(0, pipeline.bindGroup)
+    passEncoder.draw(3, 1, 0, 0)
+  }
+
+  function submitPass() {
+    passEncoder.end()
+    const commandBuffer = commandEncoder.finish()
+    device.queue.submit([commandBuffer])
+  }
+
+  function frame(pipeline: Pipeline, callback?: () => void) {
+    drawPass(pipeline)
+    callback?.()
+    submitPass()
+  }
+
+  return {
+    commandEncoder,
+    passEncoder,
+    drawPass,
+    submitPass,
+    frame
+  }
 }
 
-onMounted(async () => {
-  if (!canvasRef.value) return
+async function useMoonbow(canvas: HTMLCanvasElement) {
   const { device } = await useGPU()
-
   const time = fTime(device)
 
-  const target = gpuCanvas(device, canvasRef.value)
+  const target = gpuCanvas(device, canvas)
   const pipeline = gpuPipeline(target, {
     shader: shaderSource,
     wireframe: false,
@@ -43,15 +58,21 @@ onMounted(async () => {
     model: false
   })
 
-  setInterval(() => {
-    const render = initRender(target)
+  function frame(callback?: () => void) {
+    renderFrame(target).frame(pipeline, () => {
+      callback?.()
+      time.update()
+    })
+  }
 
-    applyPipeline(render.passEncoder, pipeline)
-    render.passEncoder.draw(3, 1, 0, 0)
-    submitPass(device, render)
+  return { frame }
+}
 
-    time.update()
-  }, 1000 / 60)
+const canvasRef = useTemplateRef('canvasRef')
+onMounted(async () => {
+  if (!canvasRef.value) return
+  const { frame } = await useMoonbow(canvasRef.value)
+  setInterval(frame, 1000 / 60)
 })
 </script>
 

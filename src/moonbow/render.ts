@@ -46,10 +46,6 @@ export function render(props: GPUCanvas, pipeline: Pipeline) {
   }
 }
 
-function frame(callback: (render: Renderer) => void) {
-  setInterval(() => callback, 1000 / 60)
-}
-
 type Renderer = ReturnType<typeof initRender>
 
 function initRender(
@@ -72,7 +68,10 @@ function initRender(
   return { commandEncoder, passEncoder }
 }
 
-export function submitPass(device: GPUDevice, { commandEncoder, passEncoder }: Renderer) {
+export function submitPass(
+  device: GPUDevice,
+  { commandEncoder, passEncoder }: Pick<Renderer, 'commandEncoder' | 'passEncoder'>
+) {
   passEncoder.end()
   const commandBuffer = commandEncoder.finish()
   device.queue.submit([commandBuffer])
