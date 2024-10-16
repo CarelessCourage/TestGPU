@@ -28,7 +28,7 @@ export interface GPUCanvas {
   render: (pipeline: Pipeline) => RenderOutput
 }
 
-export function gpuCanvas(device: GPUDevice, canvasQuery: HTMLCanvasElement | null): GPUCanvas {
+export function gpuCanvas(device: GPUDevice, canvasQuery?: HTMLCanvasElement | null): GPUCanvas {
   if (!canvasQuery) throw new Error('No webgpu canvas found.')
   const context = canvasQuery.getContext('webgpu')
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat()

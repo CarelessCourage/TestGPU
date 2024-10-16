@@ -1,6 +1,8 @@
 import type { GPUCanvas } from './target.js'
 import { bufferVertexLayout } from './geometry/utils.js'
-interface PipelineOptions {
+import { renderFrame } from '../moonbow'
+
+export interface PipelineOptions {
   uniforms: UB[]
   storage?: [UB, UB]
   shader: string
@@ -18,7 +20,7 @@ export interface ComputePipeline {
 }
 
 export function gpuPipeline(
-  { device, format }: GPUCanvas,
+  { device, format, context }: GPUCanvas,
   { uniforms, shader, wireframe = false, model = true }: PipelineOptions
 ) {
   const entries = getUniformEntries({ device, uniforms })
@@ -66,8 +68,11 @@ export function gpuPipeline(
   })
 
   return {
-    pipeline: pipeline,
-    bindGroup: bindGroup
+    pipeline,
+    bindGroup,
+    renderFrame: (callback?: () => void) => {
+      renderFrame({ device, context }).frame({ pipeline, bindGroup }, callback)
+    }
   }
 }
 

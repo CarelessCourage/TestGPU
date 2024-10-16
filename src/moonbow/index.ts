@@ -4,11 +4,12 @@ import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
 import { gpuCamera } from './camera'
 import { useGPU, gpuCanvas } from './target'
-import { instance } from './engine'
+import { instance, useMoonbow } from './engine'
 import { bufferVertexLayout } from './geometry/utils'
 import type { GPUCanvas } from './target'
 import { applyPipeline, submitPass } from './render'
-import type { Pipeline } from './pipeline'
+import { renderFrame } from './render2'
+import type { Pipeline, PipelineOptions } from './pipeline'
 
 export {
   gpuPipeline,
@@ -25,7 +26,9 @@ export {
   bufferVertexLayout,
   storageBuffer,
   applyPipeline,
-  submitPass
+  submitPass,
+  renderFrame,
+  useMoonbow
 }
 
-export type { UB, GPUCanvas, Pipeline }
+export type { UB, GPUCanvas, Pipeline, PipelineOptions }
