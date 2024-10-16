@@ -2,15 +2,26 @@
 // @ts-ignore
 import shaderSource from '../shaders/impact.wgsl'
 import { useTemplateRef, onMounted } from 'vue'
-import { useMoonbow } from '../moonbow'
+import { useMoonbow, fTime } from '../moonbow'
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 onMounted(async () => {
   const renderFrame = await useMoonbow({
     canvas: canvasRef.value,
-    shader: shaderSource
+    shader: shaderSource,
+    uniforms: ({ device }) => {
+      const time = fTime(device)
+      return { time }
+    }
   })
-  setInterval(renderFrame, 1000 / 60)
+
+  setInterval(
+    () =>
+      renderFrame(({ uniforms }) => {
+        uniforms?.time.update()
+      }),
+    1000 / 60
+  )
 })
 </script>
 
