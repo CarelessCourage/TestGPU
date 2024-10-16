@@ -6,12 +6,11 @@ import { useMoonbow } from '../moonbow'
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 onMounted(async () => {
-  if (!canvasRef.value) return
-  const frame = await useMoonbow({
+  const renderFrame = await useMoonbow({
     canvas: canvasRef.value,
     shader: shaderSource
   })
-  setInterval(frame, 1000 / 60)
+  setInterval(renderFrame, 1000 / 60)
 })
 </script>
 

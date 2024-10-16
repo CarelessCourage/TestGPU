@@ -4,7 +4,7 @@ import { useGPU, fTime, gpuPipeline, gpuCanvas, gpuCamera } from '../moonbow'
 import type { PipelineOptions, GPUCanvas, UB } from '../moonbow'
 
 interface MoonbowOptions extends Omit<PipelineOptions, 'uniforms' | 'storage'> {
-  canvas: HTMLCanvasElement
+  canvas: HTMLCanvasElement | null
   uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => UB[]
   storage: (props: { target: GPUCanvas; device: GPUDevice }) => UB[]
 }
