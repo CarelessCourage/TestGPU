@@ -15,7 +15,6 @@ export async function useMoonbow<U extends { [key: string]: UB }>(
   const { device } = await useGPU()
   const target = gpuCanvas(device, options.canvas)
 
-  const time = fTime(device)
   const uniforms = options.uniforms?.({ target, device })
   const storage = options.storage?.({ target, device })
 
