@@ -37,7 +37,24 @@ export async function useMoonbow<U extends { [key: string]: UB }>(
     })
   }
 
-  return renderFrame
+  function loop(
+    callback?: (props: { target: GPUCanvas; device: GPUDevice; uniforms?: U }) => void,
+    interval = 1000 / 60
+  ) {
+    setInterval(
+      () =>
+        pipeline.renderFrame(() => {
+          callback?.({
+            target: target,
+            device: device,
+            uniforms: uniforms
+          })
+        }),
+      interval
+    )
+  }
+
+  return { renderFrame, loop }
 }
 
 // @ts-ignore

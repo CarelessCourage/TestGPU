@@ -6,7 +6,7 @@ import { useMoonbow, fTime } from '../moonbow'
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 onMounted(async () => {
-  const renderFrame = await useMoonbow({
+  const moon = await useMoonbow({
     canvas: canvasRef.value,
     shader: shaderSource,
     uniforms: ({ device }) => {
@@ -15,13 +15,9 @@ onMounted(async () => {
     }
   })
 
-  setInterval(
-    () =>
-      renderFrame(({ uniforms }) => {
-        uniforms?.time.update()
-      }),
-    1000 / 60
-  )
+  moon.loop(({ uniforms }) => {
+    uniforms?.time.update()
+  })
 })
 </script>
 
