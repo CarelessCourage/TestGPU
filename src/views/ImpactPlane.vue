@@ -9,9 +9,9 @@ onMounted(async () => {
   const moon = await useMoonbow({
     canvas: canvasRef.value,
     shader: shaderSource,
-    uniforms: ({ device }) => {
+    memory: ({ device }) => {
       const time = fTime(device)
-      return { time }
+      return { uniforms: { time } }
     }
   })
 
