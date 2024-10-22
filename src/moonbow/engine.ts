@@ -1,8 +1,7 @@
 // @ts-ignore
 import shaderSource from '../shaders/impact.wgsl'
 import { useGPU, fTime, gpuPipeline, gpuCanvas, gpuCamera } from '../moonbow'
-import type { PipelineOptions, GPUCanvas, UB } from '../moonbow'
-import type { R } from 'node_modules/vite/dist/node/types.d-aGj9QkWt'
+import type { PipelineOptions, GPUCanvas, UB, MoonbowEncoder } from '../moonbow'
 
 interface MoonbowUniforms {
   [key: string]: UB
@@ -17,10 +16,11 @@ interface MoonbowMemory<U extends MoonbowUniforms = MoonbowUniforms> {
 interface MoonbowOptions<U extends MoonbowUniforms>
   extends Omit<PipelineOptions, 'uniforms' | 'storage'> {
   canvas: HTMLCanvasElement | null
+  model?: boolean
   memory: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<MoonbowMemory<U>>
 }
 
-async function getMemory<U extends MoonbowUniforms>(options: Partial<MoonbowOptions<U>>) {
+export async function getMemory<U extends MoonbowUniforms>(options: Partial<MoonbowOptions<U>>) {
   const { device } = await useGPU()
   const target = gpuCanvas(device, options.canvas)
 
@@ -30,63 +30,49 @@ async function getMemory<U extends MoonbowUniforms>(options: Partial<MoonbowOpti
   return { uniforms, storage, device, target }
 }
 
+export type GetMemory<U extends MoonbowUniforms> = Awaited<ReturnType<typeof getMemory<U>>>
+
 export async function useMoonbow<U extends MoonbowUniforms>(options: Partial<MoonbowOptions<U>>) {
   const memory = await getMemory(options)
 
-  const pipeline = gpuPipeline(memory.target, {
-    model: false,
-    shader: options.shader || shaderSource,
-    uniforms: memory.uniforms ? Object.values(memory.uniforms) : [],
-    storage: memory.storage
+  const pipeline = gpuPipeline(memory, {
+    model: options.model || false,
+    shader: options.shader || shaderSource
   })
 
   return frames(pipeline, memory)
 }
 
+type MoonbowFrameCallback<U extends MoonbowUniforms> = (
+  memory: GetMemory<U>,
+  encoder: MoonbowEncoder
+) => void
+
 function frames<U extends MoonbowUniforms>(
   pipeline: ReturnType<typeof gpuPipeline>,
-  memory: Awaited<ReturnType<typeof getMemory<U>>>
+  memory: GetMemory<U>
 ) {
-  function renderFrame(
-    callback?: (props: { target: GPUCanvas; device: GPUDevice; uniforms?: U }) => void
-  ) {
-    pipeline.renderFrame(() => {
-      callback?.({
-        target: memory.target,
-        device: memory.device,
-        uniforms: memory.uniforms
-      })
+  function renderFrame(callback?: MoonbowFrameCallback<U>) {
+    pipeline.renderFrame((encoder) => {
+      if (!callback) return
+      callback(memory, encoder)
     })
   }
 
-  function loop(
-    callback?: (props: { target: GPUCanvas; device: GPUDevice; uniforms?: U }) => void,
-    interval = 1000 / 60
-  ) {
-    setInterval(
-      () =>
-        pipeline.renderFrame(() => {
-          callback?.({
-            target: memory.target,
-            device: memory.device,
-            uniforms: memory.uniforms
-          })
-        }),
-      interval
-    )
+  function loop(callback?: MoonbowFrameCallback<U>, interval = 1000 / 60) {
+    setInterval(() => renderFrame(callback), interval)
   }
 
-  return { renderFrame, loop }
+  return { renderFrame, loop, memory, pipeline }
 }
 
 // @ts-ignore
-export function instance(device, { uniforms, canvas, shader }) {
+export async function instance(device, { uniforms, canvas, shader }) {
   const target = gpuCanvas(device, canvas)
-  const camera = gpuCamera(target)
-  const pipeline = gpuPipeline(target, {
+
+  const pipeline = gpuPipeline(memory, {
     shader: shader,
-    wireframe: false,
-    uniforms: [uniforms.time, uniforms.intensity, camera]
+    wireframe: false
   })
 
   return target.render(pipeline)

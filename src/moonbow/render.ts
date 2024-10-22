@@ -39,10 +39,10 @@ export function render(props: GPUCanvas, pipeline: Pipeline) {
   return {
     draw: draw,
     scene: scene,
-    pipeline: pipeline,
-    frame: (callback: (render: Renderer) => void) => {
-      setInterval(() => scene(callback).draw(), 1000 / 60)
-    }
+    pipeline: pipeline
+    // frame: (callback: (render: Renderer) => void) => {
+    //   setInterval(() => scene(callback).draw(), 1000 / 60)
+    // }
   }
 }
 

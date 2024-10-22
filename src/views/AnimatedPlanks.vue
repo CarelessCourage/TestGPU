@@ -1,9 +1,21 @@
 <script lang="ts" setup>
+import { onMounted } from 'vue'
 // @ts-ignore
 import shader from '../shaders/shader.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
-import { useGPU, uTime, f32, instance, cube } from '../moonbow'
+import {
+  useGPU,
+  uTime,
+  f32,
+  instance,
+  cube,
+  useMoonbow,
+  gpuCanvas,
+  getMemory,
+  gpuPipeline,
+  gpuCamera
+} from '../moonbow'
 
 function spinningPlanks(device: GPUDevice) {
   const resolution = 15
@@ -39,32 +51,38 @@ function spinningPlanks(device: GPUDevice) {
 async function init() {
   const { device } = await useGPU()
 
-  const time = uTime(device)
-  const intensity = f32(device, [0.1])
+  const memory = await getMemory({
+    canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+    shader: shader,
+    memory: ({ device, target }) => {
+      const time = uTime(device)
+      const camera = gpuCamera(target)
+      const intensity = f32(device, [0.1])
+      return { uniforms: { camera, time, intensity } }
+    }
+  })
+
+  const pipeline = gpuPipeline(memory, {
+    shader: shader,
+    wireframe: false
+  })
+
   const model = spinningPlanks(device)
 
-  const scene1 = instance(device, {
-    shader: shader,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#one') as HTMLCanvasElement
-  })
-
-  const scene2 = instance(device, {
-    shader: basic,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#two') as HTMLCanvasElement
-  })
+  const scene1 = memory.target.render(pipeline)
+  const scene2 = memory.target.render(pipeline)
 
   let rotation = 0
   setInterval(() => {
     rotation += 0.05
-    time.update()
     scene1.draw(({ passEncoder }) => model.render(passEncoder, rotation))
     scene2.draw(({ passEncoder }) => model.render(passEncoder, rotation))
   }, 1000 / 60)
 }
 
-init()
+onMounted(() => {
+  init()
+})
 </script>
 
 <template>

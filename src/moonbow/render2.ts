@@ -1,5 +1,10 @@
 import type { GPUCanvas, Pipeline } from '../moonbow'
 
+export interface MoonbowEncoder {
+  commandEncoder: GPUCommandEncoder
+  passEncoder: GPURenderPassEncoder
+}
+
 export function renderFrame({ device, context }: Pick<GPUCanvas, 'device' | 'context'>) {
   const commandEncoder = device.createCommandEncoder()
   const passEncoder = commandEncoder.beginRenderPass({
@@ -26,9 +31,15 @@ export function renderFrame({ device, context }: Pick<GPUCanvas, 'device' | 'con
     device.queue.submit([commandBuffer])
   }
 
-  function frame(pipeline: Pick<Pipeline, 'bindGroup' | 'pipeline'>, callback?: () => void) {
+  function frame(
+    pipeline: Pick<Pipeline, 'bindGroup' | 'pipeline'>,
+    callback?: (encoder: MoonbowEncoder) => void
+  ) {
     drawPass(pipeline)
-    callback?.()
+    callback?.({
+      commandEncoder,
+      passEncoder
+    })
     submitPass()
   }
 
