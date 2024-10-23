@@ -74,7 +74,7 @@ export function gpuPipeline<U extends MoonbowUniforms>(
     pipeline,
     bindGroup,
     renderFrame: (callback?: (encoder: MoonbowEncoder) => void) => {
-      renderFrame({ device, context }).frame({ pipeline, bindGroup }, callback)
+      renderFrame({ device, context, model }).frame({ pipeline, bindGroup }, callback)
     }
   }
 }

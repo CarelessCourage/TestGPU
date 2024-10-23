@@ -1,13 +1,30 @@
 import type { GPUCanvas, Pipeline } from '../moonbow'
 
-export interface MoonbowEncoder {
-  commandEncoder: GPUCommandEncoder
-  passEncoder: GPURenderPassEncoder
+function getDepthStencil(
+  device: GPUDevice,
+  element: Pick<HTMLCanvasElement, 'height' | 'width'>
+): GPURenderPassDepthStencilAttachment {
+  const depthTexture = device.createTexture({
+    size: [element.width, element.height],
+    format: 'depth24plus',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  })
+
+  return {
+    view: depthTexture.createView(),
+    depthClearValue: 1.0,
+    depthLoadOp: 'clear',
+    depthStoreOp: 'store'
+  }
 }
 
-export function renderFrame({ device, context }: Pick<GPUCanvas, 'device' | 'context'>) {
+function initRender(
+  { device, context }: Pick<GPUCanvas, 'device' | 'context'>,
+  depthStencilAttachment?: GPURenderPassDepthStencilAttachment
+) {
   const commandEncoder = device.createCommandEncoder()
   const passEncoder = commandEncoder.beginRenderPass({
+    depthStencilAttachment: depthStencilAttachment,
     colorAttachments: [
       {
         // @location(0), see fragment shader
@@ -18,11 +35,29 @@ export function renderFrame({ device, context }: Pick<GPUCanvas, 'device' | 'con
       }
     ]
   })
+  return { commandEncoder, passEncoder }
+}
+
+export interface MoonbowEncoder {
+  commandEncoder: GPUCommandEncoder
+  passEncoder: GPURenderPassEncoder
+}
+
+export function renderFrame({
+  device,
+  context,
+  model
+}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean }) {
+  const depthStencil = getDepthStencil(device, context.canvas)
+  const { passEncoder, commandEncoder } = initRender(
+    { device, context },
+    model ? depthStencil : undefined
+  )
 
   function drawPass(pipeline: Pick<Pipeline, 'bindGroup' | 'pipeline'>) {
     passEncoder.setPipeline(pipeline.pipeline)
     passEncoder.setBindGroup(0, pipeline.bindGroup)
-    passEncoder.draw(3, 1, 0, 0)
+    // passEncoder.draw(3, 1, 0, 0)
   }
 
   function submitPass() {

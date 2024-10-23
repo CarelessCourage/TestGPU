@@ -45,7 +45,7 @@ type MoonbowFrameCallback<U extends MoonbowUniforms> = (
   encoder: MoonbowEncoder
 ) => void
 
-function frames<U extends MoonbowUniforms>(
+export function frames<U extends MoonbowUniforms>(
   pipeline: ReturnType<typeof gpuPipeline>,
   memory: GetMemory<U>
 ) {

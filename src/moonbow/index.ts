@@ -4,7 +4,7 @@ import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
 import { gpuCamera } from './camera'
 import { useGPU, gpuCanvas } from './target'
-import { instance, useMoonbow, getMemory } from './engine'
+import { instance, useMoonbow, getMemory, frames } from './engine'
 import type { GetMemory, MoonbowUniforms } from './engine'
 import { bufferVertexLayout } from './geometry/utils'
 import type { GPUCanvas } from './target'
@@ -31,7 +31,8 @@ export {
   submitPass,
   renderFrame,
   useMoonbow,
-  getMemory
+  getMemory,
+  frames
 }
 
 export type { UB, GPUCanvas, Pipeline, PipelineOptions, GetMemory, MoonbowUniforms, MoonbowEncoder }

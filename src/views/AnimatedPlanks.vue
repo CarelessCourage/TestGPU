@@ -4,7 +4,7 @@ import { onMounted } from 'vue'
 import shader from '../shaders/shader.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
-import { uTime, f32, cube, getMemory, gpuPipeline, gpuCamera } from '../moonbow'
+import { uTime, f32, cube, getMemory, gpuPipeline, gpuCamera, useMoonbow, frames } from '../moonbow'
 
 function spinningPlanks(device: GPUDevice) {
   const resolution = 15
@@ -49,8 +49,11 @@ async function init() {
 
   const pipeline = gpuPipeline(memory, {
     shader: shader,
-    wireframe: false
+    wireframe: false,
+    model: true
   })
+
+  const renderFrames = frames(pipeline, memory)
 
   const model = spinningPlanks(memory.device)
   const scene1 = memory.target.render(pipeline)
@@ -75,7 +78,10 @@ async function init() {
   let rotation = 0
   setInterval(() => {
     rotation += 0.05
-    scene1.draw(({ passEncoder }) => model.render(passEncoder, rotation))
+    renderFrames.renderFrame(({ uniforms }, { passEncoder }) => {
+      model.render(passEncoder, rotation)
+    })
+    //scene1.draw(({ passEncoder }) => model.render(passEncoder, rotation))
     scene2.draw(({ passEncoder }) => model2.render(passEncoder, rotation))
   }, 1000 / 60)
 }

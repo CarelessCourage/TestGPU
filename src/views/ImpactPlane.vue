@@ -12,7 +12,8 @@ onMounted(async () => {
     memory: ({ device }) => ({ time: fTime(device) })
   })
 
-  moon.loop(({ uniforms }) => {
+  moon.loop(({ uniforms }, { passEncoder }) => {
+    passEncoder.draw(3, 1, 0, 0)
     uniforms?.time?.update()
   })
 })
