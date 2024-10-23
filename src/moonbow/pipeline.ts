@@ -1,7 +1,7 @@
 import type { GPUCanvas } from './target.js'
 import { bufferVertexLayout } from './geometry/utils.js'
 import { renderFrame } from '../moonbow'
-import type { GetMemory, MoonbowEncoder } from '../moonbow'
+import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../moonbow'
 
 export interface PipelineOptions {
   shader: string
@@ -18,8 +18,8 @@ export interface ComputePipeline {
   bindGroup: GPUBindGroup
 }
 
-export function gpuPipeline(
-  memory: GetMemory,
+export function gpuPipeline<U extends MoonbowUniforms>(
+  memory: GetMemory<U>,
   { shader, wireframe = false, model = true }: PipelineOptions
 ) {
   const { device, format, context } = memory.target

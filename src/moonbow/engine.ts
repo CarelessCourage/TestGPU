@@ -3,7 +3,7 @@ import shaderSource from '../shaders/impact.wgsl'
 import { useGPU, fTime, gpuPipeline, gpuCanvas, gpuCamera } from '../moonbow'
 import type { PipelineOptions, GPUCanvas, UB, MoonbowEncoder } from '../moonbow'
 
-interface MoonbowUniforms {
+export interface MoonbowUniforms {
   [key: string]: UB
 }
 
@@ -14,7 +14,9 @@ interface MoonbowOptions<U extends MoonbowUniforms>
   memory: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
 }
 
-export async function getMemory<U extends MoonbowUniforms>(options: MoonbowOptions<U>) {
+export async function getMemory<U extends MoonbowUniforms>(
+  options: Omit<MoonbowOptions<U>, 'shader'>
+) {
   const { device } = await useGPU()
   const target = gpuCanvas(device, options.canvas)
 
