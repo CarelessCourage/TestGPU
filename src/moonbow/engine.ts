@@ -7,32 +7,27 @@ interface MoonbowUniforms {
   [key: string]: UB
 }
 
-interface MoonbowMemory<U extends MoonbowUniforms = MoonbowUniforms> {
-  uniforms: U
-  storage: [UB, UB]
-  models: any
-}
-
 interface MoonbowOptions<U extends MoonbowUniforms>
   extends Omit<PipelineOptions, 'uniforms' | 'storage'> {
   canvas: HTMLCanvasElement | null
   model?: boolean
-  memory: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<MoonbowMemory<U>>
+  memory: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
 }
 
-export async function getMemory<U extends MoonbowUniforms>(options: Partial<MoonbowOptions<U>>) {
+export async function getMemory<U extends MoonbowUniforms>(options: MoonbowOptions<U>) {
   const { device } = await useGPU()
   const target = gpuCanvas(device, options.canvas)
 
-  const uniforms = options.memory?.({ target, device }).uniforms
+  const uniforms = options.memory({ target, device })
   const storage = options.memory?.({ target, device }).storage
 
+  delete uniforms?.storage
   return { uniforms, storage, device, target }
 }
 
 export type GetMemory<U extends MoonbowUniforms> = Awaited<ReturnType<typeof getMemory<U>>>
 
-export async function useMoonbow<U extends MoonbowUniforms>(options: Partial<MoonbowOptions<U>>) {
+export async function useMoonbow<U extends MoonbowUniforms>(options: MoonbowOptions<U>) {
   const memory = await getMemory(options)
 
   const pipeline = gpuPipeline(memory, {

@@ -9,14 +9,11 @@ onMounted(async () => {
   const moon = await useMoonbow({
     canvas: canvasRef.value,
     shader: shaderSource,
-    memory: ({ device }) => {
-      const time = fTime(device)
-      return { uniforms: { time } }
-    }
+    memory: ({ device }) => ({ time: fTime(device) })
   })
 
   moon.loop(({ uniforms }) => {
-    uniforms?.time.update()
+    uniforms?.time?.update()
   })
 })
 </script>

@@ -49,17 +49,14 @@ function spinningPlanks(device: GPUDevice) {
 }
 
 async function init() {
-  const { device } = await useGPU()
-
   const memory = await getMemory({
+    shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
-    shader: shader,
-    memory: ({ device, target }) => {
-      const time = uTime(device)
-      const camera = gpuCamera(target)
-      const intensity = f32(device, [0.1])
-      return { uniforms: { camera, time, intensity } }
-    }
+    memory: ({ device, target }) => ({
+      camera: gpuCamera(target),
+      time: uTime(device),
+      intensity: f32(device, [0.1])
+    })
   })
 
   const pipeline = gpuPipeline(memory, {
@@ -67,7 +64,7 @@ async function init() {
     wireframe: false
   })
 
-  const model = spinningPlanks(device)
+  const model = spinningPlanks(memory.device)
 
   const scene1 = memory.target.render(pipeline)
   const scene2 = memory.target.render(pipeline)
