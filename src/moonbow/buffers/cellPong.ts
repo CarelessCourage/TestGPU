@@ -1,4 +1,4 @@
-import { storageBuffer, f32 } from '../'
+import { storageBuffer, float } from '..'
 
 // Create an array representing the active state of each cell.
 // Storage buffers are more flexible and much bigger than uniform buffers
@@ -6,7 +6,7 @@ import { storageBuffer, f32 } from '../'
 
 export function cellPong(device: GPUDevice, GRID_SIZE: number) {
   const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
-  const grid = f32(device, [GRID_SIZE, GRID_SIZE])
+  const grid = float(device, [GRID_SIZE, GRID_SIZE])
 
   // Set each cell to a random state,
   // then copy the JavaScript array into the storage buffer.

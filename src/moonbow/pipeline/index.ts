@@ -1,7 +1,8 @@
-import type { GPUCanvas } from './target.js'
-import { bufferVertexLayout } from './geometry/utils.js'
-import { renderFrame } from '../moonbow'
-import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../moonbow'
+import type { GPUCanvas } from '../target.js'
+import { bufferVertexLayout } from '../geometry/utils.js'
+import { renderPass } from '../'
+import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../'
+import { getBindGroupLayout, getUniformEntries } from './entries.js'
 
 export interface PipelineOptions {
   shader: string
@@ -74,7 +75,13 @@ export function gpuPipeline<U extends MoonbowUniforms>(
     pipeline,
     bindGroup,
     renderFrame: (callback?: (encoder: MoonbowEncoder) => void) => {
-      renderFrame({ device, context, model }).frame({ pipeline, bindGroup }, callback)
+      const encoder = renderPass({ device, context, model })
+      encoder.drawPass({ pipeline, bindGroup })
+      callback?.({
+        commandEncoder: encoder.commandEncoder,
+        passEncoder: encoder.passEncoder
+      })
+      encoder.submitPass()
     }
   }
 }
@@ -172,132 +179,6 @@ export function gpuComputePipeline(
   }
 }
 
-type UniformEntries = ReturnType<typeof getUniformEntries>
-
-function getUniformEntries(props: { device: GPUDevice; uniforms: UB[] }) {
-  const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE
-  return props.uniforms.map((uniform, index) => ({
-    binding: uniform.binding === undefined ? index : uniform.binding,
-    visibility: uniform.visibility || defaultVisibility,
-    buffer: { type: uniform.bufferType || ('uniform' as GPUBufferBindingType) },
-    resource: { buffer: uniform.buffer }
-  }))
-}
-
-function getBindGroupLayout(device: GPUDevice, entries: UniformEntries) {
-  const bindGroupLayout = device.createBindGroupLayout({
-    label: 'Uniforms Bind Group Layout',
-    entries: entries.map((entry) => ({
-      binding: entry.binding,
-      visibility: entry.visibility,
-      buffer: entry.buffer
-    }))
-  })
-  return bindGroupLayout
-}
-
-export function uTime(device: GPUDevice) {
-  let time = 50
-  return uniformBuffer(device, {
-    label: 'Time Buffer',
-    binding: undefined,
-    update: (buffer) => {
-      time++
-      device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
-      return time
-    }
-  })
-}
-
-export function fTime(device: GPUDevice) {
-  let time = 50
-  return uniformBuffer(device, {
-    label: 'Time Buffer',
-    binding: undefined,
-    update: (buffer) => {
-      time += 0.02
-      device.queue.writeBuffer(buffer, 0, new Float32Array([time]))
-      return time
-    }
-  })
-}
-
-export const f32 = (device: GPUDevice, value: number[]) => {
-  const data = new Float32Array(value)
-  return uniformBuffer(device, {
-    size: data.byteLength,
-    binding: undefined,
-    update: (buffer) => {
-      device.queue.writeBuffer(buffer, 0, data)
-    }
-  })
-}
-
-export const vec3 = (device: GPUDevice, value: number) =>
-  uniformBuffer(device, {
-    size: 12,
-    update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
-  })
-
-export const vec4 = (device: GPUDevice, value: number) =>
-  uniformBuffer(device, {
-    size: 16,
-    update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
-  })
-
-export interface UB {
-  binding?: number
-  visibility?: number
-  buffer: GPUBuffer
-  bufferType?: GPUBufferBindingType
-  update: () => void
-}
-
 export interface UBI {
   device: GPUDevice
-}
-
-interface UBOptions {
-  label?: string
-  size?: number
-  binding?: number
-  visibility?: number
-  usage?: GPUBufferUsageFlags
-  update: (buffer: GPUBuffer) => void
-}
-
-export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
-  const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
-  const defaultUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-  const buffer = device.createBuffer({
-    label: options.label,
-    size: options.size || 4,
-    usage: options.usage || defaultUsage
-  })
-
-  // Passes the buffer to the update callback
-  options.update(buffer)
-  return {
-    binding: options.binding,
-    visibility: options.visibility || defaultVisibility,
-    buffer: buffer,
-    update: () => options.update(buffer)
-  }
-}
-
-export function storageBuffer(device: GPUDevice, options: UBOptions): UB {
-  const buffer = device.createBuffer({
-    label: options.label,
-    size: options.size || 4,
-    usage: options.usage || GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-  })
-
-  // Passes the buffer to the update callback
-  options.update(buffer)
-  return {
-    binding: options.binding,
-    visibility: options.visibility,
-    buffer: buffer,
-    update: () => options.update(buffer)
-  }
 }

@@ -43,7 +43,7 @@ export interface MoonbowEncoder {
   passEncoder: GPURenderPassEncoder
 }
 
-export function renderFrame({
+export function renderPass({
   device,
   context,
   model
@@ -66,23 +66,10 @@ export function renderFrame({
     device.queue.submit([commandBuffer])
   }
 
-  function frame(
-    pipeline: Pick<Pipeline, 'bindGroup' | 'pipeline'>,
-    callback?: (encoder: MoonbowEncoder) => void
-  ) {
-    drawPass(pipeline)
-    callback?.({
-      commandEncoder,
-      passEncoder
-    })
-    submitPass()
-  }
-
   return {
     commandEncoder,
     passEncoder,
     drawPass,
-    submitPass,
-    frame
+    submitPass
   }
 }

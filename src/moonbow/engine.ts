@@ -1,6 +1,6 @@
 // @ts-ignore
 import shaderSource from '../shaders/impact.wgsl'
-import { useGPU, fTime, gpuPipeline, gpuCanvas, gpuCamera } from '../moonbow'
+import { useGPU, gpuPipeline, gpuCanvas } from '../moonbow'
 import type { PipelineOptions, GPUCanvas, UB, MoonbowEncoder } from '../moonbow'
 
 export interface MoonbowUniforms {
@@ -12,12 +12,13 @@ interface MoonbowOptions<U extends MoonbowUniforms>
   canvas: HTMLCanvasElement | null
   model?: boolean
   memory: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
+  device?: GPUDevice
 }
 
 export async function getMemory<U extends MoonbowUniforms>(
   options: Omit<MoonbowOptions<U>, 'shader'>
 ) {
-  const { device } = await useGPU()
+  const device = options.device || (await useGPU()).device
   const target = gpuCanvas(device, options.canvas)
 
   const uniforms = options.memory({ target, device })
@@ -33,17 +34,16 @@ export async function useMoonbow<U extends MoonbowUniforms>(options: MoonbowOpti
   const memory = await getMemory(options)
 
   const pipeline = gpuPipeline(memory, {
-    model: options.model || false,
+    model: options.model,
     shader: options.shader || shaderSource
   })
 
   return frames(pipeline, memory)
 }
 
-type MoonbowFrameCallback<U extends MoonbowUniforms> = (
-  memory: GetMemory<U>,
-  encoder: MoonbowEncoder
-) => void
+interface MemoryEncoder<U extends MoonbowUniforms> extends GetMemory<U>, MoonbowEncoder {}
+
+type MoonbowFrameCallback<U extends MoonbowUniforms> = (memoryEncoder: MemoryEncoder<U>) => void
 
 export function frames<U extends MoonbowUniforms>(
   pipeline: ReturnType<typeof gpuPipeline>,
@@ -52,7 +52,7 @@ export function frames<U extends MoonbowUniforms>(
   function renderFrame(callback?: MoonbowFrameCallback<U>) {
     pipeline.renderFrame((encoder) => {
       if (!callback) return
-      callback(memory, encoder)
+      callback({ ...memory, ...encoder })
     })
   }
 

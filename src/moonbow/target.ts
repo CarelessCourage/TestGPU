@@ -1,6 +1,6 @@
-import { render } from './render.js'
-import type { RenderOutput } from './render.js'
-import type { Pipeline } from './pipeline.js'
+import { render } from './render'
+import type { RenderOutput } from './render'
+import type { Pipeline } from './pipeline'
 
 export interface GPU {
   device: GPUDevice

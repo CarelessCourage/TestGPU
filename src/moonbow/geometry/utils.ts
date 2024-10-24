@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { rotationSetting } from '../rotate'
+import { rotationSetting } from '../utils/rotate'
 export interface GeoObject {
   buffer: GeoBuffers
   geometry: Geometry

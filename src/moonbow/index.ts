@@ -1,15 +1,15 @@
-import { gpuPipeline, gpuComputePipeline, uTime, fTime, f32, storageBuffer } from './pipeline'
+import { gpuPipeline, gpuComputePipeline, uTime, fTime, float, storageBuffer } from './pipeline'
 import type { UB } from './pipeline'
 import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
-import { gpuCamera } from './camera'
+import { gpuCamera } from './buffers/camera'
 import { useGPU, gpuCanvas } from './target'
 import { instance, useMoonbow, getMemory, frames } from './engine'
 import type { GetMemory, MoonbowUniforms } from './engine'
 import { bufferVertexLayout } from './geometry/utils'
 import type { GPUCanvas } from './target'
 import { applyPipeline, submitPass } from './render'
-import { renderFrame } from './render2'
+import { renderPass } from './render2'
 import type { MoonbowEncoder } from './render2'
 import type { Pipeline, PipelineOptions } from './pipeline'
 
@@ -18,7 +18,7 @@ export {
   gpuComputePipeline,
   uTime,
   fTime,
-  f32,
+  float,
   cube,
   plane,
   gpuCamera,
@@ -29,7 +29,7 @@ export {
   storageBuffer,
   applyPipeline,
   submitPass,
-  renderFrame,
+  renderPass,
   useMoonbow,
   getMemory,
   frames
