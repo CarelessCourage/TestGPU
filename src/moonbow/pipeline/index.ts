@@ -1,8 +1,9 @@
-import type { GPUCanvas } from '../target.js'
+import { renderPass } from '../render/index'
 import { bufferVertexLayout } from '../geometry/utils.js'
-import { renderPass } from '../'
-import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../'
 import { getBindGroupLayout, getUniformEntries } from './entries.js'
+
+import type { GPUCanvas } from '../target.js'
+import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../'
 
 export interface PipelineOptions {
   shader: string

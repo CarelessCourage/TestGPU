@@ -3,54 +3,54 @@
 import shader from '../shaders/shader.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
-import { useGPU, uTime, f32, instance, cube } from '../moonbow'
+import { onMounted } from 'vue'
+import { spinningCube } from '../scenes/spinningCube'
+import { uTime, float, gpuCamera, useMoonbow, useGPU, cube } from '../moonbow'
 
-function spinningCube(device: GPUDevice) {
-  const resolution = 15
-  const size: [number, number, number] = [1, 1, 1]
-
-  const object = cube(device, {
-    size,
-    resolution,
-    position: [0, 0, 0]
-  })
-
-  function render(pass: GPURenderPassEncoder, rotation: number) {
-    object.set(pass, { rotation: [0.5, rotation, 0] })
-  }
-
-  return { render }
-}
-
-async function init() {
+onMounted(async () => {
   const { device } = await useGPU()
 
   const time = uTime(device)
-  const intensity = f32(device, [0.1])
+  const intensity = float(device, [0.1])
+
   const model = spinningCube(device)
 
-  const scene1 = instance(device, {
+  const moon = await useMoonbow({
+    device,
     shader: shader,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#one') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
-  const scene2 = instance(device, {
+  const moon2 = await useMoonbow({
+    device,
     shader: basic,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#two') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
   let rotation = 0
   setInterval(() => {
-    rotation += 0.005
-    time.update()
-    scene1.draw(({ passEncoder }) => model.render(passEncoder, rotation))
-    scene2.draw(({ passEncoder }) => model.render(passEncoder, rotation))
-  }, 1000 / 60)
-}
+    rotation += 0.05
+    moon.renderFrame(({ passEncoder }) => {
+      model.render(passEncoder, rotation)
+    })
 
-init()
+    moon2.renderFrame(({ passEncoder }) => {
+      model.render(passEncoder, rotation)
+    })
+  }, 1000 / 60)
+})
 </script>
 
 <template>

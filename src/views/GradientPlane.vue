@@ -4,9 +4,9 @@ import { onMounted } from 'vue'
 import shader from '../shaders/gradient.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
-import { useGPU, uTime, f32, instance, cube } from '../moonbow'
+import { uTime, float, gpuCamera, useMoonbow, useGPU, cube } from '../moonbow'
 
-function spinningPlanks(device: GPUDevice) {
+function spinningPlank(device: GPUDevice) {
   const resolution = 30
   const size: [number, number, number] = [2.5, 2.5, 0.05]
 
@@ -27,25 +27,44 @@ onMounted(async () => {
   const { device } = await useGPU()
 
   const time = uTime(device)
-  const intensity = f32(device, [0.1])
-  const model = spinningPlanks(device)
+  const intensity = float(device, [0.1])
 
-  const scene1 = instance(device, {
+  const model = spinningPlank(device)
+
+  const moon = await useMoonbow({
+    device,
     shader: shader,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#one') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
-  const scene2 = instance(device, {
+  const moon2 = await useMoonbow({
+    device,
     shader: basic,
-    uniforms: { time, intensity },
-    canvas: document.querySelector('canvas#two') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
   setInterval(() => {
-    time.update()
-    scene1.draw(({ passEncoder }) => model.render(passEncoder))
-    scene2.draw(({ passEncoder }) => model.render(passEncoder))
+    moon.renderFrame(({ passEncoder, uniforms }) => {
+      model.render(passEncoder)
+      uniforms.time?.update()
+    })
+
+    moon2.renderFrame(({ passEncoder, uniforms }) => {
+      model.render(passEncoder)
+      uniforms.time?.update()
+    })
   }, 1000 / 60)
 })
 </script>

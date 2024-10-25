@@ -4,26 +4,7 @@ import { onMounted } from 'vue'
 import shader from '../shaders/marble.wgsl'
 // @ts-ignore
 import basic from '../shaders/basic.wgsl'
-import { useGPU, uTime, f32, cube, gpuPipeline, gpuCamera, gpuCanvas } from '../moonbow'
-import type { UB } from '../moonbow'
-
-interface InstanceType {
-  uniforms: UB[]
-  canvas: HTMLCanvasElement
-  shader: string
-}
-
-function instance(device: GPUDevice, { uniforms, canvas, shader }: InstanceType) {
-  const target = gpuCanvas(device, canvas)
-  const camera = gpuCamera(target)
-  const pipeline = gpuPipeline(target, {
-    shader: shader,
-    wireframe: false,
-    uniforms: [...uniforms, camera]
-  })
-
-  return target.render(pipeline)
-}
+import { uTime, float, gpuCamera, useMoonbow, useGPU, cube } from '../moonbow'
 
 function surface(device: GPUDevice) {
   const resolution = 1
@@ -46,25 +27,42 @@ onMounted(async () => {
   const { device } = await useGPU()
 
   const time = uTime(device)
-  const intensity = f32(device, [0.1])
+  const intensity = float(device, [0.1])
+
   const model = surface(device)
 
-  const scene1 = instance(device, {
+  const moon = await useMoonbow({
+    device,
     shader: shader,
-    uniforms: [time, intensity],
-    canvas: document.querySelector('canvas#one') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
-  const scene2 = instance(device, {
+  const moon2 = await useMoonbow({
+    device,
     shader: basic,
-    uniforms: [time, intensity],
-    canvas: document.querySelector('canvas#two') as HTMLCanvasElement
+    canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
+    model: true,
+    memory: ({ target }) => ({
+      time: time,
+      intensity: intensity,
+      camera: gpuCamera(target)
+    })
   })
 
   setInterval(() => {
-    time.update()
-    scene1.draw(({ passEncoder }) => model.render(passEncoder))
-    scene2.draw(({ passEncoder }) => model.render(passEncoder))
+    moon.renderFrame(({ passEncoder }) => {
+      model.render(passEncoder)
+    })
+
+    moon2.renderFrame(({ passEncoder }) => {
+      model.render(passEncoder)
+    })
   }, 1000 / 60)
 })
 </script>

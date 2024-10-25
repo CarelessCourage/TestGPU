@@ -4,8 +4,8 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, f32, plane, gpuComputePipeline, storageBuffer } from '../moonbow'
-import { cellPong } from '../moonbow/storage/cellPong'
+import { useGPU, gpuCanvas, plane, gpuComputePipeline } from '../moonbow'
+import { cellPong } from '../moonbow/buffers/cellPong'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)

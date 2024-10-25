@@ -1,4 +1,5 @@
-import { storageBuffer, float } from '..'
+import { storageBuffer } from './'
+import { float } from './uniforms'
 
 // Create an array representing the active state of each cell.
 // Storage buffers are more flexible and much bigger than uniform buffers

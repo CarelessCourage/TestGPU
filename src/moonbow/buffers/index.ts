@@ -1,4 +1,4 @@
-export interface UB {
+export interface UniformBuffer {
   binding?: number
   visibility?: number
   buffer: GPUBuffer
@@ -15,7 +15,7 @@ interface UBOptions {
   update: (buffer: GPUBuffer) => void
 }
 
-export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
+export function uniformBuffer(device: GPUDevice, options: UBOptions): UniformBuffer {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
   const defaultUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   const buffer = device.createBuffer({
@@ -34,7 +34,7 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UB {
   }
 }
 
-export function storageBuffer(device: GPUDevice, options: UBOptions): UB {
+export function storageBuffer(device: GPUDevice, options: UBOptions): UniformBuffer {
   const buffer = device.createBuffer({
     label: options.label,
     size: options.size || 4,

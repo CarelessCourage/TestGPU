@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { uniformBuffer } from '../pipeline'
+import { uniformBuffer } from '../'
 import { modelMatrix } from '../geometry/utils'
 import { quaternion, rotationSetting } from '../utils/rotate'
 

@@ -1,12 +1,3 @@
-import { render } from './render'
-import type { RenderOutput } from './render'
-import type { Pipeline } from './pipeline'
-
-export interface GPU {
-  device: GPUDevice
-  adapter: GPUAdapter
-}
-
 export async function useGPU() {
   if (!navigator.gpu) throw new Error('WebGPU not supported on this browser.')
   const adapter = await navigator.gpu.requestAdapter()
@@ -19,16 +10,7 @@ export async function useGPU() {
   }
 }
 
-export interface GPUCanvas {
-  element: HTMLCanvasElement
-  context: GPUCanvasContext
-  format: GPUTextureFormat
-  device: GPUDevice
-  aspect: number
-  render: (pipeline: Pipeline) => RenderOutput
-}
-
-export function gpuCanvas(device: GPUDevice, canvasQuery?: HTMLCanvasElement | null): GPUCanvas {
+export function gpuCanvas(device: GPUDevice, canvasQuery?: HTMLCanvasElement | null) {
   if (!canvasQuery) throw new Error('No webgpu canvas found.')
   const context = canvasQuery.getContext('webgpu')
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat()
@@ -44,9 +26,10 @@ export function gpuCanvas(device: GPUDevice, canvasQuery?: HTMLCanvasElement | n
     context: context,
     format: canvasFormat,
     device: device,
-    aspect: canvasQuery.width / canvasQuery.height,
-    render: (pipeline: Pipeline) => render(target, pipeline)
+    aspect: canvasQuery.width / canvasQuery.height
   }
 
   return target
 }
+
+export type GPUCanvas = ReturnType<typeof gpuCanvas>
