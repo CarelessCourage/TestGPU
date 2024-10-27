@@ -4,7 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, plane, gpuComputePipeline } from '../moonbow'
+import { useGPU, gpuCanvas, plane, gpuComputePipeline, getMemory } from '../moonbow'
 import { cellPong } from '../moonbow/buffers/cellPong'
 
 function getPlane(device: GPUDevice) {
@@ -22,40 +22,24 @@ onMounted(async () => {
   const UPDATE_INTERVAL = 30 // Update every 200ms (5 times/sec)
 
   const { device } = await useGPU()
-  const target = gpuCanvas(device, document.querySelector('canvas'))
   const model = getPlane(device)
 
   const cellstate = cellPong(device, GRID_SIZE)
 
-  const pipeline = gpuComputePipeline(target, {
+  const memory = await getMemory({
+    device,
+    storage: cellstate.storage,
+    canvas: document.querySelector('canvas'),
+    memory: ({ target }) => ({
+      cellPong: cellstate.uniform,
+      storage: cellstate.storage
+    })
+  })
+
+  const pipeline = gpuComputePipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
-    wireframe: false,
-    uniforms: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-        buffer: cellstate.grid.buffer, // Grid uniform buffer
-        bufferType: 'uniform', // Grid uniform buffer
-        update: () => console.log('rex')
-      }
-    ],
-    storage: [
-      {
-        binding: 1,
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
-        buffer: cellstate.a, // Cell state input buffer
-        bufferType: 'read-only-storage', // Cell state input buffer
-        update: () => console.log('rex')
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: cellstate.b, // Cell state output buffer
-        bufferType: 'storage', // Cell state output buffer
-        update: () => console.log('rex')
-      }
-    ]
+    wireframe: false
   })
 
   const WORKGROUP_SIZE = 8
@@ -83,7 +67,7 @@ onMounted(async () => {
       colorAttachments: [
         {
           //@location(0), see fragment shader
-          view: target.context.getCurrentTexture().createView(),
+          view: memory.target.context.getCurrentTexture().createView(),
           clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store'

@@ -9,6 +9,7 @@ onMounted(async () => {
   const moon = await useMoonbow({
     canvas: canvasRef.value,
     shader: shaderSource,
+    model: false,
     memory: ({ device }) => ({ time: fTime(device) })
   })
 

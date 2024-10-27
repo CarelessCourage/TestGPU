@@ -1,5 +1,6 @@
 import { storageBuffer } from './'
 import { float } from './uniforms'
+import type { UniformBuffer } from './'
 
 // Create an array representing the active state of each cell.
 // Storage buffers are more flexible and much bigger than uniform buffers
@@ -30,9 +31,34 @@ export function cellPong(device: GPUDevice, GRID_SIZE: number) {
     update: (buffer) => device.queue.writeBuffer(buffer, 0, cellStateArray)
   })
 
+  const uniform: UniformBuffer = {
+    binding: 0,
+    visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+    buffer: grid.buffer, // Grid uniform buffer
+    bufferType: 'uniform', // Grid uniform buffer
+    update: () => console.log('rex')
+  }
+
+  const storage: UniformBuffer[] = [
+    {
+      binding: 1,
+      visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
+      buffer: stateA.buffer, // Cell state input buffer
+      bufferType: 'read-only-storage', // Cell state input buffer
+      update: () => console.log('rex')
+    },
+    {
+      binding: 2,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: stateB.buffer, // Cell state output buffer
+      bufferType: 'storage', // Cell state output buffer
+      update: () => console.log('rex')
+    }
+  ]
+
   return {
     grid,
-    a: stateA.buffer,
-    b: stateB.buffer
+    uniform,
+    storage
   }
 }

@@ -2,7 +2,6 @@ import { renderPass } from '../render/index'
 import { bufferVertexLayout } from '../geometry/utils.js'
 import { getBindGroupLayout, getUniformEntries } from './entries.js'
 
-import type { GPUCanvas } from '../target.js'
 import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../'
 
 export interface PipelineOptions {
@@ -31,6 +30,11 @@ export function gpuPipeline<U extends MoonbowUniforms>(
   const entries = getUniformEntries({ device, uniforms })
   const layout = getBindGroupLayout(device, entries)
 
+  const pipelineLayout = device.createPipelineLayout({
+    label: 'Pipeline Layout',
+    bindGroupLayouts: [layout]
+  })
+
   const cellShaderModule = device.createShaderModule({
     label: 'Cell shader',
     code: shader
@@ -38,9 +42,7 @@ export function gpuPipeline<U extends MoonbowUniforms>(
 
   const pipeline = device.createRenderPipeline({
     label: 'Cell pipeline',
-    layout: device.createPipelineLayout({
-      bindGroupLayouts: [layout]
-    }),
+    layout: pipelineLayout,
     vertex: {
       module: cellShaderModule,
       entryPoint: 'vertexMain',
@@ -87,10 +89,14 @@ export function gpuPipeline<U extends MoonbowUniforms>(
   }
 }
 
-export function gpuComputePipeline(
-  { device, format }: GPUCanvas,
-  { uniforms, shader, computeShader, storage, wireframe = false }: PipelineOptions
+export function gpuComputePipeline<U extends MoonbowUniforms>(
+  memory: GetMemory<U>,
+  { shader, computeShader, wireframe = false, model = true }: PipelineOptions
 ) {
+  const { device, format, context } = memory.target
+  const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
+  const storage = memory.storage
+
   const entries = getUniformEntries({ device, uniforms })
   const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
   const layout = getBindGroupLayout(device, [...entries, ...storageEntries])
@@ -111,7 +117,7 @@ export function gpuComputePipeline(
     vertex: {
       module: cellShaderModule,
       entryPoint: 'vertexMain',
-      buffers: bufferVertexLayout()
+      buffers: model ? bufferVertexLayout() : undefined
     },
     fragment: {
       module: cellShaderModule,
@@ -119,9 +125,17 @@ export function gpuComputePipeline(
       targets: [{ format }]
     },
     primitive: {
-      topology: 'line-list',
+      topology: wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
-    }
+    },
+    depthStencil: model
+      ? {
+          // this makes sure that faces get rendered in the correct order.
+          depthWriteEnabled: true,
+          depthCompare: 'less',
+          format: 'depth24plus'
+        }
+      : undefined
   })
 
   // Create the compute shader that will process the simulation.
@@ -176,10 +190,15 @@ export function gpuComputePipeline(
   return {
     pipeline: cellPipeline,
     simulationPipeline: simulationPipeline,
-    bindGroups: bindGroups
+    bindGroups: bindGroups,
+    renderFrame: (callback?: (encoder: MoonbowEncoder) => void) => {
+      const encoder = renderPass({ device, context, model })
+      //encoder.drawPass({ pipeline, bindGroup })
+      callback?.({
+        commandEncoder: encoder.commandEncoder,
+        passEncoder: encoder.passEncoder
+      })
+      encoder.submitPass()
+    }
   }
-}
-
-export interface UBI {
-  device: GPUDevice
 }
