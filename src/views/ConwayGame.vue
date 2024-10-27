@@ -32,7 +32,7 @@ onMounted(async () => {
     canvas: document.querySelector('canvas'),
     memory: ({ target }) => ({
       cellPong: cellstate.uniform,
-      storage: cellstate.storage
+      storage: cellstate.storage,
     })
   })
 

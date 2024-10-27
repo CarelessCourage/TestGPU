@@ -5,7 +5,7 @@ export interface MoonbowUniforms {
 }
 
 export interface MoonbowMemory {
-  [key: string]: UniformBuffer | MoonbowUniforms
+  [key: string]: MoonbowUniforms[] | MoonbowUniforms
 }
 
 export interface MoonbowOptions<U extends MoonbowUniforms> extends PipelineOptions {
