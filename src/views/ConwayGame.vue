@@ -28,11 +28,13 @@ onMounted(async () => {
 
   const memory = await getMemory({
     device,
-    storage: cellstate.storage,
     canvas: document.querySelector('canvas'),
-    memory: ({ target }) => ({
-      cellPong: cellstate.uniform,
-      storage: cellstate.storage
+    storage: ({ target }) => ({
+      read: cellstate.storage[0],
+      write: cellstate.storage[1]
+    }),
+    uniforms: ({ target }) => ({
+      cellPong: cellstate.uniform
     })
   })
 

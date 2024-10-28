@@ -89,13 +89,13 @@ export function gpuPipeline<U extends MoonbowUniforms>(
   }
 }
 
-export function gpuComputePipeline<U extends MoonbowUniforms>(
-  memory: GetMemory<U>,
+export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+  memory: GetMemory<U, S>,
   { shader, computeShader, wireframe = false, model = true }: PipelineOptions
 ) {
   const { device, format, context } = memory.target
   const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
-  const storage = memory.storage
+  const storage = memory.storage ? Object.values(memory.storage) : []
 
   const entries = getUniformEntries({ device, uniforms })
   const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
