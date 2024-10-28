@@ -1,8 +1,7 @@
-import { renderPass } from '../render/index'
 import { bufferVertexLayout } from '../geometry/utils.js'
 import { getBindGroupLayout, getUniformEntries } from './entries.js'
-
-import type { GetMemory, MoonbowEncoder, MoonbowUniforms } from '../'
+import { renderPass } from '../'
+import type { GetMemory, MoonbowRender, MoonbowUniforms } from '../'
 
 export interface PipelineOptions {
   shader: string
@@ -11,7 +10,9 @@ export interface PipelineOptions {
   model?: boolean
 }
 
-export type Pipeline = ReturnType<typeof gpuPipeline>
+export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
+  typeof gpuPipeline<U, S>
+>
 
 export interface ComputePipeline {
   pipeline: GPURenderPipeline
@@ -19,13 +20,13 @@ export interface ComputePipeline {
   bindGroup: GPUBindGroup
 }
 
-export function gpuPipeline<U extends MoonbowUniforms>(
-  memory: GetMemory<U>,
+export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+  memory: GetMemory<U, S>,
   { shader, wireframe = false, model = true }: PipelineOptions
 ) {
   const { device, format, context } = memory.target
   const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
-  const storage = memory.storage
+  const storage = memory.storage ? Object.values(memory.storage) : []
 
   const entries = getUniformEntries({ device, uniforms })
   const layout = getBindGroupLayout(device, entries)
@@ -77,13 +78,10 @@ export function gpuPipeline<U extends MoonbowUniforms>(
   return {
     pipeline,
     bindGroup,
-    renderFrame: (callback?: (encoder: MoonbowEncoder) => void) => {
+    renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
       const encoder = renderPass({ device, context, model })
       encoder.drawPass({ pipeline, bindGroup })
-      callback?.({
-        commandEncoder: encoder.commandEncoder,
-        passEncoder: encoder.passEncoder
-      })
+      callback?.(encoder)
       encoder.submitPass()
     }
   }
@@ -191,13 +189,10 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     pipeline: cellPipeline,
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
-    renderFrame: (callback?: (encoder: MoonbowEncoder) => void) => {
+    renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
       const encoder = renderPass({ device, context, model })
       //encoder.drawPass({ pipeline, bindGroup })
-      callback?.({
-        commandEncoder: encoder.commandEncoder,
-        passEncoder: encoder.passEncoder
-      })
+      callback?.(encoder)
       encoder.submitPass()
     }
   }

@@ -1,5 +1,5 @@
 import type { GPUCanvas, Pipeline } from '../'
-import { getDepthStencil, initRender } from './utils'
+import { getDepthStencil } from './utils'
 
 export function renderPass({
   device,
@@ -7,15 +7,24 @@ export function renderPass({
   model
 }: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean }) {
   const depthStencil = getDepthStencil(device, context.canvas)
-  const { passEncoder, commandEncoder } = initRender(
-    { device, context },
-    model ? depthStencil : undefined
-  )
+  const commandEncoder = device.createCommandEncoder()
 
-  function drawPass(pipeline: Pick<Pipeline, 'bindGroup' | 'pipeline'>) {
+  const passEncoder = commandEncoder.beginRenderPass({
+    depthStencilAttachment: model ? depthStencil : undefined,
+    colorAttachments: [
+      {
+        // @location(0), see fragment shader
+        view: context.getCurrentTexture().createView(),
+        clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
+        loadOp: 'clear',
+        storeOp: 'store'
+      }
+    ]
+  })
+
+  function drawPass(pipeline: Pick<Pipeline<any, any>, 'bindGroup' | 'pipeline'>) {
     passEncoder.setPipeline(pipeline.pipeline)
     passEncoder.setBindGroup(0, pipeline.bindGroup)
-    // passEncoder.draw(3, 1, 0, 0)
   }
 
   function submitPass() {
@@ -25,9 +34,11 @@ export function renderPass({
   }
 
   return {
-    commandEncoder,
-    passEncoder,
     drawPass,
-    submitPass
+    submitPass,
+    passEncoder,
+    commandEncoder
   }
 }
+
+export type MoonbowRender = ReturnType<typeof renderPass>

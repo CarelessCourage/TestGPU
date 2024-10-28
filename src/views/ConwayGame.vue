@@ -4,7 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, plane, gpuComputePipeline, getMemory } from '../moonbow'
+import { useGPU, plane, gpuComputePipeline, getMemory, renderPass } from '../moonbow'
 import { cellPong } from '../moonbow/buffers/cellPong'
 
 function getPlane(device: GPUDevice) {
@@ -17,13 +17,12 @@ function getPlane(device: GPUDevice) {
 }
 
 onMounted(async () => {
-  //Config
   const GRID_SIZE = 100
   const UPDATE_INTERVAL = 30 // Update every 200ms (5 times/sec)
 
   const { device } = await useGPU()
-  const model = getPlane(device)
 
+  const model = getPlane(device)
   const cellstate = cellPong(device, GRID_SIZE)
 
   const memory = await getMemory({
@@ -49,33 +48,22 @@ onMounted(async () => {
   let step = 0 // Track how many simulation steps have been run
 
   function updateGrid() {
-    const encoder = device.createCommandEncoder()
-    const computePass = encoder.beginComputePass()
+    const encoder = renderPass({ device, context: memory.target.context, model: false })
 
     // Compute work
-    computePass.setPipeline(pipeline.simulationPipeline)
-    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
+    encoder.computePass.setPipeline(pipeline.simulationPipeline)
+    encoder.computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
 
     const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
+    encoder.computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
     // DispatchWorkgroups numbers arenot the number of invocations!
     // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
 
-    computePass.end()
+    encoder.computePass.end()
 
     step++
 
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          //@location(0), see fragment shader
-          view: memory.target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1.0 },
-          loadOp: 'clear',
-          storeOp: 'store'
-        }
-      ]
-    })
+    const pass = encoder.passEncoder
 
     pass.setPipeline(pipeline.pipeline)
 
@@ -99,7 +87,7 @@ onMounted(async () => {
 
     pass.end()
 
-    const commandBuffer = encoder.finish()
+    const commandBuffer = encoder.commandEncoder.finish()
     device.queue.submit([commandBuffer])
   }
 

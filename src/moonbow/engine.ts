@@ -1,10 +1,17 @@
 import { gpuPipeline, getMemory } from './'
-import type { MoonbowEncoder, MoonbowUniforms, MoonbowOptions, GetMemory } from './'
+import type { MoonbowRender, MoonbowUniforms, MoonbowOptions, GetMemory } from './'
 
-interface MemoryEncoder<U extends MoonbowUniforms> extends GetMemory<U>, MoonbowEncoder {}
-type MoonbowFrameCallback<U extends MoonbowUniforms> = (memoryEncoder: MemoryEncoder<U>) => void
+interface MemoryEncoder<U extends MoonbowUniforms, S extends MoonbowUniforms>
+  extends GetMemory<U, S>,
+    MoonbowRender {}
 
-export async function useMoonbow<U extends MoonbowUniforms>(options: MoonbowOptions<U>) {
+type MoonbowFrameCallback<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
+  memoryEncoder: MemoryEncoder<U, S>
+) => void
+
+export async function useMoonbow<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+  options: MoonbowOptions<U, S>
+) {
   const memory = await getMemory(options)
 
   const pipeline = gpuPipeline(memory, {
@@ -12,21 +19,21 @@ export async function useMoonbow<U extends MoonbowUniforms>(options: MoonbowOpti
     shader: options.shader
   })
 
-  return frames<U>(pipeline, memory)
+  return frames<U, S>(pipeline, memory)
 }
 
-export function frames<U extends MoonbowUniforms>(
+export function frames<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   pipeline: ReturnType<typeof gpuPipeline>,
-  memory: GetMemory<U>
+  memory: GetMemory<U, S>
 ) {
-  function renderFrame(callback?: MoonbowFrameCallback<U>) {
+  function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
     pipeline.renderFrame((encoder) => {
       if (!callback) return
       callback({ ...memory, ...encoder })
     })
   }
 
-  function loop(callback?: MoonbowFrameCallback<U>, interval = 1000 / 60) {
+  function loop(callback?: MoonbowFrameCallback<U, S>, interval = 1000 / 60) {
     setInterval(() => renderFrame(callback), interval)
   }
 

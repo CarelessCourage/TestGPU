@@ -10,7 +10,8 @@ onMounted(async () => {
     canvas: canvasRef.value,
     shader: shaderSource,
     model: false,
-    memory: ({ device }) => ({ time: fTime(device) })
+    uniforms: ({ device }) => ({ time: fTime(device) }),
+    storage: ({ device }) => ({ time: fTime(device) })
   })
 
   moon.loop(({ passEncoder, uniforms }) => {
