@@ -4,10 +4,10 @@ import { getDepthStencil } from './utils'
 export function renderPass({
   device,
   context,
-  model
-}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean }) {
+  model,
+  commandEncoder
+}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean, commandEncoder: GPUCommandEncoder }) {
   const depthStencil = getDepthStencil(device, context.canvas)
-  const commandEncoder = device.createCommandEncoder()
 
   const passEncoder = commandEncoder.beginRenderPass({
     depthStencilAttachment: model ? depthStencil : undefined,
@@ -42,3 +42,35 @@ export function renderPass({
 }
 
 export type MoonbowRender = ReturnType<typeof renderPass>
+
+
+const WORKGROUP_SIZE = 8
+
+export function computePass({
+  pipeline
+  commandEncoder,
+  GRID_SIZE,
+}: { 
+  model: boolean, 
+  commandEncoder: GPUCommandEncoder, 
+  GRID_SIZE: number, 
+  pipeline: Pipeline<any, any> 
+}) {
+  const computePass = commandEncoder.beginComputePass()
+    // Compute work
+    computePass.setPipeline(pipeline.simulationPipeline)
+    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
+
+    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
+    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
+    // DispatchWorkgroups numbers arenot the number of invocations!
+    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
+
+    computePass.end()
+
+  return {
+    computePass
+  }
+}
+
+export type MoonbowCompute = ReturnType<typeof computePass>

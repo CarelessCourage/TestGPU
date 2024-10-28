@@ -48,18 +48,20 @@ onMounted(async () => {
   let step = 0 // Track how many simulation steps have been run
 
   function updateGrid() {
-    const encoder = renderPass({ device, context: memory.target.context, model: false })
+    const commandEncoder = device.createCommandEncoder()
+    const encoder = renderPass({ device, context: memory.target.context, commandEncoder, model: false })
 
+    const computePass = encoder.commandEncoder.beginComputePass()
     // Compute work
-    encoder.computePass.setPipeline(pipeline.simulationPipeline)
-    encoder.computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
+    computePass.setPipeline(pipeline.simulationPipeline)
+    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
 
     const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-    encoder.computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
+    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
     // DispatchWorkgroups numbers arenot the number of invocations!
     // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
 
-    encoder.computePass.end()
+    computePass.end()
 
     step++
 
