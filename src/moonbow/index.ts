@@ -1,7 +1,7 @@
 import { getMemory } from './memory'
 import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
-import { renderPass } from './render'
+import { renderPass, computePass } from './render'
 import { gpuCamera } from './buffers/camera'
 import { useGPU, gpuCanvas } from './target'
 import { useMoonbow, frames } from './engine'
@@ -30,6 +30,7 @@ export {
   getMemory,
   useMoonbow,
   renderPass,
+  computePass,
   gpuPipeline,
   uniformBuffer,
   gpuComputePipeline,

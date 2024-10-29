@@ -4,7 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, plane, gpuComputePipeline, getMemory, renderPass } from '../moonbow'
+import { useGPU, plane, gpuComputePipeline, getMemory, renderPass, computePass } from '../moonbow'
 import { cellPong } from '../moonbow/buffers/cellPong'
 
 function getPlane(device: GPUDevice) {
@@ -43,27 +43,31 @@ onMounted(async () => {
     wireframe: false
   })
 
-  const WORKGROUP_SIZE = 8
-
   let step = 0 // Track how many simulation steps have been run
+
+  function runCompute(commandEncoder: GPUCommandEncoder) {
+    const computeEncoder = computePass({
+      GRID_SIZE,
+      commandEncoder
+    })
+
+    computeEncoder.drawPass(pipeline, step)
+    computeEncoder.submitPass()
+
+    step++
+  }
 
   function updateGrid() {
     const commandEncoder = device.createCommandEncoder()
-    const encoder = renderPass({ device, context: memory.target.context, commandEncoder, model: false })
 
-    const computePass = encoder.commandEncoder.beginComputePass()
-    // Compute work
-    computePass.setPipeline(pipeline.simulationPipeline)
-    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
+    runCompute(commandEncoder)
 
-    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
-    // DispatchWorkgroups numbers arenot the number of invocations!
-    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
-
-    computePass.end()
-
-    step++
+    const encoder = renderPass({
+      device,
+      context: memory.target.context,
+      commandEncoder,
+      model: true
+    })
 
     const pass = encoder.passEncoder
 

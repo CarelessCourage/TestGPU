@@ -1,15 +1,18 @@
-import type { GPUCanvas, Pipeline } from '../'
+import type { GPUCanvas, Pipeline, MoonbowUniforms } from '../'
 import { getDepthStencil } from './utils'
+import { gpuComputePipeline } from '../'
 
 export function renderPass({
   device,
   context,
   model,
   commandEncoder
-}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean, commandEncoder: GPUCommandEncoder }) {
+}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean; commandEncoder?: GPUCommandEncoder }) {
   const depthStencil = getDepthStencil(device, context.canvas)
 
-  const passEncoder = commandEncoder.beginRenderPass({
+  const cEncoder = commandEncoder || device.createCommandEncoder()
+
+  const passEncoder = cEncoder.beginRenderPass({
     depthStencilAttachment: model ? depthStencil : undefined,
     colorAttachments: [
       {
@@ -29,7 +32,7 @@ export function renderPass({
 
   function submitPass() {
     passEncoder.end()
-    const commandBuffer = commandEncoder.finish()
+    const commandBuffer = cEncoder.finish()
     device.queue.submit([commandBuffer])
   }
 
@@ -37,39 +40,45 @@ export function renderPass({
     drawPass,
     submitPass,
     passEncoder,
-    commandEncoder
+    commandEncoder: cEncoder
   }
 }
 
 export type MoonbowRender = ReturnType<typeof renderPass>
 
-
 const WORKGROUP_SIZE = 8
 
+type ComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
+  typeof gpuComputePipeline<U, S>
+>
+
 export function computePass({
-  pipeline
   commandEncoder,
-  GRID_SIZE,
-}: { 
-  model: boolean, 
-  commandEncoder: GPUCommandEncoder, 
-  GRID_SIZE: number, 
-  pipeline: Pipeline<any, any> 
+  GRID_SIZE
+}: {
+  commandEncoder: GPUCommandEncoder
+  GRID_SIZE: number
 }) {
   const computePass = commandEncoder.beginComputePass()
-    // Compute work
+
+  function drawPass<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+    pipeline: ComputePipeline<U, S>,
+    step: number
+  ) {
     computePass.setPipeline(pipeline.simulationPipeline)
     computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
+  }
 
+  function submitPass() {
     const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
     computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
-    // DispatchWorkgroups numbers arenot the number of invocations!
-    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
-
     computePass.end()
+  }
 
   return {
-    computePass
+    computePass,
+    drawPass,
+    submitPass
   }
 }
 
