@@ -6,6 +6,7 @@ import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
 import { useGPU, plane, gpuComputePipeline, getMemory, renderPass, computePass } from '../moonbow'
 import { cellPong } from '../moonbow/buffers/cellPong'
+import { updateGrid } from './test'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -40,7 +41,8 @@ onMounted(async () => {
   const pipeline = gpuComputePipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
-    wireframe: false
+    wireframe: false,
+    model: false
   })
 
   let step = 0 // Track how many simulation steps have been run
@@ -57,7 +59,7 @@ onMounted(async () => {
     step++
   }
 
-  function updateGrid() {
+  function updateGrid2() {
     const commandEncoder = device.createCommandEncoder()
 
     runCompute(commandEncoder)
@@ -66,7 +68,7 @@ onMounted(async () => {
       device,
       context: memory.target.context,
       commandEncoder,
-      model: true
+      model: false
     })
 
     const pass = encoder.passEncoder
@@ -98,7 +100,7 @@ onMounted(async () => {
   }
 
   // Schedule updateGrid() to run repeatedly
-  setInterval(updateGrid, UPDATE_INTERVAL)
+  setInterval(updateGrid2, UPDATE_INTERVAL)
 })
 </script>
 

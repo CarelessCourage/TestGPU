@@ -37,7 +37,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   })
 
   const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader',
+    label: 'Cell shader 22',
     code: shader
   })
 
@@ -105,7 +105,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   })
 
   const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader',
+    label: 'Cell shader 33',
     code: shader
   })
 

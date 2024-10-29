@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 // @ts-ignore
 import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
@@ -167,4 +167,4 @@ div.meta {
   padding-right: var(--padding);
   top: 10vh;
 }
-</style>
+</style> -->

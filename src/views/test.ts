@@ -2,7 +2,7 @@ const WORKGROUP_SIZE = 8
 
 let step = 0 // Track how many simulation steps have been run
 
-function updateGrid({
+export function updateGrid({
   device,
   pipeline,
   GRID_SIZE,
