@@ -42,7 +42,7 @@ onMounted(async () => {
     shader: ConwayShader,
     computeShader: ConwayCompute,
     wireframe: false,
-    model: false
+    model: true
   })
 
   let step = 0 // Track how many simulation steps have been run
@@ -68,7 +68,7 @@ onMounted(async () => {
       device,
       context: memory.target.context,
       commandEncoder,
-      model: false
+      model: true
     })
 
     const pass = encoder.passEncoder
@@ -100,7 +100,17 @@ onMounted(async () => {
   }
 
   // Schedule updateGrid() to run repeatedly
-  setInterval(updateGrid2, UPDATE_INTERVAL)
+  setInterval(
+    () =>
+      updateGrid({
+        device,
+        pipeline,
+        GRID_SIZE,
+        target: memory.target,
+        model
+      }),
+    UPDATE_INTERVAL
+  )
 })
 </script>
 
