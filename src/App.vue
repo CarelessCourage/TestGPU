@@ -6,6 +6,7 @@ import { RouterView, RouterLink } from 'vue-router'
   <header>
     <nav>
       <RouterLink to="/conway" activeClass="active">Conway</RouterLink>
+      <RouterLink to="/conwaylegacy" activeClass="active">Conway Game</RouterLink>
       <RouterLink to="/" activeClass="active">Moonbow</RouterLink>
       <RouterLink to="/planks" activeClass="active">Planks</RouterLink>
       <RouterLink to="/gradient" activeClass="active">Gradient</RouterLink>

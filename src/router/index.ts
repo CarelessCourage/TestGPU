@@ -7,6 +7,7 @@ import AnimatedPlanks from '@/views/AnimatedPlanks.vue'
 import BomberSet from '@/views/BomberSet.vue'
 import MarblePlane from '@/views/MarblePlane.vue'
 import ImpactPlane from '@/views/ImpactPlane.vue'
+import ConwayLegacy from '@/views/conwaygamelegacy.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,11 @@ const router = createRouter({
       path: '/conway',
       name: 'conway',
       component: ConwayGame
+    },
+    {
+      path: '/conwaylegacy',
+      name: 'conwaylegacy',
+      component: ConwayLegacy
     },
     {
       path: '/',

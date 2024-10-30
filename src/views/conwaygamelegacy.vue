@@ -1,16 +1,34 @@
-<script setup>
+<script setup lang="ts">
+// @ts-ignore
 import ConwayShader from '../shaders/conway.wgsl'
+// @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, gpuPipeline, uTime, f32, plane, bufferLayout } from '../moonbow'
+import { useGPU, gpuCanvas, float, plane } from '../moonbow'
 
-function getPlane(device) {
+function getPlane(device: GPUDevice) {
   const surface = plane(device)
   return {
     buffer: surface.buffer,
     geometry: surface.geometry,
-    render: (pass) => surface.set(pass, { rotation: [0.0, 0.0, 0] })
+    render: (pass: any) => surface.set(pass, { rotation: [0.0, 0.0, 0] })
   }
+}
+
+function bufferLayout(): [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout] {
+  const vertexLayout: GPUVertexBufferLayout = {
+    arrayStride: 3 * 4,
+    attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x3' }]
+  }
+  const normalLayout: GPUVertexBufferLayout = {
+    arrayStride: 3 * 4,
+    attributes: [{ shaderLocation: 1, offset: 0, format: 'float32x3' }]
+  }
+  const uvLayout: GPUVertexBufferLayout = {
+    arrayStride: 2 * 4,
+    attributes: [{ shaderLocation: 2, offset: 0, format: 'float32x2' }]
+  }
+  return [vertexLayout, normalLayout, uvLayout]
 }
 
 onMounted(async () => {
@@ -23,7 +41,7 @@ onMounted(async () => {
   const target = gpuCanvas(device, canvas)
   const model = getPlane(device)
 
-  const grid = f32(device, [GRID_SIZE, GRID_SIZE])
+  const grid = float(device, [GRID_SIZE, GRID_SIZE])
 
   const cellstate = pingpong()
 
