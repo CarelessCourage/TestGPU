@@ -127,14 +127,6 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
       topology: wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
     }
-    // depthStencil: model
-    //   ? {
-    //       // this makes sure that faces get rendered in the correct order.
-    //       depthWriteEnabled: true,
-    //       depthCompare: 'less',
-    //       format: 'depth24plus'
-    //     }
-    //   : undefined
   })
 
   // Create the compute shader that will process the simulation.

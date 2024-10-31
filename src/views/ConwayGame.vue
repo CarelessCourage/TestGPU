@@ -4,9 +4,8 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, plane, gpuComputePipeline, getMemory, renderPass, computePass } from '../moonbow'
+import { useGPU, plane, gpuComputePipeline, getMemory, computePass } from '../moonbow'
 import { cellPong } from '../moonbow/buffers/cellPong'
-import { updateGrid } from './test'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -41,10 +40,11 @@ onMounted(async () => {
   const pipeline = gpuComputePipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
-    wireframe: false,
+    wireframe: true,
     model: true
   })
 
+  const WORKGROUP_SIZE = 8
   let step = 0 // Track how many simulation steps have been run
 
   function runCompute(commandEncoder: GPUCommandEncoder) {
@@ -59,19 +59,34 @@ onMounted(async () => {
     step++
   }
 
-  function updateGrid2() {
-    const commandEncoder = device.createCommandEncoder()
+  function updateGrid() {
+    const encoder = device.createCommandEncoder()
+    const computePass = encoder.beginComputePass()
 
-    runCompute(commandEncoder)
+    // Compute work
+    computePass.setPipeline(pipeline.simulationPipeline)
+    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
 
-    const encoder = renderPass({
-      device,
-      context: memory.target.context,
-      commandEncoder,
-      model: true
+    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
+    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
+    // DispatchWorkgroups numbers arenot the number of invocations!
+    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
+
+    computePass.end()
+
+    step++
+
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          //@location(0), see fragment shader
+          view: memory.target.context.getCurrentTexture().createView(),
+          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store'
+        }
+      ]
     })
-
-    const pass = encoder.passEncoder
 
     pass.setPipeline(pipeline.pipeline)
 
@@ -95,22 +110,12 @@ onMounted(async () => {
 
     pass.end()
 
-    const commandBuffer = encoder.commandEncoder.finish()
+    const commandBuffer = encoder.finish()
     device.queue.submit([commandBuffer])
   }
 
   // Schedule updateGrid() to run repeatedly
-  setInterval(
-    () =>
-      updateGrid({
-        device,
-        pipeline,
-        GRID_SIZE,
-        target: memory.target,
-        model
-      }),
-    UPDATE_INTERVAL
-  )
+  setInterval(updateGrid, UPDATE_INTERVAL)
 })
 </script>
 
