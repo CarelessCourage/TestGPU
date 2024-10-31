@@ -15,6 +15,7 @@ export function cellPong(device: GPUDevice, GRID_SIZE: number) {
   for (let i = 0; i < cellStateArray.length; ++i) {
     cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
   }
+
   const stateA = storageBuffer(device, {
     label: 'Cell - State A',
     size: cellStateArray.byteLength,
@@ -25,6 +26,7 @@ export function cellPong(device: GPUDevice, GRID_SIZE: number) {
   for (let i = 0; i < cellStateArray.length; i++) {
     cellStateArray[i] = i % 2 // We are saving memory by reusing the same array
   }
+
   const stateB = storageBuffer(device, {
     label: 'Cell - State B',
     size: cellStateArray.byteLength,
@@ -59,6 +61,8 @@ export function cellPong(device: GPUDevice, GRID_SIZE: number) {
   return {
     grid,
     uniform,
-    storage
+    storage,
+    stateA,
+    stateB
   }
 }

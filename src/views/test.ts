@@ -1,3 +1,5 @@
+import type { ComputePipeline } from '../moonbow'
+
 const WORKGROUP_SIZE = 8
 
 let step = 0 // Track how many simulation steps have been run
@@ -10,7 +12,7 @@ export function updateGrid({
   model
 }: {
   device: GPUDevice
-  pipeline: any
+  pipeline: Pick<ComputePipeline, 'bindGroups' | 'pipeline' | 'simulationPipeline'>
   GRID_SIZE: number
   target: any
   model: any

@@ -9,11 +9,12 @@ import { bufferVertexLayout } from './geometry/utils'
 import { gpuPipeline, gpuComputePipeline } from './pipeline'
 import { float, uTime, fTime } from './buffers/uniforms'
 import { uniformBuffer } from './buffers'
+import { getUniformEntries } from './pipeline/entries'
 
 import type { GPUCanvas } from './target'
 import type { MoonbowRender } from './render'
 import type { GetMemory } from './memory'
-import type { Pipeline, PipelineOptions } from './pipeline'
+import type { Pipeline, ComputePipeline, PipelineOptions } from './pipeline'
 import type { UniformBuffer } from './buffers'
 import type { MoonbowOptions, MoonbowUniforms } from './types'
 
@@ -34,7 +35,8 @@ export {
   gpuPipeline,
   uniformBuffer,
   gpuComputePipeline,
-  bufferVertexLayout
+  bufferVertexLayout,
+  getUniformEntries
 }
 
 export type {
@@ -43,7 +45,8 @@ export type {
   GetMemory,
   UniformBuffer,
   MoonbowRender,
-  PipelineOptions,
   MoonbowOptions,
+  PipelineOptions,
+  ComputePipeline,
   MoonbowUniforms
 }

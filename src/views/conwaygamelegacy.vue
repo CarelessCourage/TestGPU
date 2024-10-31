@@ -4,7 +4,18 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, gpuCanvas, float, plane } from '../moonbow'
+import {
+  useGPU,
+  gpuCanvas,
+  float,
+  plane,
+  getMemory,
+  getUniformEntries,
+  gpuComputePipeline
+} from '../moonbow'
+import { cellPong } from '../moonbow/buffers/cellPong'
+
+import { updateGrid } from './test'
 
 function getPlane(device: GPUDevice) {
   const surface = plane(device)
@@ -41,76 +52,42 @@ onMounted(async () => {
   const target = gpuCanvas(device, canvas)
   const model = getPlane(device)
 
-  const grid = float(device, [GRID_SIZE, GRID_SIZE])
+  const cellP = cellPong(device, GRID_SIZE)
 
-  const cellstate = pingpong()
-
-  function pingpong() {
-    const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
-
-    const stateA = device.createBuffer({
-      label: 'Cell - State A',
-      size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  const memory = await getMemory({
+    device,
+    canvas: document.querySelector('canvas'),
+    storage: ({ target }) => ({
+      read: cellP.storage[0],
+      write: cellP.storage[1]
+    }),
+    uniforms: ({ target }) => ({
+      cellPong: cellP.uniform
     })
+  })
 
-    const stateB = device.createBuffer({
-      label: 'Cell - State B',
-      size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-    })
+  const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
+  const storage = memory.storage ? Object.values(memory.storage) : []
 
-    // Set each cell to a random state, then copy the JavaScript array
-    // into the storage buffer.
-    for (let i = 0; i < cellStateArray.length; ++i) {
-      cellStateArray[i] = Math.random() > 0.6 ? 1 : 0
-    }
-    device.queue.writeBuffer(stateA, 0, cellStateArray)
-
-    // Mark every other cell of the second grid as active.
-    for (let i = 0; i < cellStateArray.length; i++) {
-      cellStateArray[i] = i % 2 // We are saving memory by reusing the same array
-    }
-    device.queue.writeBuffer(stateB, 0, cellStateArray)
-
-    return {
-      a: stateA,
-      b: stateB
-    }
-  }
+  const entries = getUniformEntries({ device, uniforms })
+  const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
+  const layout = device.createBindGroupLayout({
+    label: 'Uniforms Bind Group Layout',
+    entries: [...entries, ...storageEntries].map((entry) => ({
+      binding: entry.binding,
+      visibility: entry.visibility,
+      buffer: entry.buffer
+    }))
+  })
 
   const cellShaderModule = device.createShaderModule({
     label: 'Cell shader',
     code: ConwayShader
   })
 
-  // We create this layout because we are sharing the same bindlayout between two diffirent shaders - and one shader might use a diffirent amount of stuff from the layout than another shader.
-  // Normally we could just auto it bit because of this variation we need to define what the layout is
-  const bindGroupLayout = device.createBindGroupLayout({
-    label: 'Cell Bind Group Layout',
-    entries: [
-      {
-        binding: 0,
-        // Add GPUShaderStage.FRAGMENT here if you are using the `grid` uniform in the fragment shader.
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-        buffer: {} // Grid uniform buffer
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
-        buffer: { type: 'read-only-storage' } // Cell state input buffer
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'storage' } // Cell state output buffer
-      }
-    ]
-  })
-
   const pipelineLayout = device.createPipelineLayout({
     label: 'Pipeline Layout',
-    bindGroupLayouts: [bindGroupLayout]
+    bindGroupLayouts: [layout]
   })
 
   const cellPipeline = device.createRenderPipeline({
@@ -132,7 +109,6 @@ onMounted(async () => {
     }
   })
 
-  const WORKGROUP_SIZE = 8
   // Create the compute shader that will process the simulation.
   const simulationShaderModule = device.createShaderModule({
     label: 'Game of Life simulation shader',
@@ -149,108 +125,55 @@ onMounted(async () => {
     }
   })
 
-  // This is where we attach the uniform to the shader through the pipeline
-  // Its doubbled up because we are using the ping-pong buffer pattern
   const bindGroups = [
     device.createBindGroup({
       label: 'Cell renderer bind group A',
-      //layout: cellPipeline.getBindGroupLayout(0), //@group(0) in shader - this just auto generates the layout from the cellPipeline
-      layout: bindGroupLayout, // No longer auto generating it
+      layout: layout,
       entries: [
-        {
-          binding: 0, //@binding(0) in shader
-          resource: { buffer: grid.buffer } //Buffer resource assigned to this binding
-        },
+        ...entries,
         {
           binding: 1, //@binding(1) in shader
-          resource: { buffer: cellstate.a }
+          resource: storageEntries[0].resource
         },
         {
           binding: 2,
-          resource: { buffer: cellstate.b }
+          resource: storageEntries[1].resource
         }
       ]
     }),
     device.createBindGroup({
       label: 'Cell renderer bind group B',
-      //layout: cellPipeline.getBindGroupLayout(0),
-      layout: bindGroupLayout, // No longer auto generating it
+      layout: layout,
       entries: [
-        {
-          binding: 0,
-          resource: { buffer: grid.buffer }
-        },
+        ...entries,
         {
           binding: 1,
-          resource: { buffer: cellstate.b }
+          resource: storageEntries[1].resource
         },
         {
           binding: 2,
-          resource: { buffer: cellstate.a }
+          resource: storageEntries[0].resource
         }
       ]
     })
   ]
 
-  let step = 0 // Track how many simulation steps have been run
-
-  function updateGrid() {
-    const encoder = device.createCommandEncoder()
-    const computePass = encoder.beginComputePass()
-
-    // Compute work
-    computePass.setPipeline(simulationPipeline)
-    computePass.setBindGroup(0, bindGroups[step % 2])
-
-    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
-    // DispatchWorkgroups numbers arenot the number of invocations!
-    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
-
-    computePass.end()
-
-    step++
-
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          //@location(0), see fragment shader
-          view: target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1 },
-          loadOp: 'clear',
-          storeOp: 'store'
-        }
-      ]
-    })
-
-    pass.setPipeline(cellPipeline)
-
-    pass.setVertexBuffer(0, model.buffer.vertices)
-    pass.setVertexBuffer(1, model.buffer.normals)
-    pass.setVertexBuffer(2, model.buffer.uvs)
-
-    pass.setBindGroup(0, bindGroups[step % 2]) // Makes sure the bind group with all the uniform stuff is actually being used in the pass
-    // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
-    // You're saying that each @binding that's part of @group(0) uses the resources in this bind group.
-
-    // Draw Geometry
-    pass.setIndexBuffer(model.buffer.indices, 'uint16')
-    pass.drawIndexed(
-      model.buffer.indicesCount,
-      GRID_SIZE * GRID_SIZE, // 16 instances
-      0,
-      0,
-      0
-    )
-
-    pass.end()
-
-    const commandBuffer = encoder.finish()
-    device.queue.submit([commandBuffer])
-  }
-
   // Schedule updateGrid() to run repeatedly
-  setInterval(updateGrid, UPDATE_INTERVAL)
+  setInterval(
+    () =>
+      updateGrid({
+        device,
+        pipeline: {
+          pipeline: cellPipeline,
+          simulationPipeline,
+          bindGroups
+        },
+        GRID_SIZE,
+        target: target,
+        model
+      }),
+    UPDATE_INTERVAL
+  )
 })
 </script>
 

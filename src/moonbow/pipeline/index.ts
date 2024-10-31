@@ -14,12 +14,6 @@ export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = Ret
   typeof gpuPipeline<U, S>
 >
 
-export interface ComputePipeline {
-  pipeline: GPURenderPipeline
-  simulationPipeline: GPUComputePipeline
-  bindGroup: GPUBindGroup
-}
-
 export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
   { shader, wireframe = false, model = true }: PipelineOptions
@@ -97,7 +91,14 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
 
   const entries = getUniformEntries({ device, uniforms })
   const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
-  const layout = getBindGroupLayout(device, [...entries, ...storageEntries])
+  const layout = device.createBindGroupLayout({
+    label: 'Uniforms Bind Group Layout',
+    entries: [...entries, ...storageEntries].map((entry) => ({
+      binding: entry.binding,
+      visibility: entry.visibility,
+      buffer: entry.buffer
+    }))
+  })
 
   const pipelineLayout = device.createPipelineLayout({
     label: 'Pipeline Layout',
@@ -197,3 +198,5 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     }
   }
 }
+
+export type ComputePipeline = ReturnType<typeof gpuComputePipeline>
