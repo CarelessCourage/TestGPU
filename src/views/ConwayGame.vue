@@ -96,7 +96,6 @@ onMounted(async () => {
     )
 
     pass.end()
-
     const commandBuffer = encoder.finish()
     device.queue.submit([commandBuffer])
   }

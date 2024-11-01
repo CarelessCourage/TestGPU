@@ -1,14 +1,5 @@
-import { bufferVertexLayout } from '../geometry/utils.js'
-import { getBindGroupLayout, getUniformEntries } from './entries.js'
-import { renderPass } from '../'
-import type { GetMemory, MoonbowRender, MoonbowUniforms } from '../'
-
-export interface PipelineOptions {
-  shader: string
-  computeShader?: string
-  wireframe?: boolean
-  model?: boolean
-}
+import { renderPass, pipelineCore } from '../'
+import type { GetMemory, MoonbowRender, MoonbowUniforms, PipelineOptions } from '../'
 
 export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
   typeof gpuPipeline<U, S>
@@ -16,65 +7,23 @@ export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = Ret
 
 export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  { shader, wireframe = false, model = true }: PipelineOptions
+  options: PipelineOptions
 ) {
-  const { device, format, context } = memory.target
-  const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
-  const storage = memory.storage ? Object.values(memory.storage) : []
-
-  const entries = getUniformEntries({ device, uniforms })
-  const layout = getBindGroupLayout(device, entries)
-
-  const pipelineLayout = device.createPipelineLayout({
-    label: 'Pipeline Layout',
-    bindGroupLayouts: [layout]
-  })
-
-  const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader 22',
-    code: shader
-  })
-
-  const pipeline = device.createRenderPipeline({
-    label: 'Cell pipeline',
-    layout: pipelineLayout,
-    vertex: {
-      module: cellShaderModule,
-      entryPoint: 'vertexMain',
-      buffers: model ? bufferVertexLayout() : undefined
-    },
-    fragment: {
-      module: cellShaderModule,
-      entryPoint: 'fragmentMain',
-      targets: [{ format }]
-    },
-    primitive: {
-      topology: wireframe ? 'line-list' : 'triangle-list',
-      cullMode: 'back' // ensures backfaces dont get rendered
-    },
-    depthStencil: model
-      ? {
-          // this makes sure that faces get rendered in the correct order.
-          depthWriteEnabled: true,
-          depthCompare: 'less',
-          format: 'depth24plus'
-        }
-      : undefined
-  })
+  const { target, pipeline, layout, uniformEntries, model } = pipelineCore(memory, options)
 
   // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup = device.createBindGroup({
+  const bindGroup = target.device.createBindGroup({
     label: 'Cell renderer bind group',
     layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: entries
+    entries: uniformEntries
   })
 
   return {
-    pipeline,
+    pipeline: pipeline,
     bindGroup,
     renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ device, context, model })
-      encoder.drawPass({ pipeline, bindGroup })
+      const encoder = renderPass({ ...target, model: model })
+      encoder.drawPass({ pipeline: pipeline, bindGroup })
       callback?.(encoder)
       encoder.submitPass()
     }
@@ -83,62 +32,20 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
 
 export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  { shader, computeShader, wireframe = false, model = true }: PipelineOptions
+  options: PipelineOptions
 ) {
-  const { device, format, context } = memory.target
-  const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
-  const storage = memory.storage ? Object.values(memory.storage) : []
-
-  const entries = getUniformEntries({ device, uniforms })
-  const storageEntries = getUniformEntries({ device, uniforms: storage || [] })
-  const layout = device.createBindGroupLayout({
-    label: 'Uniforms Bind Group Layout',
-    entries: [...entries, ...storageEntries].map((entry) => ({
-      binding: entry.binding,
-      visibility: entry.visibility,
-      buffer: entry.buffer
-    }))
-  })
-
-  const pipelineLayout = device.createPipelineLayout({
-    label: 'Pipeline Layout',
-    bindGroupLayouts: [layout]
-  })
-
-  const cellShaderModule = device.createShaderModule({
-    label: 'Cell shader 33',
-    code: shader
-  })
-
-  const cellPipeline = device.createRenderPipeline({
-    label: 'Cell pipeline',
-    layout: pipelineLayout,
-    vertex: {
-      module: cellShaderModule,
-      entryPoint: 'vertexMain',
-      buffers: model ? bufferVertexLayout() : undefined
-    },
-    fragment: {
-      module: cellShaderModule,
-      entryPoint: 'fragmentMain',
-      targets: [{ format }]
-    },
-    primitive: {
-      topology: wireframe ? 'line-list' : 'triangle-list',
-      cullMode: 'back' // ensures backfaces dont get rendered
-    }
-  })
+  const pipe = pipelineCore(memory, options)
 
   // Create the compute shader that will process the simulation.
-  const simulationShaderModule = device.createShaderModule({
+  const simulationShaderModule = pipe.target.device.createShaderModule({
     label: 'Game of Life simulation shader',
-    code: computeShader || ''
+    code: options.computeShader || ''
   })
 
   // Create a compute pipeline that updates the game state.
-  const simulationPipeline = device.createComputePipeline({
+  const simulationPipeline = pipe.target.device.createComputePipeline({
     label: 'Simulation pipeline',
-    layout: pipelineLayout,
+    layout: pipe.pipelineLayout,
     compute: {
       module: simulationShaderModule,
       entryPoint: 'computeMain'
@@ -146,44 +53,44 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   })
 
   const bindGroups = [
-    device.createBindGroup({
+    pipe.target.device.createBindGroup({
       label: 'Cell renderer bind group A',
-      layout: layout,
+      layout: pipe.layout,
       entries: [
-        ...entries,
+        ...pipe.uniformEntries,
         {
           binding: 1, //@binding(1) in shader
-          resource: storageEntries[0].resource
+          resource: pipe.storageEntries[0].resource
         },
         {
           binding: 2,
-          resource: storageEntries[1].resource
+          resource: pipe.storageEntries[1].resource
         }
       ]
     }),
-    device.createBindGroup({
+    pipe.target.device.createBindGroup({
       label: 'Cell renderer bind group B',
-      layout: layout,
+      layout: pipe.layout,
       entries: [
-        ...entries,
+        ...pipe.uniformEntries,
         {
           binding: 1,
-          resource: storageEntries[1].resource
+          resource: pipe.storageEntries[1].resource
         },
         {
           binding: 2,
-          resource: storageEntries[0].resource
+          resource: pipe.storageEntries[0].resource
         }
       ]
     })
   ]
 
   return {
-    pipeline: cellPipeline,
+    pipeline: pipe.pipeline,
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
     renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ device, context, model })
+      const encoder = renderPass({ ...pipe.target, model: pipe.model })
       //encoder.drawPass({ pipeline, bindGroup })
       callback?.(encoder)
       encoder.submitPass()
