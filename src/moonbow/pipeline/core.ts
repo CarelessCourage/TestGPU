@@ -35,7 +35,7 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     bindGroupLayouts: [layout]
   })
 
-  const cellShaderModule = target.device.createShaderModule({
+  const shaderModule = target.device.createShaderModule({
     label: 'Shader module',
     code: shader
   })
@@ -44,12 +44,12 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     label: 'Render pipeline',
     layout: pipelineLayout,
     vertex: {
-      module: cellShaderModule,
+      module: shaderModule,
       entryPoint: 'vertexMain',
       buffers: model ? bufferVertexLayout() : undefined
     },
     fragment: {
-      module: cellShaderModule,
+      module: shaderModule,
       entryPoint: 'fragmentMain',
       targets: [{ format: target.format }]
     },
