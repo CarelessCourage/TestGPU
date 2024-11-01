@@ -44,7 +44,6 @@ onMounted(async () => {
     model: true
   })
 
-  const WORKGROUP_SIZE = 8
   let step = 0 // Track how many simulation steps have been run
 
   function runCompute(commandEncoder: GPUCommandEncoder) {
@@ -61,20 +60,8 @@ onMounted(async () => {
 
   function updateGrid() {
     const encoder = device.createCommandEncoder()
-    const computePass = encoder.beginComputePass()
 
-    // Compute work
-    computePass.setPipeline(pipeline.simulationPipeline)
-    computePass.setBindGroup(0, pipeline.bindGroups[step % 2])
-
-    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-    computePass.dispatchWorkgroups(workgroupCount, workgroupCount)
-    // DispatchWorkgroups numbers arenot the number of invocations!
-    // Instead, it's the number of workgroups to execute, as defined by the @workgroup_size in the shader
-
-    computePass.end()
-
-    step++
+    runCompute(encoder)
 
     const pass = encoder.beginRenderPass({
       colorAttachments: [
