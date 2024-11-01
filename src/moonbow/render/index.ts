@@ -5,15 +5,16 @@ import { gpuComputePipeline } from '../'
 export function renderPass({
   device,
   context,
-  model,
+  depthStencil,
   commandEncoder
-}: Pick<GPUCanvas, 'device' | 'context'> & { model: boolean; commandEncoder?: GPUCommandEncoder }) {
-  const depthStencil = getDepthStencil(device, context.canvas)
-
+}: Pick<GPUCanvas, 'device' | 'context'> & {
+  depthStencil: boolean
+  commandEncoder?: GPUCommandEncoder
+}) {
   const cEncoder = commandEncoder || device.createCommandEncoder()
 
   const passEncoder = cEncoder.beginRenderPass({
-    depthStencilAttachment: model ? depthStencil : undefined,
+    depthStencilAttachment: depthStencil ? getDepthStencil(device, context.canvas) : undefined,
     colorAttachments: [
       {
         // @location(0), see fragment shader

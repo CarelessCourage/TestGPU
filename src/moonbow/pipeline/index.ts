@@ -22,7 +22,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
     pipeline: pipeline,
     bindGroup,
     renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ ...target, model: model })
+      const encoder = renderPass({ ...target, depthStencil: model })
       encoder.drawPass({ pipeline: pipeline, bindGroup })
       callback?.(encoder)
       encoder.submitPass()
@@ -90,7 +90,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
     renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ ...pipe.target, model: pipe.model })
+      const encoder = renderPass({ ...pipe.target, depthStencil: false })
       //encoder.drawPass({ pipeline, bindGroup })
       callback?.(encoder)
       encoder.submitPass()

@@ -63,6 +63,10 @@ onMounted(async () => {
 
     runCompute(encoder)
 
+    // pipeline.renderFrame(({passEncoder}) => {
+    //   passEncoder.setPipeline(pipeline.pipeline)
+    // })
+
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {

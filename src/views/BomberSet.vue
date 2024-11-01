@@ -36,11 +36,13 @@ onMounted(async () => {
     shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
-    memory: ({ target }) => ({
+    depthStencil: undefined,
+    uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
-    })
+    }),
+    storage: ({ target }) => ({})
   })
 
   const moon2 = await useMoonbow({
@@ -48,11 +50,13 @@ onMounted(async () => {
     shader: basic,
     canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
     model: true,
-    memory: ({ target }) => ({
+    depthStencil: undefined,
+    uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
-    })
+    }),
+    storage: ({ target }) => ({})
   })
 
   setInterval(() => {

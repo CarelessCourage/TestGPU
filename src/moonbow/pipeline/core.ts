@@ -53,11 +53,11 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
       entryPoint: 'fragmentMain',
       targets: [{ format: target.format }]
     },
+    depthStencil: getStencil(depthStencil),
     primitive: {
       topology: wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
-    },
-    depthStencil: getStencil(depthStencil)
+    }
   })
 
   return {
