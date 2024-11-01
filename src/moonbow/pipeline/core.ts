@@ -7,7 +7,7 @@ export interface PipelineOptions {
   computeShader?: string
   wireframe?: boolean
   model?: boolean
-  depthStencil?: boolean
+  depthStencil?: boolean | GPUDepthStencilState
 }
 
 function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
@@ -36,12 +36,12 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
   })
 
   const cellShaderModule = target.device.createShaderModule({
-    label: 'Cell shader 22',
+    label: 'Shader module',
     code: shader
   })
 
   const pipeline = target.device.createRenderPipeline({
-    label: 'Cell pipeline',
+    label: 'Render pipeline',
     layout: pipelineLayout,
     vertex: {
       module: cellShaderModule,
@@ -57,14 +57,7 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
       topology: wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
     },
-    depthStencil: depthStencil
-      ? {
-          // this makes sure that faces get rendered in the correct order.
-          depthWriteEnabled: true,
-          depthCompare: 'less',
-          format: 'depth24plus'
-        }
-      : undefined
+    depthStencil: getStencil(depthStencil)
   })
 
   return {
@@ -76,4 +69,17 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     uniformEntries,
     storageEntries
   }
+}
+
+function getStencil(depthStencil?: boolean | GPUDepthStencilState) {
+  const defaultStencil: GPUDepthStencilState = {
+    // this makes sure that faces get rendered in the correct order.
+    depthWriteEnabled: true,
+    depthCompare: 'less',
+    format: 'depth24plus'
+  }
+
+  if (depthStencil === true) return defaultStencil
+  if (depthStencil === false) return undefined
+  return depthStencil
 }
