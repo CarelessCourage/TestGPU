@@ -1,5 +1,6 @@
-import { bufferVertexLayout } from '../geometry/utils.js'
-import { getBindGroupLayout, getUniformEntries } from './entries.js'
+import { bufferVertexLayout } from '../geometry/utils'
+import { getStencil } from '../render/utils'
+import { getBindGroupLayout, getUniformEntries } from './entries'
 import type { GetMemory, MoonbowUniforms } from '../'
 
 export interface PipelineOptions {
@@ -10,9 +11,9 @@ export interface PipelineOptions {
   depthStencil?: boolean | GPUDepthStencilState
 }
 
-function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>
-) {
+function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>({
+  memory
+}: GetMemory<U, S>) {
   const target = memory.target
   const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
   const storage = memory.storage ? Object.values(memory.storage) : []
@@ -24,10 +25,10 @@ function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   return { target, layout, uniformEntries, storageEntries }
 }
 
-export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>,
-  { shader, wireframe = false, model = true, depthStencil }: PipelineOptions
-) {
+export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniforms>({
+  memory,
+  options
+}: GetMemory<U, S>) {
   const { target, layout, uniformEntries, storageEntries } = memoryLayout(memory)
 
   const pipelineLayout = target.device.createPipelineLayout({
@@ -37,31 +38,31 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
 
   const shaderModule = target.device.createShaderModule({
     label: 'Shader module',
-    code: shader
+    code: options.shader || ''
   })
 
   const pipeline = target.device.createRenderPipeline({
-    label: 'Render pipeline',
+    label: 'Moonbow Render pipeline',
     layout: pipelineLayout,
     vertex: {
       module: shaderModule,
       entryPoint: 'vertexMain',
-      buffers: model ? bufferVertexLayout() : undefined
+      buffers: options.model ? bufferVertexLayout() : undefined
     },
     fragment: {
       module: shaderModule,
       entryPoint: 'fragmentMain',
       targets: [{ format: target.format }]
     },
-    depthStencil: getStencil(depthStencil),
+    depthStencil: getStencil(options.depthStencil),
     primitive: {
-      topology: wireframe ? 'line-list' : 'triangle-list',
+      topology: options.wireframe ? 'line-list' : 'triangle-list',
       cullMode: 'back' // ensures backfaces dont get rendered
     }
   })
 
   return {
-    model,
+    model: options.model,
     target,
     layout,
     pipeline,
@@ -69,17 +70,4 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     uniformEntries,
     storageEntries
   }
-}
-
-function getStencil(depthStencil?: boolean | GPUDepthStencilState) {
-  const defaultStencil: GPUDepthStencilState = {
-    // this makes sure that faces get rendered in the correct order.
-    depthWriteEnabled: true,
-    depthCompare: 'less',
-    format: 'depth24plus'
-  }
-
-  if (depthStencil === true) return defaultStencil
-  if (depthStencil === false) return undefined
-  return depthStencil
 }

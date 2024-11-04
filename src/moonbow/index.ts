@@ -4,7 +4,7 @@ import { plane } from './geometry/plane'
 import { renderPass, computePass } from './render'
 import { gpuCamera } from './buffers/camera'
 import { useGPU, gpuCanvas } from './target'
-import { useMoonbow, frames } from './engine'
+import { useMoonbow, getActions } from './engine'
 import { bufferVertexLayout } from './geometry/utils'
 import { gpuPipeline, gpuComputePipeline } from './pipeline'
 import { pipelineCore } from './pipeline/core'
@@ -26,11 +26,11 @@ export {
   float,
   uTime,
   fTime,
-  frames,
   useGPU,
   gpuCanvas,
   gpuCamera,
   getMemory,
+  getActions,
   useMoonbow,
   renderPass,
   pipelineCore,

@@ -5,11 +5,11 @@ export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = Ret
   typeof gpuPipeline<U, S>
 >
 
-export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>,
-  options: PipelineOptions
-) {
-  const { target, pipeline, layout, uniformEntries, model } = pipelineCore(memory, options)
+export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>({
+  memory,
+  options
+}: GetMemory<U, S>) {
+  const { target, pipeline, layout, uniformEntries, model } = pipelineCore({ memory, options })
 
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = target.device.createBindGroup({

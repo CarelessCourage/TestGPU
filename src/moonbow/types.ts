@@ -13,6 +13,6 @@ export interface MoonbowOptions<U extends MoonbowUniforms, S extends MoonbowUnif
   uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
   storage: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<S>
   canvas: HTMLCanvasElement | null
-  device?: GPUDevice
-  model?: boolean
+  device: GPUDevice
+  model: boolean
 }

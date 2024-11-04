@@ -10,19 +10,14 @@ type MoonbowFrameCallback<U extends MoonbowUniforms, S extends MoonbowUniforms> 
 ) => void
 
 export async function useMoonbow<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  options: MoonbowOptions<U, S>
+  passedOptions: Partial<MoonbowOptions<U, S>>
 ) {
-  const memory = await getMemory(options)
-
-  const pipeline = gpuPipeline(memory, {
-    model: options.model,
-    shader: options.shader
-  })
-
-  return frames<U, S>(pipeline, memory)
+  const pack = await getMemory(passedOptions)
+  const pipeline = gpuPipeline(pack)
+  return getActions<U, S>(pipeline, pack)
 }
 
-export function frames<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+export function getActions<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   pipeline: ReturnType<typeof gpuPipeline>,
   memory: GetMemory<U, S>
 ) {

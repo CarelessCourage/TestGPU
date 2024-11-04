@@ -1,5 +1,5 @@
 import type { GPUCanvas, Pipeline, MoonbowUniforms } from '../'
-import { getDepthStencil } from './utils'
+import { getDepthStencilAttachment } from './utils'
 import { gpuComputePipeline } from '../'
 
 export function renderPass({
@@ -14,7 +14,10 @@ export function renderPass({
   const cEncoder = commandEncoder || device.createCommandEncoder()
 
   const passEncoder = cEncoder.beginRenderPass({
-    depthStencilAttachment: depthStencil ? getDepthStencil(device, context.canvas) : undefined,
+    label: 'Moonbow Render Pass',
+    depthStencilAttachment: depthStencil
+      ? getDepthStencilAttachment(device, context.canvas)
+      : undefined,
     colorAttachments: [
       {
         // @location(0), see fragment shader

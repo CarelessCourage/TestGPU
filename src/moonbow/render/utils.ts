@@ -1,4 +1,4 @@
-export function getDepthStencil(
+export function getDepthStencilAttachment(
   device: GPUDevice,
   element: Pick<HTMLCanvasElement, 'height' | 'width'>
 ): GPURenderPassDepthStencilAttachment {
@@ -14,4 +14,17 @@ export function getDepthStencil(
     depthLoadOp: 'clear',
     depthStoreOp: 'store'
   }
+}
+
+export function getStencil(depthStencil?: boolean | GPUDepthStencilState) {
+  const defaultStencil: GPUDepthStencilState = {
+    // this makes sure that faces get rendered in the correct order.
+    depthWriteEnabled: true,
+    depthCompare: 'less',
+    format: 'depth24plus'
+  }
+
+  if (depthStencil === true) return defaultStencil
+  if (depthStencil === false) return undefined
+  return depthStencil
 }

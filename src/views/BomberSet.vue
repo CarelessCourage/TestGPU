@@ -36,7 +36,7 @@ onMounted(async () => {
     shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
-    depthStencil: undefined,
+    depthStencil: true,
     uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
@@ -50,7 +50,7 @@ onMounted(async () => {
     shader: basic,
     canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
     model: true,
-    depthStencil: undefined,
+    depthStencil: true,
     uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
