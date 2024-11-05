@@ -1,15 +1,22 @@
 import { renderPass, pipelineCore } from '../'
-import type { GetMemory, MoonbowRender, MoonbowUniforms, PipelineOptions } from '../'
+import type { GetMemory, MoonbowRender, MoonbowUniforms, MoonbowPipelineOptions } from '../'
+
+export interface MemoryEncoder<U extends MoonbowUniforms, S extends MoonbowUniforms>
+  extends GetMemory<U, S>,
+    MoonbowRender {}
+
+type MoonbowFrameCallback<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
+  memoryEncoder: MemoryEncoder<U, S>
+) => void
 
 export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
   typeof gpuPipeline<U, S>
 >
 
-export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>({
-  memory,
-  options
-}: GetMemory<U, S>) {
-  const { target, pipeline, layout, uniformEntries, model } = pipelineCore({ memory, options })
+export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+  memory: GetMemory<U, S>
+) {
+  const { target, pipeline, layout, uniformEntries } = pipelineCore(memory)
 
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = target.device.createBindGroup({
@@ -18,23 +25,30 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
     entries: uniformEntries
   })
 
+  function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
+    const encoder = renderPass({ target: target, depthStencil: memory.depthStencil })
+    encoder.drawPass({ pipeline: pipeline, bindGroup })
+    callback?.({ ...memory, ...encoder })
+    encoder.submitPass()
+  }
+
+  function loop(callback?: MoonbowFrameCallback<U, S>, interval = 1000 / 60) {
+    setInterval(() => renderFrame(callback), interval)
+  }
+
   return {
-    pipeline: pipeline,
+    pipeline,
     bindGroup,
-    renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ ...target, depthStencil: model })
-      encoder.drawPass({ pipeline: pipeline, bindGroup })
-      callback?.(encoder)
-      encoder.submitPass()
-    }
+    renderFrame,
+    loop
   }
 }
 
 export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  options: PipelineOptions
+  options: MoonbowPipelineOptions
 ) {
-  const pipe = pipelineCore(memory, options)
+  const pipe = pipelineCore(memory)
 
   // Create the compute shader that will process the simulation.
   const simulationShaderModule = pipe.target.device.createShaderModule({
@@ -90,7 +104,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
     renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ ...pipe.target, depthStencil: false })
+      const encoder = renderPass({ target: pipe.target, depthStencil: false })
       //encoder.drawPass({ pipeline, bindGroup })
       callback?.(encoder)
       encoder.submitPass()

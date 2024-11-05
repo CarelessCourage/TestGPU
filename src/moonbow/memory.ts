@@ -1,31 +1,36 @@
 import { useGPU, gpuCanvas } from './'
 import type { MoonbowUniforms, MoonbowOptions } from './'
 
+/**
+ * Gets a device and lets the user allocate uniform/storage buffers to the memory on it. Also assembles the options and assigns the defaults.
+ */
 export async function getMemory<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  passedOptions: Omit<Partial<MoonbowOptions<U, S>>, 'shader'>
+  passedOptions: Partial<MoonbowOptions<U, S>>
 ) {
-  const options = getOptions(passedOptions)
-  const device = options.device || (await useGPU()).device
-  const target = gpuCanvas(device, options.canvas)
+  const options = await getOptionsWithDefaults(passedOptions)
+  const target = gpuCanvas(options.device, options.canvas)
 
-  const uniforms = options.uniforms?.({ target, device }) || {}
-  const storage = options.storage?.({ target, device }) || {}
+  const uniforms = options.uniforms?.({ target, device: options.device }) || {}
+  const storage = options.storage?.({ target, device: options.device }) || {}
 
   delete uniforms?.storage
   return {
-    memory: { uniforms, storage, device, target },
-    options
+    ...options,
+    uniforms,
+    storage,
+    target
   }
 }
 
-function getOptions<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   options: Partial<MoonbowOptions<U, S>>
-): MoonbowOptions<U, S> {
+): Promise<MoonbowOptions<U, S>> {
+  const device = options.device || (await useGPU()).device
   return {
     uniforms: options.uniforms || (() => ({})),
     storage: options.storage || (() => ({})),
     canvas: options.canvas || null,
-    device: options.device,
+    device: device,
     model: options.model || true,
     shader: options.shader || '',
     computeShader: options.computeShader || '',

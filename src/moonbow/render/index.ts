@@ -1,27 +1,24 @@
-import type { GPUCanvas, Pipeline, MoonbowUniforms } from '../'
+import type { GPUCanvas, Pipeline, MoonbowUniforms, MoonbowPipelineOptions } from '../'
 import { getDepthStencilAttachment } from './utils'
 import { gpuComputePipeline } from '../'
 
 export function renderPass({
-  device,
-  context,
-  depthStencil,
-  commandEncoder
-}: Pick<GPUCanvas, 'device' | 'context'> & {
-  depthStencil: boolean
-  commandEncoder?: GPUCommandEncoder
+  target,
+  depthStencil
+}: {
+  target: Pick<GPUCanvas, 'device' | 'context'>
+  depthStencil: MoonbowPipelineOptions['depthStencil']
 }) {
-  const cEncoder = commandEncoder || device.createCommandEncoder()
-
-  const passEncoder = cEncoder.beginRenderPass({
+  const commandEncoder = target.device.createCommandEncoder()
+  const passEncoder = commandEncoder.beginRenderPass({
     label: 'Moonbow Render Pass',
     depthStencilAttachment: depthStencil
-      ? getDepthStencilAttachment(device, context.canvas)
+      ? getDepthStencilAttachment(target.device, target.context.canvas)
       : undefined,
     colorAttachments: [
       {
         // @location(0), see fragment shader
-        view: context.getCurrentTexture().createView(),
+        view: target.context.getCurrentTexture().createView(),
         clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
         loadOp: 'clear',
         storeOp: 'store'
@@ -36,21 +33,19 @@ export function renderPass({
 
   function submitPass() {
     passEncoder.end()
-    const commandBuffer = cEncoder.finish()
-    device.queue.submit([commandBuffer])
+    const commandBuffer = commandEncoder.finish()
+    target.device.queue.submit([commandBuffer])
   }
 
   return {
     drawPass,
     submitPass,
     passEncoder,
-    commandEncoder: cEncoder
+    commandEncoder
   }
 }
 
 export type MoonbowRender = ReturnType<typeof renderPass>
-
-const WORKGROUP_SIZE = 8
 
 type ComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
   typeof gpuComputePipeline<U, S>
@@ -63,6 +58,7 @@ export function computePass({
   commandEncoder: GPUCommandEncoder
   GRID_SIZE: number
 }) {
+  const WORKGROUP_SIZE = 8
   const computePass = commandEncoder.beginComputePass()
 
   function drawPass<U extends MoonbowUniforms, S extends MoonbowUniforms>(

@@ -10,14 +10,21 @@ onMounted(async () => {
     canvas: canvasRef.value,
     shader: shaderSource,
     model: false,
-    uniforms: ({ device }) => ({ time: fTime(device) }),
-    storage: ({ device }) => ({ time: fTime(device) })
+    depthStencil: false,
+    uniforms: ({ device }) => ({ time: fTime(device) })
   })
 
-  moon.loop(({ passEncoder, uniforms }) => {
-    passEncoder.draw(3, 1, 0, 0)
-    uniforms?.time?.update()
-  })
+  // moon.loop(({ passEncoder, uniforms }) => {
+  //   passEncoder.draw(3, 1, 0, 0)
+  //   uniforms?.time?.update()
+  // })
+
+  setInterval(() => {
+    moon.renderFrame(({ passEncoder, uniforms }) => {
+      passEncoder.draw(3, 1, 0, 0)
+      uniforms?.time?.update()
+    })
+  }, 1000 / 60)
 })
 </script>
 
