@@ -31,7 +31,7 @@ async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends Moonb
     storage: options.storage || (() => ({})),
     canvas: options.canvas || null,
     device: device,
-    model: options.model || true,
+    model: options.model === undefined ? true : options.model,
     shader: options.shader || '',
     computeShader: options.computeShader || '',
     wireframe: options.wireframe || false,
