@@ -23,12 +23,12 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
   const { target, layout, uniformEntries, storageEntries } = memoryLayout(memory)
 
   const pipelineLayout = target.device.createPipelineLayout({
-    label: 'Pipeline Layout',
+    label: 'Moonbow Pipeline Layout',
     bindGroupLayouts: [layout]
   })
 
   const shaderModule = target.device.createShaderModule({
-    label: 'Shader module',
+    label: 'Moonbow Shader module',
     code: memory.shader || ''
   })
 

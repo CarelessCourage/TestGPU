@@ -14,9 +14,10 @@ export type Pipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = Ret
 >
 
 export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>
+  memory: GetMemory<U, S>,
+  options: Partial<MoonbowPipelineOptions>
 ) {
-  const { target, pipeline, layout, uniformEntries } = pipelineCore(memory)
+  const { target, pipeline, layout, uniformEntries } = pipelineCore({ ...memory, ...options })
 
   // This is where we attach the uniform to the shader through the pipeline
   const bindGroup = target.device.createBindGroup({
@@ -46,9 +47,9 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
 
 export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  options: MoonbowPipelineOptions
+  options: Partial<MoonbowPipelineOptions>
 ) {
-  const pipe = pipelineCore(memory)
+  const pipe = pipelineCore({ ...memory, ...options })
 
   // Create the compute shader that will process the simulation.
   const simulationShaderModule = pipe.target.device.createShaderModule({
