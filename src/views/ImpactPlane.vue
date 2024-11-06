@@ -11,6 +11,7 @@ onMounted(async () => {
     shader: shaderSource,
     model: false,
     depthStencil: false,
+    wireframe: false,
     uniforms: ({ device }) => ({ time: fTime(device) })
   })
 

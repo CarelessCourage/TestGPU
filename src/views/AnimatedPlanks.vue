@@ -24,8 +24,7 @@ onMounted(async () => {
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
-    }),
-    storage: ({ target }) => ({})
+    })
   })
 
   const moon2 = await useMoonbow({
@@ -37,8 +36,7 @@ onMounted(async () => {
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
-    }),
-    storage: ({ target }) => ({})
+    })
   })
 
   let rotation = 0

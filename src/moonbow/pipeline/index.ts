@@ -99,16 +99,23 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     })
   ]
 
+  function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
+    const encoder = renderPass({ target: pipe.target, depthStencil: memory.depthStencil })
+    //encoder.drawPass({ pipeline: pipeline, bindGroup })
+    callback?.({ ...memory, ...encoder })
+    encoder.submitPass()
+  }
+
+  function loop(callback?: MoonbowFrameCallback<U, S>, interval = 1000 / 60) {
+    setInterval(() => renderFrame(callback), interval)
+  }
+
   return {
     pipeline: pipe.pipeline,
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
-    renderFrame: (callback?: (encoder: MoonbowRender) => void) => {
-      const encoder = renderPass({ target: pipe.target, depthStencil: false })
-      //encoder.drawPass({ pipeline, bindGroup })
-      callback?.(encoder)
-      encoder.submitPass()
-    }
+    renderFrame,
+    loop
   }
 }
 

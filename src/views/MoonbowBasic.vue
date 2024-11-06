@@ -20,7 +20,7 @@ onMounted(async () => {
     shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
-    memory: ({ target }) => ({
+    uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
@@ -32,7 +32,7 @@ onMounted(async () => {
     shader: basic,
     canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
     model: true,
-    memory: ({ target }) => ({
+    uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
       camera: gpuCamera(target)
