@@ -40,8 +40,7 @@ onMounted(async () => {
   const pipeline = gpuComputePipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
-    wireframe: true,
-    model: true
+    wireframe: true
   })
 
   let step = 0 // Track how many simulation steps have been run

@@ -19,10 +19,9 @@ onMounted(async () => {
     device,
     shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
-    model: true,
     uniforms: ({ target }) => ({
-      time: time,
-      intensity: intensity,
+      time,
+      intensity,
       camera: gpuCamera(target)
     })
   })
@@ -31,10 +30,9 @@ onMounted(async () => {
     device,
     shader: basic,
     canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
-    model: true,
     uniforms: ({ target }) => ({
-      time: time,
-      intensity: intensity,
+      time,
+      intensity,
       camera: gpuCamera(target)
     })
   })

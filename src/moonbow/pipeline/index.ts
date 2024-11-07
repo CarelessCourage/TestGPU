@@ -17,18 +17,13 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   memory: GetMemory<U, S>,
   options: Partial<MoonbowPipelineOptions>
 ) {
-  const { target, pipeline, layout, uniformEntries } = pipelineCore({ ...memory, ...options })
+  const pCore = pipelineCore({ ...memory, ...options })
 
-  // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup = target.device.createBindGroup({
-    label: 'Cell renderer bind group',
-    layout: layout, // pipeline.getBindGroupLayout(0), //@group(0) in shader
-    entries: uniformEntries
-  })
+  const bindGroup = pCore.bindGroup()
 
   function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
-    const encoder = renderPass({ target: target, depthStencil: memory.depthStencil })
-    encoder.drawPass({ pipeline: pipeline, bindGroup })
+    const encoder = renderPass({ target: pCore.target, depthStencil: memory.depthStencil })
+    encoder.drawPass({ pipeline: pCore.pipeline, bindGroup })
     callback?.({ ...memory, ...encoder })
     encoder.submitPass()
   }
@@ -38,7 +33,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   }
 
   return {
-    pipeline,
+    pipeline: pCore.pipeline,
     bindGroup,
     renderFrame,
     loop
@@ -68,36 +63,18 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   })
 
   const bindGroups = [
-    pipe.target.device.createBindGroup({
-      label: 'Cell renderer bind group A',
-      layout: pipe.layout,
-      entries: [
-        ...pipe.uniformEntries,
-        {
-          binding: 1, //@binding(1) in shader
-          resource: pipe.storageEntries[0].resource
-        },
-        {
-          binding: 2,
-          resource: pipe.storageEntries[1].resource
-        }
-      ]
-    }),
-    pipe.target.device.createBindGroup({
-      label: 'Cell renderer bind group B',
-      layout: pipe.layout,
-      entries: [
-        ...pipe.uniformEntries,
-        {
-          binding: 1,
-          resource: pipe.storageEntries[1].resource
-        },
-        {
-          binding: 2,
-          resource: pipe.storageEntries[0].resource
-        }
-      ]
-    })
+    pipe.bindGroup(),
+    pipe.bindGroup(({ uniformEntries, storageEntries }) => [
+      ...uniformEntries,
+      {
+        binding: 1,
+        resource: storageEntries[1].resource
+      },
+      {
+        binding: 2,
+        resource: storageEntries[0].resource
+      }
+    ])
   ]
 
   function renderFrame(callback?: MoonbowFrameCallback<U, S>) {

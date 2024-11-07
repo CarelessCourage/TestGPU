@@ -20,19 +20,19 @@ function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
 export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>
 ) {
-  const { target, layout, uniformEntries, storageEntries } = memoryLayout(memory)
+  const memLay = memoryLayout(memory)
 
-  const pipelineLayout = target.device.createPipelineLayout({
+  const pipelineLayout = memLay.target.device.createPipelineLayout({
     label: 'Moonbow Pipeline Layout',
-    bindGroupLayouts: [layout]
+    bindGroupLayouts: [memLay.layout]
   })
 
-  const shaderModule = target.device.createShaderModule({
+  const shaderModule = memLay.target.device.createShaderModule({
     label: 'Moonbow Shader module',
     code: memory.shader || ''
   })
 
-  const pipeline = target.device.createRenderPipeline({
+  const pipeline = memLay.target.device.createRenderPipeline({
     label: 'Moonbow Render pipeline',
     layout: pipelineLayout,
     vertex: {
@@ -43,7 +43,7 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     fragment: {
       module: shaderModule,
       entryPoint: 'fragmentMain',
-      targets: [{ format: target.format }]
+      targets: [{ format: memLay.target.format }]
     },
     depthStencil: getStencil(memory.depthStencil),
     primitive: {
@@ -52,13 +52,25 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     }
   })
 
+  // This is where we attach the uniform to the shader through the pipeline
+  function bindGroup(
+    callback?: ({ uniformEntries, storageEntries }: typeof memLay) => Iterable<GPUBindGroupEntry>
+  ) {
+    return memLay.target.device.createBindGroup({
+      label: 'Moonbow bindgroup',
+      layout: memLay.layout,
+      entries: callback ? callback(memLay) : [...memLay.uniformEntries, ...memLay.storageEntries]
+    })
+  }
+
   return {
-    model: memory.model,
-    target,
-    layout,
     pipeline,
     pipelineLayout,
-    uniformEntries,
-    storageEntries
+    model: memory.model,
+    target: memLay.target,
+    layout: memLay.layout,
+    uniformEntries: memLay.uniformEntries,
+    storageEntries: memLay.storageEntries,
+    bindGroup
   }
 }
