@@ -18,7 +18,6 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   options: Partial<MoonbowPipelineOptions>
 ) {
   const pCore = pipelineCore({ ...memory, ...options })
-
   const bindGroup = pCore.bindGroup()
 
   function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
@@ -90,6 +89,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
 
   return {
     pipeline: pipe.pipeline,
+    target: pipe.target,
     simulationPipeline: simulationPipeline,
     bindGroups: bindGroups,
     renderFrame,

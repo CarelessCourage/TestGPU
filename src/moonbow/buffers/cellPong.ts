@@ -6,7 +6,7 @@ import type { UniformBuffer } from './'
 // Storage buffers are more flexible and much bigger than uniform buffers
 // but uniform buffers are sometimes prioritised by the GPU so they might be faster depending on the GPU
 
-export function cellPong(device: GPUDevice, GRID_SIZE: number) {
+export function getCellPong(device: GPUDevice, GRID_SIZE: number) {
   const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE)
   const grid = float(device, [GRID_SIZE, GRID_SIZE])
 

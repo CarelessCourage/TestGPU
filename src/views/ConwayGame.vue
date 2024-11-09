@@ -4,36 +4,23 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, plane, gpuComputePipeline, getMemory, computePass } from '../moonbow'
-import { cellPong } from '../moonbow/buffers/cellPong'
-
-function getPlane(device: GPUDevice) {
-  const surface = plane(device)
-  return {
-    buffer: surface.buffer,
-    geometry: surface.geometry,
-    render: (pass: GPURenderPassEncoder) => surface.set(pass, { rotation: [0.0, 0.0, 0] })
-  }
-}
+import { useGPU, getCellPlane, gpuComputePipeline, getMemory, computePass } from '../moonbow'
+import { getCellPong } from '../moonbow/buffers/cellPong'
 
 onMounted(async () => {
-  const GRID_SIZE = 100
-  const UPDATE_INTERVAL = 30 // Update every 200ms (5 times/sec)
-
   const { device } = await useGPU()
 
-  const model = getPlane(device)
-  const cellstate = cellPong(device, GRID_SIZE)
+  const GRID_SIZE = 100
+  const cellPlane = getCellPlane(device, GRID_SIZE)
+  const cellState = getCellPong(device, GRID_SIZE)
 
   const memory = await getMemory({
     device,
     canvas: document.querySelector('canvas'),
+    uniforms: () => ({ cellPong: cellState.uniform }),
     storage: () => ({
-      read: cellstate.storage[0],
-      write: cellstate.storage[1]
-    }),
-    uniforms: () => ({
-      cellPong: cellstate.uniform
+      read: cellState.storage[0],
+      write: cellState.storage[1]
     })
   })
 
@@ -44,7 +31,6 @@ onMounted(async () => {
   })
 
   let step = 0 // Track how many simulation steps have been run
-
   function runCompute(commandEncoder: GPUCommandEncoder) {
     const computeEncoder = computePass({
       GRID_SIZE,
@@ -58,53 +44,57 @@ onMounted(async () => {
   }
 
   function updateGrid() {
-    const encoder = device.createCommandEncoder()
+    const encoder = pipeline.target.device.createCommandEncoder()
 
     runCompute(encoder)
 
-    // pipeline.renderFrame(({passEncoder}) => {
-    //   passEncoder.setPipeline(pipeline.pipeline)
-    // })
+    function passRender({
+      context,
+      pipeline,
+      bindGroup
+    }: {
+      context: GPUCanvasContext
+      pipeline: GPURenderPipeline
+      bindGroup: GPUBindGroup
+    }) {
+      const passEncoder = encoder.beginRenderPass({
+        label: 'Moonbow Render Pass',
+        depthStencilAttachment: undefined,
+        colorAttachments: [
+          {
+            // @location(0), see fragment shader
+            view: context.getCurrentTexture().createView(),
+            clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store'
+          }
+        ]
+      })
 
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          //@location(0), see fragment shader
-          view: memory.target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.15, a: 1.0 },
-          loadOp: 'clear',
-          storeOp: 'store'
-        }
-      ]
+      passEncoder.setPipeline(pipeline)
+      passEncoder.setBindGroup(0, bindGroup) // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
+
+      return passEncoder
+    }
+
+    const passEncoder = passRender({
+      pipeline: pipeline.pipeline,
+      context: pipeline.target.context,
+      bindGroup: pipeline.bindGroups[step % 2]
     })
 
-    pass.setPipeline(pipeline.pipeline)
+    cellPlane.update(passEncoder)
 
-    pass.setVertexBuffer(0, model.buffer.vertices)
-    pass.setVertexBuffer(1, model.buffer.normals)
-    pass.setVertexBuffer(2, model.buffer.uvs)
+    function submitPass(passEncoder: GPURenderPassEncoder) {
+      passEncoder.end()
+      const commandBuffer = encoder.finish()
+      pipeline.target.device.queue.submit([commandBuffer])
+    }
 
-    pass.setBindGroup(0, pipeline.bindGroups[step % 2]) // Makes sure the bind group with all the uniform stuff is actually being used in the pass
-    // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
-    // You're saying that each @binding that's part of @group(0) uses the resources in this bind group.
-
-    // Draw Geometry
-    pass.setIndexBuffer(model.buffer.indices, 'uint16')
-    pass.drawIndexed(
-      model.buffer.indicesCount,
-      GRID_SIZE * GRID_SIZE, // 16 instances
-      0,
-      0,
-      0
-    )
-
-    pass.end()
-    const commandBuffer = encoder.finish()
-    device.queue.submit([commandBuffer])
+    submitPass(passEncoder)
   }
 
-  // Schedule updateGrid() to run repeatedly
-  setInterval(updateGrid, UPDATE_INTERVAL)
+  setInterval(updateGrid, 30)
 })
 </script>
 

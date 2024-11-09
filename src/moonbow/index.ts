@@ -1,6 +1,7 @@
 import { getMemory } from './memory'
 import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
+import { getCellPlane } from './geometry/cellPlane'
 import { renderPass, computePass } from './render'
 import { gpuCamera } from './buffers/camera'
 import { useGPU, gpuCanvas } from './target'
@@ -22,6 +23,7 @@ import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowUniforms } from './
 export {
   cube,
   plane,
+  getCellPlane,
   float,
   uTime,
   fTime,
