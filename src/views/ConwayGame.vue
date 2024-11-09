@@ -4,7 +4,14 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, getCellPlane, gpuComputePipeline, getMemory, computePass } from '../moonbow'
+import {
+  useGPU,
+  getCellPlane,
+  gpuComputePipeline,
+  getMemory,
+  computePass,
+  computeRenderPass
+} from '../moonbow'
 import { getCellPong } from '../moonbow/buffers/cellPong'
 
 onMounted(async () => {
@@ -44,40 +51,11 @@ onMounted(async () => {
   }
 
   function updateGrid() {
-    const encoder = pipeline.target.device.createCommandEncoder()
+    const lol = computeRenderPass(pipeline)
 
-    runCompute(encoder)
+    runCompute(lol.encoder)
 
-    function passRender({
-      context,
-      pipeline,
-      bindGroup
-    }: {
-      context: GPUCanvasContext
-      pipeline: GPURenderPipeline
-      bindGroup: GPUBindGroup
-    }) {
-      const passEncoder = encoder.beginRenderPass({
-        label: 'Moonbow Render Pass',
-        depthStencilAttachment: undefined,
-        colorAttachments: [
-          {
-            // @location(0), see fragment shader
-            view: context.getCurrentTexture().createView(),
-            clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
-            loadOp: 'clear',
-            storeOp: 'store'
-          }
-        ]
-      })
-
-      passEncoder.setPipeline(pipeline)
-      passEncoder.setBindGroup(0, bindGroup) // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
-
-      return passEncoder
-    }
-
-    const passEncoder = passRender({
+    const passEncoder = lol.passRender({
       pipeline: pipeline.pipeline,
       context: pipeline.target.context,
       bindGroup: pipeline.bindGroups[step % 2]
@@ -85,13 +63,7 @@ onMounted(async () => {
 
     cellPlane.update(passEncoder)
 
-    function submitPass(passEncoder: GPURenderPassEncoder) {
-      passEncoder.end()
-      const commandBuffer = encoder.finish()
-      pipeline.target.device.queue.submit([commandBuffer])
-    }
-
-    submitPass(passEncoder)
+    lol.submitPass(passEncoder)
   }
 
   setInterval(updateGrid, 30)

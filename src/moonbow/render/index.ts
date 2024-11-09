@@ -84,21 +84,35 @@ export function computePass({
 
 export type MoonbowCompute = ReturnType<typeof computePass>
 
-function updateGrid<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+interface PassRender {
+  pipeline: GPURenderPipeline
+  bindGroup: GPUBindGroup
+  context: GPUCanvas['context']
+}
+
+export function computeRenderPass<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   pipeline: ComputePipeline<U, S>
 ) {
   const encoder = pipeline.target.device.createCommandEncoder()
 
-  // runCompute(encoder)
+  function passRender({ pipeline, bindGroup, context }: PassRender) {
+    const passEncoder = encoder.beginRenderPass({
+      label: 'Moonbow Render Pass',
+      depthStencilAttachment: undefined,
+      colorAttachments: [
+        {
+          // @location(0), see fragment shader
+          view: context.getCurrentTexture().createView(),
+          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store'
+        }
+      ]
+    })
 
-  interface PassRender {
-    pipeline: GPURenderPipeline
-    bindGroup: GPUBindGroup
-  }
-
-  function passRender({ pipeline, bindGroup }: PassRender) {
     passEncoder.setPipeline(pipeline)
     passEncoder.setBindGroup(0, bindGroup) // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
+    return passEncoder
   }
 
   function submitPass(passEncoder: GPURenderPassEncoder) {
@@ -107,26 +121,9 @@ function updateGrid<U extends MoonbowUniforms, S extends MoonbowUniforms>(
     pipeline.target.device.queue.submit([commandBuffer])
   }
 
-  const passEncoder = encoder.beginRenderPass({
-    label: 'Moonbow Render Pass',
-    depthStencilAttachment: undefined,
-    colorAttachments: [
-      {
-        // @location(0), see fragment shader
-        view: pipeline.target.context.getCurrentTexture().createView(),
-        clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
-        loadOp: 'clear',
-        storeOp: 'store'
-      }
-    ]
-  })
-
-  passRender({
-    pipeline: pipeline.pipeline,
-    bindGroup: pipeline.bindGroups[step % 2]
-  })
-
-  // cellPlane.update(passEncoder)
-
-  submitPass(passEncoder)
+  return {
+    passRender,
+    submitPass,
+    encoder
+  }
 }
