@@ -56,16 +56,16 @@ onMounted(async () => {
   }
 
   setInterval(() => {
-    const lol = renderPass({
+    const renderer = renderPass({
       target: pipeline.target,
       depthStencil: false
     })
 
-    runCompute(lol.commandEncoder)
+    runCompute(renderer.commandEncoder)
 
-    const initPass = lol.initPass(pipeline.target.context)
+    const initPass = renderer.initPass(pipeline.target.context)
 
-    const passEncoder = lol.drawPass({
+    const passEncoder = renderer.drawPass({
       passEncoder: initPass,
       pipeline: pipeline.pipeline,
       bindGroup: pipeline.bindGroups[step % 2]
@@ -73,7 +73,7 @@ onMounted(async () => {
 
     cellPlane.update(passEncoder)
 
-    lol.submitPass(passEncoder)
+    renderer.submitPass(passEncoder)
   }, 30)
 })
 </script>
