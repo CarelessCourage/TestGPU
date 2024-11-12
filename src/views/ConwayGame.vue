@@ -55,7 +55,7 @@ onMounted(async () => {
     step++
   }
 
-  function updateGrid() {
+  setInterval(() => {
     const lol = renderPass({
       target: pipeline.target,
       depthStencil: false
@@ -63,18 +63,18 @@ onMounted(async () => {
 
     runCompute(lol.commandEncoder)
 
+    const initPass = lol.initPass(pipeline.target.context)
+
     const passEncoder = lol.drawPass({
+      passEncoder: initPass,
       pipeline: pipeline.pipeline,
-      context: pipeline.target.context,
       bindGroup: pipeline.bindGroups[step % 2]
     })
 
     cellPlane.update(passEncoder)
 
     lol.submitPass(passEncoder)
-  }
-
-  setInterval(updateGrid, 30)
+  }, 30)
 })
 </script>
 
