@@ -10,7 +10,7 @@ import {
   gpuComputePipeline,
   getMemory,
   computePass,
-  computeRenderPass
+  renderPass
 } from '../moonbow'
 import { getCellPong } from '../moonbow/buffers/cellPong'
 
@@ -39,23 +39,31 @@ onMounted(async () => {
 
   let step = 0 // Track how many simulation steps have been run
   function runCompute(commandEncoder: GPUCommandEncoder) {
+    const WORKGROUP_SIZE = 8
+    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
+
     const computeEncoder = computePass({
-      GRID_SIZE,
-      commandEncoder
+      commandEncoder,
+      workgroups: [workgroupCount, workgroupCount, 1],
+      simulationPipeline: pipeline.simulationPipeline,
+      bindGroup: pipeline.bindGroups[step % 2]
     })
 
-    computeEncoder.drawPass(pipeline, step)
+    computeEncoder.drawPass()
     computeEncoder.submitPass()
 
     step++
   }
 
   function updateGrid() {
-    const lol = computeRenderPass(pipeline)
+    const lol = renderPass({
+      target: pipeline.target,
+      depthStencil: false
+    })
 
-    runCompute(lol.encoder)
+    runCompute(lol.commandEncoder)
 
-    const passEncoder = lol.passRender({
+    const passEncoder = lol.drawPass({
       pipeline: pipeline.pipeline,
       context: pipeline.target.context,
       bindGroup: pipeline.bindGroups[step % 2]
