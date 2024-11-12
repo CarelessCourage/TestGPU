@@ -1,4 +1,10 @@
-import type { GPUCanvas, Pipeline, MoonbowUniforms, MoonbowPipelineOptions } from '../'
+import type {
+  GPUCanvas,
+  Pipeline,
+  MoonbowUniforms,
+  MoonbowPipelineOptions,
+  PipelineCore
+} from '../'
 import { getDepthStencilAttachment } from './utils'
 import { gpuComputePipeline } from '../'
 
@@ -48,30 +54,29 @@ export function computePass({
 export type MoonbowCompute = ReturnType<typeof computePass>
 
 interface PassRender {
-  pipeline: GPURenderPipeline
   bindGroup: GPUBindGroup
   passEncoder: GPURenderPassEncoder
 }
 
 export function renderPass({
-  target,
+  pipeline,
   depthStencil
 }: {
-  target: Pick<GPUCanvas, 'device' | 'context'>
+  pipeline: Pick<PipelineCore, 'pipeline' | 'target'>
   depthStencil: MoonbowPipelineOptions['depthStencil']
 }) {
-  const commandEncoder = target.device.createCommandEncoder()
+  const commandEncoder = pipeline.target.device.createCommandEncoder()
 
-  function initPass(context: GPUCanvas['context']) {
+  function initPass() {
     return commandEncoder.beginRenderPass({
       label: 'Moonbow Render Pass',
       depthStencilAttachment: depthStencil
-        ? getDepthStencilAttachment(target.device, target.context.canvas)
+        ? getDepthStencilAttachment(pipeline.target.device, pipeline.target.context.canvas)
         : undefined,
       colorAttachments: [
         {
           // @location(0), see fragment shader
-          view: context.getCurrentTexture().createView(),
+          view: pipeline.target.context.getCurrentTexture().createView(),
           clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store'
@@ -80,8 +85,8 @@ export function renderPass({
     })
   }
 
-  function drawPass({ pipeline, bindGroup, passEncoder }: PassRender) {
-    passEncoder.setPipeline(pipeline)
+  function drawPass({ bindGroup, passEncoder }: PassRender) {
+    passEncoder.setPipeline(pipeline.pipeline)
     passEncoder.setBindGroup(0, bindGroup) // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
     return passEncoder
   }
@@ -89,7 +94,7 @@ export function renderPass({
   function submitPass(passEncoder: GPURenderPassEncoder) {
     passEncoder.end()
     const commandBuffer = commandEncoder.finish()
-    target.device.queue.submit([commandBuffer])
+    pipeline.target.device.queue.submit([commandBuffer])
   }
 
   return {

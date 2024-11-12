@@ -57,22 +57,20 @@ onMounted(async () => {
 
   setInterval(() => {
     const renderer = renderPass({
-      target: pipeline.target,
+      pipeline: pipeline.core,
       depthStencil: false
     })
 
     runCompute(renderer.commandEncoder)
 
-    const initPass = renderer.initPass(pipeline.target.context)
+    const initPass = renderer.initPass()
 
     const passEncoder = renderer.drawPass({
       passEncoder: initPass,
-      pipeline: pipeline.pipeline,
       bindGroup: pipeline.bindGroups[step % 2]
     })
 
     cellPlane.update(passEncoder)
-
     renderer.submitPass(passEncoder)
   }, 30)
 })

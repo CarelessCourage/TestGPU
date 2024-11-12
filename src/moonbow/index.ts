@@ -19,6 +19,7 @@ import type { GetMemory } from './memory'
 import type { Pipeline, ComputePipeline } from './pipeline'
 import type { UniformBuffer } from './buffers'
 import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowUniforms } from './types'
+import type { PipelineCore } from './pipeline/core'
 
 export {
   cube,
@@ -51,5 +52,6 @@ export type {
   MoonbowOptions,
   MoonbowPipelineOptions,
   ComputePipeline,
-  MoonbowUniforms
+  MoonbowUniforms,
+  PipelineCore
 }

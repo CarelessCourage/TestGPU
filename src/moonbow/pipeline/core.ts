@@ -74,3 +74,5 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     bindGroup
   }
 }
+
+export type PipelineCore = ReturnType<typeof pipelineCore>

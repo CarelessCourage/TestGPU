@@ -21,10 +21,9 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   const bindGroup = pCore.bindGroup()
 
   function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
-    const encoder = renderPass({ target: pCore.target, depthStencil: memory.depthStencil })
-    const initPass = encoder.initPass(pCore.target.context)
+    const encoder = renderPass({ pipeline: pCore, depthStencil: memory.depthStencil })
+    const initPass = encoder.initPass()
     encoder.drawPass({
-      pipeline: pCore.pipeline,
       bindGroup,
       passEncoder: initPass
     })
@@ -82,14 +81,14 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   ]
 
   function renderFrameCore(callback?: MoonbowFrameCallback<U, S>) {
-    const encoder = renderPass({ target: pipe.target, depthStencil: memory.depthStencil })
+    const encoder = renderPass({ pipeline: pipe, depthStencil: memory.depthStencil })
     //encoder.drawPass({ pipeline: pipeline, bindGroup })
     callback?.({ ...memory, ...encoder })
   }
 
   function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
-    const encoder = renderPass({ target: pipe.target, depthStencil: memory.depthStencil })
-    const initPass = encoder.initPass(pipe.target.context)
+    const encoder = renderPass({ pipeline: pipe, depthStencil: memory.depthStencil })
+    const initPass = encoder.initPass()
     //encoder.drawPass({ pipeline: pipeline, bindGroup })
     callback?.({ ...memory, ...encoder })
     encoder.submitPass(initPass)
@@ -100,8 +99,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   }
 
   return {
-    pipeline: pipe.pipeline,
-    target: pipe.target,
+    core: pipe,
     simulationPipeline,
     renderFrame,
     bindGroups,
