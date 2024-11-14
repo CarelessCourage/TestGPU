@@ -19,7 +19,7 @@ import type { GetMemory } from './memory'
 import type { Pipeline, ComputePipeline } from './pipeline'
 import type { UniformBuffer } from './buffers'
 import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowUniforms } from './types'
-import type { PipelineCore } from './pipeline/core'
+import type { PipelineCore, BindGroup, BindGroups } from './pipeline/core'
 
 export {
   cube,
@@ -46,11 +46,13 @@ export {
 export type {
   Pipeline,
   GPUCanvas,
+  BindGroup,
   GetMemory,
   UniformBuffer,
   ComputePass,
   MoonbowRender,
   MoonbowOptions,
+  BindGroups,
   MoonbowCompute,
   MoonbowPipelineOptions,
   ComputePipeline,

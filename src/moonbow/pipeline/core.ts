@@ -53,9 +53,9 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
   })
 
   // This is where we attach the uniform to the shader through the pipeline
-  function bindGroup(
+  const bindGroup: BindGroup<U, S> = (
     callback?: ({ uniformEntries, storageEntries }: typeof memLay) => Iterable<GPUBindGroupEntry>
-  ) {
+  ) => {
     return memLay.target.device.createBindGroup({
       label: 'Moonbow bindgroup',
       layout: memLay.layout,
@@ -74,5 +74,16 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
     bindGroup
   }
 }
+
+export type BindGroup<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
+  callback?: ({
+    uniformEntries,
+    storageEntries
+  }: ReturnType<typeof memoryLayout<U, S>>) => Iterable<GPUBindGroupEntry>
+) => GPUBindGroup
+
+export type BindGroups<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
+  bindGroup: BindGroup<U, S>
+) => GPUBindGroup[]
 
 export type PipelineCore = ReturnType<typeof pipelineCore>

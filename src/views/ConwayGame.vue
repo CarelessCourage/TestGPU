@@ -10,6 +10,7 @@ import { getCellPong } from '../moonbow/buffers/cellPong'
 onMounted(async () => {
   const { device } = await useGPU()
 
+  let step = 0
   const GRID_SIZE = 100
   const cellPlane = getCellPlane(device, GRID_SIZE)
   const cellState = getCellPong(device, GRID_SIZE)
@@ -24,28 +25,40 @@ onMounted(async () => {
     })
   })
 
-  const pipeline = gpuComputePipeline(memory, {
+  gpuComputePipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
-    wireframe: true
-  })
-
-  let step = 0 // Track how many simulation steps have been run
-
-  setInterval(() => {
-    pipeline
-      .compute(({ bindGroups }) => {
-        const workgroupSize = 8
-        const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
-        return {
-          workgroups: [workgroupCount, workgroupCount, 1],
-          bindGroup: bindGroups[step % 2]
-        }
+    wireframe: true,
+    bindGroups: (bindGroup) => {
+      return [
+        bindGroup(),
+        bindGroup(({ uniformEntries, storageEntries }) => [
+          ...uniformEntries,
+          {
+            binding: 1,
+            resource: storageEntries[1].resource
+          },
+          {
+            binding: 2,
+            resource: storageEntries[0].resource
+          }
+        ])
+      ]
+    }
+  }).loop(({ compute }) => {
+    compute(({ bindGroups }) => {
+      const workgroupSize = 8
+      const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
+      return {
+        workgroups: [workgroupCount, workgroupCount, 1],
+        bindGroup: bindGroups[step % 2]
+      }
+    })
+      .draw(({ bindGroups }) => ({ bindGroup: bindGroups[step % 2] }))
+      .frame(({ renderPass }) => {
+        cellPlane.update(renderPass)
+        step++
       })
-      .draw(pipeline.bindGroups[step % 2])
-      .frame(({ renderPass }) => cellPlane.update(renderPass))
-
-    step++
   }, 30)
 })
 </script>

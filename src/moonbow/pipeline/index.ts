@@ -4,7 +4,8 @@ import type {
   MoonbowRender,
   MoonbowUniforms,
   MoonbowPipelineOptions,
-  ComputePass
+  ComputePass,
+  BindGroup
 } from '../'
 
 interface MemoryEncoder<U extends MoonbowUniforms, S extends MoonbowUniforms>
@@ -27,7 +28,7 @@ export interface MoonbowCallback<U extends MoonbowUniforms, S extends MoonbowUni
 
 export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  options: Partial<MoonbowPipelineOptions>
+  options: Partial<MoonbowPipelineOptions<U, S>>
 ) {
   const pCore = pipelineCore({ ...memory, ...options })
   const bindGroup = pCore.bindGroup()
@@ -63,7 +64,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
 
 export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  options: Partial<MoonbowPipelineOptions>
+  options: Partial<MoonbowPipelineOptions<U, S>>
 ) {
   const pipe = pipelineCore({ ...memory, ...options })
 
@@ -83,20 +84,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     }
   })
 
-  const bindGroups = [
-    pipe.bindGroup(),
-    pipe.bindGroup(({ uniformEntries, storageEntries }) => [
-      ...uniformEntries,
-      {
-        binding: 1,
-        resource: storageEntries[1].resource
-      },
-      {
-        binding: 2,
-        resource: storageEntries[0].resource
-      }
-    ])
-  ]
+  const bindGroups = options.bindGroups?.(pipe.bindGroup) || [pipe.bindGroup()]
 
   function getCommandEncoder() {
     return pipe.target.device.createCommandEncoder({
@@ -108,7 +96,13 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     const commandEncoder = passedCommandEncoder || getCommandEncoder()
     const encoder = getRenderer({ pipeline: pipe, depthStencil: false, commandEncoder }) //memory.depthStencil
 
-    function draw(bindGroup: GPUBindGroup) {
+    type DrawProps = { bindGroup: GPUBindGroup }
+    type DrawFunction = (props: { bindGroups: GPUBindGroup[] }) => DrawProps
+
+    function draw(passedBindGroup: DrawProps | DrawFunction) {
+      const { bindGroup } =
+        typeof passedBindGroup === 'function' ? passedBindGroup({ bindGroups }) : passedBindGroup
+
       const initP = encoder.initPass()
       encoder.drawPass({
         passEncoder: initP.renderPass,
@@ -130,9 +124,10 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
 
     return {
       draw: draw,
-      submit: (bindGroup?: GPUBindGroup) => draw(bindGroup ? bindGroup : bindGroups[0]).submit(),
+      submit: (bindGroup?: GPUBindGroup) =>
+        draw({ bindGroup: bindGroup ? bindGroup : bindGroups[0] }).submit(),
       frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
-        draw(bindGroups[0]).frame(callback)
+        draw({ bindGroup: bindGroups[0] }).frame(callback)
       }
     }
   }
@@ -155,16 +150,22 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     return render(commandEncoder)
   }
 
-  // function loop(callback?: MoonbowFrameCallback<U, S>, interval = 1000 / 60) {
-  //   setInterval(() => renderFrame(callback), interval)
-  // }
+  const actions = {
+    compute,
+    ...render()
+  }
+
+  function loop(callback: (props: typeof actions) => void, interval = 1000 / 60) {
+    setInterval(() => {
+      callback(actions)
+    }, interval)
+  }
 
   return {
     core: pipe,
     simulationPipeline,
-    bindGroups,
-    compute,
-    ...render()
+    loop,
+    ...actions
   }
 }
 
