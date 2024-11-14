@@ -33,13 +33,14 @@ onMounted(async () => {
   let step = 0 // Track how many simulation steps have been run
 
   setInterval(() => {
-    const workgroupSize = 8
-    const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
-
     pipeline
-      .compute({
-        workgroups: [workgroupCount, workgroupCount, 1],
-        bindGroup: pipeline.bindGroups[step % 2]
+      .compute(({ bindGroups }) => {
+        const workgroupSize = 8
+        const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
+        return {
+          workgroups: [workgroupCount, workgroupCount, 1],
+          bindGroup: bindGroups[step % 2]
+        }
       })
       .draw(pipeline.bindGroups[step % 2])
       .frame(({ renderPass }) => cellPlane.update(renderPass))

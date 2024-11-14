@@ -137,30 +137,23 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     }
   }
 
-  function compute(props: Partial<Pick<ComputePass, 'workgroups' | 'bindGroup'>>) {
+  type ComputeProps = Partial<Pick<ComputePass, 'workgroups' | 'bindGroup'>>
+  type ComputeFunction = (props: { bindGroups: GPUBindGroup[] }) => ComputeProps
+
+  function compute(props: ComputeProps | ComputeFunction) {
+    const options = typeof props === 'function' ? props({ bindGroups }) : props
+
     const commandEncoder = getCommandEncoder()
     const computeEncoder = computePass({
       commandEncoder,
-      workgroups: props.workgroups,
+      workgroups: options.workgroups,
       simulationPipeline: simulationPipeline,
-      bindGroup: props.bindGroup || bindGroups[0]
+      bindGroup: options.bindGroup || bindGroups[0]
     })
 
     computeEncoder.draw().submit()
     return render(commandEncoder)
   }
-
-  // function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
-  //   const encoder = getRenderer({
-  //     pipeline: pipe,
-  //     depthStencil: memory.depthStencil,
-  //     commandEncoder
-  //   })
-  //   const { renderPass } = encoder.initPass()
-  //   //encoder.drawPass({ pipeline: pipeline, bindGroup })
-  //   callback?.({ ...memory, ...encoder })
-  //   encoder.submitPass(renderPass)
-  // }
 
   // function loop(callback?: MoonbowFrameCallback<U, S>, interval = 1000 / 60) {
   //   setInterval(() => renderFrame(callback), interval)
