@@ -98,59 +98,56 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     ])
   ]
 
-  function test() {
-    const commandEncoder = pipe.target.device.createCommandEncoder({
+  function getCommandEncoder() {
+    return pipe.target.device.createCommandEncoder({
       label: 'Moonbow Command Encoder'
     })
+  }
 
-    function render() {
-      const encoder = getRenderer({ pipeline: pipe, depthStencil: false, commandEncoder }) //memory.depthStencil
+  function render(passedCommandEncoder?: GPUCommandEncoder) {
+    const commandEncoder = passedCommandEncoder || getCommandEncoder()
+    const encoder = getRenderer({ pipeline: pipe, depthStencil: false, commandEncoder }) //memory.depthStencil
 
-      function draw(bindGroup: GPUBindGroup) {
-        const initP = encoder.initPass()
-        encoder.drawPass({
-          passEncoder: initP.renderPass,
-          bindGroup: bindGroup
-        })
-
-        return {
-          submit: () => encoder.submitPass(initP.renderPass),
-          frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
-            callback({
-              ...memory,
-              commandEncoder: encoder.commandEncoder,
-              renderPass: initP.renderPass
-            })
-            encoder.submitPass(initP.renderPass)
-          }
-        }
-      }
-
-      return {
-        draw: draw,
-        submit: (bindGroup?: GPUBindGroup) => draw(bindGroup ? bindGroup : bindGroups[0]).submit(),
-        frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
-          draw(bindGroups[0]).frame(callback)
-        }
-      }
-    }
-
-    function compute(props: Partial<Pick<ComputePass, 'workgroups' | 'bindGroup'>>) {
-      const computeEncoder = computePass({
-        commandEncoder,
-        workgroups: props.workgroups,
-        simulationPipeline: simulationPipeline,
-        bindGroup: props.bindGroup || bindGroups[0]
+    function draw(bindGroup: GPUBindGroup) {
+      const initP = encoder.initPass()
+      encoder.drawPass({
+        passEncoder: initP.renderPass,
+        bindGroup: bindGroup
       })
 
-      computeEncoder.draw().submit()
-      return render()
+      return {
+        submit: () => encoder.submitPass(initP.renderPass),
+        frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
+          callback({
+            ...memory,
+            commandEncoder: encoder.commandEncoder,
+            renderPass: initP.renderPass
+          })
+          encoder.submitPass(initP.renderPass)
+        }
+      }
     }
 
     return {
-      compute: compute,
-      render: render
+      draw: draw,
+      submit: (bindGroup?: GPUBindGroup) => draw(bindGroup ? bindGroup : bindGroups[0]).submit(),
+      frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
+        draw(bindGroups[0]).frame(callback)
+      }
     }
+  }
+
+  function compute(props: Partial<Pick<ComputePass, 'workgroups' | 'bindGroup'>>) {
+    const commandEncoder = getCommandEncoder()
+    const computeEncoder = computePass({
+      commandEncoder,
+      workgroups: props.workgroups,
+      simulationPipeline: simulationPipeline,
+      bindGroup: props.bindGroup || bindGroups[0]
+    })
+
+    computeEncoder.draw().submit()
+    return render(commandEncoder)
   }
 
   // function renderFrame(callback?: MoonbowFrameCallback<U, S>) {
@@ -173,7 +170,8 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
     core: pipe,
     simulationPipeline,
     bindGroups,
-    test
+    compute,
+    ...render()
   }
 }
 

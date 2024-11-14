@@ -37,7 +37,6 @@ onMounted(async () => {
     const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
 
     pipeline
-      .test()
       .compute({
         workgroups: [workgroupCount, workgroupCount, 1],
         bindGroup: pipeline.bindGroups[step % 2]
