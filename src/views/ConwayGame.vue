@@ -4,14 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import {
-  useGPU,
-  getCellPlane,
-  gpuComputePipeline,
-  getMemory,
-  computePass,
-  renderPass
-} from '../moonbow'
+import { useGPU, getCellPlane, gpuComputePipeline, getMemory } from '../moonbow'
 import { getCellPong } from '../moonbow/buffers/cellPong'
 
 onMounted(async () => {
@@ -38,40 +31,21 @@ onMounted(async () => {
   })
 
   let step = 0 // Track how many simulation steps have been run
-  function runCompute(commandEncoder: GPUCommandEncoder) {
-    const WORKGROUP_SIZE = 8
-    const workgroupCount = Math.ceil(GRID_SIZE / WORKGROUP_SIZE)
-
-    const computeEncoder = computePass({
-      commandEncoder,
-      workgroups: [workgroupCount, workgroupCount, 1],
-      simulationPipeline: pipeline.simulationPipeline,
-      bindGroup: pipeline.bindGroups[step % 2]
-    })
-
-    computeEncoder.drawPass()
-    computeEncoder.submitPass()
-
-    step++
-  }
 
   setInterval(() => {
-    const renderer = renderPass({
-      pipeline: pipeline.core,
-      depthStencil: false
-    })
+    const workgroupSize = 8
+    const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)
 
-    runCompute(renderer.commandEncoder)
+    pipeline
+      .test()
+      .compute({
+        workgroups: [workgroupCount, workgroupCount, 1],
+        bindGroup: pipeline.bindGroups[step % 2]
+      })
+      .draw(pipeline.bindGroups[step % 2])
+      .frame(({ renderPass }) => cellPlane.update(renderPass))
 
-    const initPass = renderer.initPass()
-
-    const passEncoder = renderer.drawPass({
-      passEncoder: initPass,
-      bindGroup: pipeline.bindGroups[step % 2]
-    })
-
-    cellPlane.update(passEncoder)
-    renderer.submitPass(passEncoder)
+    step++
   }, 30)
 })
 </script>

@@ -1,20 +1,9 @@
-import type {
-  GPUCanvas,
-  Pipeline,
-  MoonbowUniforms,
-  MoonbowPipelineOptions,
-  PipelineCore
-} from '../'
+import type { MoonbowPipelineOptions, PipelineCore } from '../'
 import { getDepthStencilAttachment } from './utils'
-import { gpuComputePipeline } from '../'
 
-export type MoonbowRender = ReturnType<typeof renderPass>
+export type MoonbowRender = ReturnType<typeof getRenderer>
 
-type ComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms> = ReturnType<
-  typeof gpuComputePipeline<U, S>
->
-
-interface ComputePass {
+export interface ComputePass {
   bindGroup: GPUBindGroup
   commandEncoder: GPUCommandEncoder
   simulationPipeline: GPUComputePipeline
@@ -29,12 +18,19 @@ export function computePass({
 }: ComputePass) {
   const computePass = commandEncoder.beginComputePass()
 
-  function drawPass() {
+  function draw() {
     computePass.setPipeline(simulationPipeline)
     computePass.setBindGroup(0, bindGroup)
+    return {
+      submit,
+      frame: (callback: () => void) => {
+        callback()
+        submit()
+      }
+    }
   }
 
-  function submitPass() {
+  function submit() {
     const [x, y, z] = Array.isArray(workgroups)
       ? workgroups.length === 2
         ? [...workgroups, 1]
@@ -46,8 +42,11 @@ export function computePass({
 
   return {
     computePass,
-    drawPass,
-    submitPass
+    draw,
+    submit: () => draw().submit(),
+    frame: (callback: () => void) => {
+      draw().frame(callback)
+    }
   }
 }
 
@@ -58,17 +57,17 @@ interface PassRender {
   passEncoder: GPURenderPassEncoder
 }
 
-export function renderPass({
+export function getRenderer({
   pipeline,
-  depthStencil
+  depthStencil,
+  commandEncoder
 }: {
   pipeline: Pick<PipelineCore, 'pipeline' | 'target'>
   depthStencil: MoonbowPipelineOptions['depthStencil']
+  commandEncoder: GPUCommandEncoder
 }) {
-  const commandEncoder = pipeline.target.device.createCommandEncoder()
-
   function initPass() {
-    return commandEncoder.beginRenderPass({
+    const renderPass = commandEncoder.beginRenderPass({
       label: 'Moonbow Render Pass',
       depthStencilAttachment: depthStencil
         ? getDepthStencilAttachment(pipeline.target.device, pipeline.target.context.canvas)
@@ -83,6 +82,11 @@ export function renderPass({
         }
       ]
     })
+    return {
+      renderPass,
+      submitPass,
+      drawPass
+    }
   }
 
   function drawPass({ bindGroup, passEncoder }: PassRender) {

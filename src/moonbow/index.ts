@@ -2,7 +2,7 @@ import { getMemory } from './memory'
 import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
 import { getCellPlane } from './geometry/cellPlane'
-import { renderPass, computePass } from './render'
+import { getRenderer, computePass } from './render'
 import { gpuCamera } from './buffers/camera'
 import { useGPU, gpuCanvas } from './target'
 import { useMoonbow } from './engine'
@@ -14,7 +14,7 @@ import { uniformBuffer } from './buffers'
 import { getUniformEntries } from './pipeline/entries'
 
 import type { GPUCanvas } from './target'
-import type { MoonbowRender } from './render'
+import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
 import type { GetMemory } from './memory'
 import type { Pipeline, ComputePipeline } from './pipeline'
 import type { UniformBuffer } from './buffers'
@@ -33,7 +33,7 @@ export {
   gpuCamera,
   getMemory,
   useMoonbow,
-  renderPass,
+  getRenderer,
   pipelineCore,
   computePass,
   gpuPipeline,
@@ -48,8 +48,10 @@ export type {
   GPUCanvas,
   GetMemory,
   UniformBuffer,
+  ComputePass,
   MoonbowRender,
   MoonbowOptions,
+  MoonbowCompute,
   MoonbowPipelineOptions,
   ComputePipeline,
   MoonbowUniforms,
