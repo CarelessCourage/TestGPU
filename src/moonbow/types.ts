@@ -8,19 +8,19 @@ export interface MoonbowMemory {
   [key: string]: MoonbowUniforms[] | MoonbowUniforms
 }
 
-export interface MoonbowPipelineOptions<U extends MoonbowUniforms, S extends MoonbowUniforms> {
+export interface MoonbowPipelineOptions {
   model: boolean
   wireframe: boolean
   depthStencil?: boolean | GPUDepthStencilState
   computeShader?: string
-  bindGroups: BindGroups<U, S>
   shader: string
 }
 
 export interface MoonbowOptions<U extends MoonbowUniforms, S extends MoonbowUniforms>
-  extends MoonbowPipelineOptions<U, S> {
+  extends MoonbowPipelineOptions {
   uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
   storage: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<S>
+  bindGroups: BindGroups<U, S>
   canvas: HTMLCanvasElement | null
   device: GPUDevice
 }

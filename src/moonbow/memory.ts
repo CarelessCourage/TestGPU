@@ -1,5 +1,5 @@
 import { useGPU, gpuCanvas } from './'
-import type { MoonbowUniforms, MoonbowOptions } from './'
+import type { MoonbowUniforms, MoonbowOptions, BindGroup } from './'
 
 /**
  * Gets a device and lets the user allocate uniform/storage buffers to the memory on it. Also assembles the options and assigns the defaults.
@@ -26,6 +26,11 @@ async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends Moonb
   options: Partial<MoonbowOptions<U, S>>
 ): Promise<MoonbowOptions<U, S>> {
   const device = options.device || (await useGPU()).device
+
+  function bindGroupFallback(bindGroup: BindGroup<U, S>) {
+    return [bindGroup()]
+  }
+
   return {
     uniforms: options.uniforms || (() => ({})),
     storage: options.storage || (() => ({})),
@@ -35,7 +40,8 @@ async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends Moonb
     shader: options.shader || '',
     computeShader: options.computeShader || '',
     wireframe: options.wireframe || false,
-    depthStencil: options.depthStencil || false
+    depthStencil: options.depthStencil || false,
+    bindGroups: options.bindGroups || bindGroupFallback
   }
 }
 

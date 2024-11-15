@@ -5,7 +5,7 @@ import type {
   MoonbowUniforms,
   MoonbowPipelineOptions,
   ComputePass,
-  BindGroup
+  PipelineCore
 } from '../'
 
 interface MemoryEncoder<U extends MoonbowUniforms, S extends MoonbowUniforms>
@@ -28,7 +28,7 @@ export interface MoonbowCallback<U extends MoonbowUniforms, S extends MoonbowUni
 
 export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   memory: GetMemory<U, S>,
-  options: Partial<MoonbowPipelineOptions<U, S>>
+  options: Partial<MoonbowPipelineOptions>
 ) {
   const pCore = pipelineCore({ ...memory, ...options })
   const bindGroup = pCore.bindGroup()
@@ -62,29 +62,35 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
   }
 }
 
-export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>,
-  options: Partial<MoonbowPipelineOptions<U, S>>
-) {
-  const pipe = pipelineCore({ ...memory, ...options })
-
-  // Create the compute shader that will process the simulation.
-  const simulationShaderModule = pipe.target.device.createShaderModule({
+function getSimulationPipeline(props: {
+  pipe: PipelineCore
+  options: Partial<MoonbowPipelineOptions>
+}) {
+  const simulationShaderModule = props.pipe.target.device.createShaderModule({
     label: 'Game of Life simulation shader',
-    code: options.computeShader || ''
+    code: props.options.computeShader || ''
   })
 
   // Create a compute pipeline that updates the game state.
-  const simulationPipeline = pipe.target.device.createComputePipeline({
+  return props.pipe.target.device.createComputePipeline({
     label: 'Simulation pipeline',
-    layout: pipe.pipelineLayout,
+    layout: props.pipe.pipelineLayout,
     compute: {
       module: simulationShaderModule,
       entryPoint: 'computeMain'
     }
   })
+}
 
-  const bindGroups = options.bindGroups?.(pipe.bindGroup) || [pipe.bindGroup()]
+export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
+  memory: GetMemory<U, S>,
+  options: Partial<MoonbowPipelineOptions>
+) {
+  const pipe = pipelineCore({ ...memory, ...options })
+
+  // Create a compute pipeline that updates the game state.
+  const simulationPipeline = options.computeShader ? getSimulationPipeline({ pipe, options }) : null
+  const bindGroups = memory.bindGroups(pipe.bindGroup)
 
   function getCommandEncoder() {
     return pipe.target.device.createCommandEncoder({
@@ -136,6 +142,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   type ComputeFunction = (props: { bindGroups: GPUBindGroup[] }) => ComputeProps
 
   function compute(props: ComputeProps | ComputeFunction) {
+    if (simulationPipeline === null) throw new Error('No compute shader provided')
     const options = typeof props === 'function' ? props({ bindGroups }) : props
 
     const commandEncoder = getCommandEncoder()
@@ -156,9 +163,7 @@ export function gpuComputePipeline<U extends MoonbowUniforms, S extends MoonbowU
   }
 
   function loop(callback: (props: typeof actions) => void, interval = 1000 / 60) {
-    setInterval(() => {
-      callback(actions)
-    }, interval)
+    setInterval(() => callback(actions), interval)
   }
 
   return {

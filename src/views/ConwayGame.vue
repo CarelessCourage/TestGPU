@@ -22,13 +22,7 @@ onMounted(async () => {
     storage: () => ({
       read: cellState.storage[0],
       write: cellState.storage[1]
-    })
-  })
-
-  gpuComputePipeline(memory, {
-    shader: ConwayShader,
-    computeShader: ConwayCompute,
-    wireframe: true,
+    }),
     bindGroups: (bindGroup) => {
       return [
         bindGroup(),
@@ -45,6 +39,12 @@ onMounted(async () => {
         ])
       ]
     }
+  })
+
+  gpuComputePipeline(memory, {
+    shader: ConwayShader,
+    computeShader: ConwayCompute,
+    wireframe: true
   }).loop(({ compute }) => {
     compute(({ bindGroups }) => {
       const workgroupSize = 8
