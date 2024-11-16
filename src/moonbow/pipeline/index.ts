@@ -41,7 +41,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
         pipeline: pipe,
         depthStencil: memory.depthStencil,
         commandEncoder
-      }) //memory.depthStencil
+      })
       const { bindGroup } =
         typeof passedBindGroup === 'function' ? passedBindGroup({ bindGroups }) : passedBindGroup
 
