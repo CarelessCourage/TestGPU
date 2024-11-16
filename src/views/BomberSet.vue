@@ -58,14 +58,9 @@ onMounted(async () => {
   })
 
   setInterval(() => {
-    moon.renderFrame(({ passEncoder }) => {
-      model.render(passEncoder)
-    })
-
-    moon2.renderFrame(({ passEncoder }) => {
-      model.render(passEncoder)
-    })
-  }, 1000 / 60)
+    moon.frame(({ renderPass }) => model.render(renderPass))
+    moon2.frame(({ renderPass }) => model.render(renderPass))
+  }, 30)
 })
 </script>
 

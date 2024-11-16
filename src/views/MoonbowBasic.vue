@@ -42,12 +42,12 @@ onMounted(async () => {
   let rotation = 0
   setInterval(() => {
     rotation += 0.05
-    moon.renderFrame(({ passEncoder }) => {
-      model.render(passEncoder, rotation)
+    moon.frame(({ renderPass }) => {
+      model.render(renderPass, rotation)
     })
 
-    moon2.renderFrame(({ passEncoder }) => {
-      model.render(passEncoder, rotation)
+    moon2.frame(({ renderPass }) => {
+      model.render(renderPass, rotation)
     })
   }, 1000 / 60)
 })

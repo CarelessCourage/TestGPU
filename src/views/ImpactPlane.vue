@@ -15,14 +15,9 @@ onMounted(async () => {
     uniforms: ({ device }) => ({ time: fTime(device) })
   })
 
-  // moon.loop(({ passEncoder, uniforms }) => {
-  //   passEncoder.draw(3, 1, 0, 0)
-  //   uniforms?.time?.update()
-  // })
-
   setInterval(() => {
-    moon.renderFrame(({ passEncoder, uniforms }) => {
-      passEncoder.draw(3, 1, 0, 0)
+    moon.frame(({ renderPass, uniforms }) => {
+      renderPass.draw(3, 1, 0, 0)
       uniforms?.time?.update()
     })
   }, 1000 / 60)
