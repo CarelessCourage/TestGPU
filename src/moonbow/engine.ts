@@ -5,5 +5,5 @@ export async function useMoonbow<U extends MoonbowUniforms, S extends MoonbowUni
   passedOptions: Partial<MoonbowOptions<U, S>>
 ) {
   const memory = await getMemory(passedOptions)
-  return gpuPipeline(memory)
+  return gpuPipeline(memory, {})
 }
