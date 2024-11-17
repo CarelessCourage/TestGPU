@@ -3,9 +3,11 @@ import { getStencil } from '../render/utils'
 import { getBindGroupLayout, getUniformEntries } from './entries'
 import type { GetMemory, MoonbowUniforms } from '../'
 
-function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>
-) {
+function memoryLayout<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(memory: GetMemory<U, S, B>) {
   const target = memory.target
   const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
   const storage = memory.storage ? Object.values(memory.storage) : []
@@ -17,9 +19,11 @@ function memoryLayout<U extends MoonbowUniforms, S extends MoonbowUniforms>(
   return { target, layout, uniformEntries, storageEntries }
 }
 
-export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>
-) {
+export function pipelineCore<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(memory: GetMemory<U, S, B>) {
   const memLay = memoryLayout(memory)
 
   const pipelineLayout = memLay.target.device.createPipelineLayout({
@@ -53,7 +57,7 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
   })
 
   // This is where we attach the uniform to the shader through the pipeline
-  const bindGroup: BindGroup<U, S> = (
+  const bindGroup: BindGroup<U, S, B> = (
     callback?: ({ uniformEntries, storageEntries }: typeof memLay) => Iterable<GPUBindGroupEntry>
   ) => {
     return memLay.target.device.createBindGroup({
@@ -75,15 +79,21 @@ export function pipelineCore<U extends MoonbowUniforms, S extends MoonbowUniform
   }
 }
 
-export type BindGroup<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
+export type BindGroup<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+> = (
   callback?: ({
     uniformEntries,
     storageEntries
-  }: ReturnType<typeof memoryLayout<U, S>>) => Iterable<GPUBindGroupEntry>
+  }: ReturnType<typeof memoryLayout<U, S, B>>) => Iterable<GPUBindGroupEntry>
 ) => GPUBindGroup
 
-export type BindGroups<U extends MoonbowUniforms, S extends MoonbowUniforms> = (
-  bindGroup: BindGroup<U, S>
-) => GPUBindGroup[]
+export type BindGroups<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+> = (bindGroup: BindGroup<U, S, B>) => B
 
 export type PipelineCore = ReturnType<typeof pipelineCore>

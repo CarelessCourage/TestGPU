@@ -16,11 +16,14 @@ export interface MoonbowPipelineOptions {
   shader: string
 }
 
-export interface MoonbowOptions<U extends MoonbowUniforms, S extends MoonbowUniforms>
-  extends MoonbowPipelineOptions {
+export interface MoonbowOptions<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+> extends MoonbowPipelineOptions {
   uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
   storage: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<S>
-  bindGroups: BindGroups<U, S>
+  bindGroups: BindGroups<U, S, B>
   canvas: HTMLCanvasElement | null
   device: GPUDevice
 }

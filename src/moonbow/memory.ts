@@ -4,9 +4,11 @@ import type { MoonbowUniforms, MoonbowOptions, BindGroup } from './'
 /**
  * Gets a device and lets the user allocate uniform/storage buffers to the memory on it. Also assembles the options and assigns the defaults.
  */
-export async function getMemory<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  passedOptions: Partial<MoonbowOptions<U, S>>
-) {
+export async function getMemory<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(passedOptions: Partial<MoonbowOptions<U, S, B>>) {
   const options = await getOptionsWithDefaults(passedOptions)
   const target = gpuCanvas(options.device, options.canvas)
 
@@ -22,12 +24,14 @@ export async function getMemory<U extends MoonbowUniforms, S extends MoonbowUnif
   }
 }
 
-async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  options: Partial<MoonbowOptions<U, S>>
-): Promise<MoonbowOptions<U, S>> {
+async function getOptionsWithDefaults<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(options: Partial<MoonbowOptions<U, S, B>>): Promise<MoonbowOptions<U, S, B>> {
   const device = options.device || (await useGPU()).device
 
-  function bindGroupFallback(bindGroup: BindGroup<U, S>) {
+  function bindGroupFallback(bindGroup: BindGroup<U, S, B>) {
     return [bindGroup()]
   }
 
@@ -45,6 +49,8 @@ async function getOptionsWithDefaults<U extends MoonbowUniforms, S extends Moonb
   }
 }
 
-export type GetMemory<U extends MoonbowUniforms, S extends MoonbowUniforms> = Awaited<
-  ReturnType<typeof getMemory<U, S>>
->
+export type GetMemory<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+> = Awaited<ReturnType<typeof getMemory<U, S, B>>>

@@ -4,7 +4,7 @@ import ConwayShader from '../shaders/conway.wgsl'
 // @ts-ignore
 import ConwayCompute from '../shaders/conwayCompute.wgsl'
 import { onMounted } from 'vue'
-import { useGPU, getCellPlane, gpuPipeline, getMemory, uTime } from '../moonbow'
+import { useGPU, getCellPlane, gpuPipeline, getMemory } from '../moonbow'
 import { getCellPong } from '../moonbow/buffers/cellPong'
 
 onMounted(async () => {
@@ -14,7 +14,6 @@ onMounted(async () => {
   const GRID_SIZE = 100
   const cellPlane = getCellPlane(device, GRID_SIZE)
   const cellState = getCellPong(device, GRID_SIZE)
-  const time = uTime(device)
 
   const memory = await getMemory({
     device,

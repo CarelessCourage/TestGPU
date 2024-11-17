@@ -7,16 +7,20 @@ import type {
   PipelineCore
 } from '../'
 
-export interface MoonbowCallback<U extends MoonbowUniforms, S extends MoonbowUniforms>
-  extends GetMemory<U, S> {
+export interface MoonbowCallback<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+> extends GetMemory<U, S, B> {
   commandEncoder: GPUCommandEncoder
   renderPass: GPURenderPassEncoder
 }
 
-export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms>(
-  memory: GetMemory<U, S>,
-  options?: Partial<MoonbowPipelineOptions>
-) {
+export function gpuPipeline<
+  U extends MoonbowUniforms,
+  S extends MoonbowUniforms,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(memory: GetMemory<U, S, B>, options?: Partial<MoonbowPipelineOptions>) {
   const pipe = pipelineCore({ ...memory, ...options })
 
   // Create a compute pipeline that updates the game state.
@@ -53,7 +57,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
 
       return {
         submit: () => encoder.submitPass(initP.renderPass),
-        frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
+        frame: (callback: (props: MoonbowCallback<U, S, B>) => void) => {
           callback({
             ...memory,
             commandEncoder: encoder.commandEncoder,
@@ -68,7 +72,7 @@ export function gpuPipeline<U extends MoonbowUniforms, S extends MoonbowUniforms
       draw: draw,
       submit: (bindGroup?: GPUBindGroup) =>
         draw({ bindGroup: bindGroup ? bindGroup : bindGroups[0] }).submit(),
-      frame: (callback: (props: MoonbowCallback<U, S>) => void) => {
+      frame: (callback: (props: MoonbowCallback<U, S, B>) => void) => {
         draw({ bindGroup: bindGroups[0] }).frame(callback)
       }
     }
