@@ -10,8 +10,8 @@ export function spinningCube(device: GPUDevice) {
     position: [0, 0, 0]
   })
 
-  function render(pass: GPURenderPassEncoder, rotation: number) {
-    object.set(pass, { rotation: [0.5, rotation, 0] })
+  function render(pass: GPURenderPassEncoder, rotation: number, x = 0) {
+    object.set(pass, { rotation: [0.5, rotation, 0], position: [x, 0, 0] })
   }
 
   return { render }

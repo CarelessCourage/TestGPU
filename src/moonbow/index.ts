@@ -1,4 +1,4 @@
-import { getMemory } from './memory'
+import { getMemory, getOptionsWithDefaults } from './memory'
 import { cube } from './geometry/box'
 import { plane } from './geometry/plane'
 import { getCellPlane } from './geometry/cellPlane'
@@ -39,7 +39,8 @@ export {
   gpuPipeline,
   uniformBuffer,
   bufferVertexLayout,
-  getUniformEntries
+  getUniformEntries,
+  getOptionsWithDefaults
 }
 
 export type {

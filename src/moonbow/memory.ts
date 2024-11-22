@@ -24,18 +24,18 @@ export async function getMemory<
   }
 }
 
-async function getOptionsWithDefaults<
+export async function getOptionsWithDefaults<
   U extends MoonbowUniforms,
   S extends MoonbowUniforms,
   B extends GPUBindGroup[] = GPUBindGroup[]
->(options: Partial<MoonbowOptions<U, S, B>>): Promise<MoonbowOptions<U, S, B>> {
+>(options: Partial<MoonbowOptions<U, S, B>>) {
   const device = options.device || (await useGPU()).device
 
   function bindGroupFallback(bindGroup: BindGroup<U, S, B>) {
-    return [bindGroup()]
+    return [bindGroup()] as const
   }
 
-  return {
+  const props = {
     uniforms: options.uniforms || (() => ({})),
     storage: options.storage || (() => ({})),
     canvas: options.canvas || null,
@@ -46,7 +46,9 @@ async function getOptionsWithDefaults<
     wireframe: options.wireframe || false,
     depthStencil: options.depthStencil || false,
     bindGroups: options.bindGroups || bindGroupFallback
-  }
+  } as const
+
+  return props as MoonbowOptions<U, S, B>
 }
 
 export type GetMemory<

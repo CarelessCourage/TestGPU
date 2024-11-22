@@ -5,7 +5,7 @@ import shader from '../shaders/shader.wgsl'
 import basic from '../shaders/basic.wgsl'
 import { onMounted } from 'vue'
 import { spinningCube } from '../scenes/spinningCube'
-import { uTime, float, gpuCamera, useMoonbow, useGPU } from '../moonbow'
+import { uTime, float, gpuCamera, useMoonbow, useGPU, getMemory, gpuPipeline } from '../moonbow'
 
 onMounted(async () => {
   const { device } = await useGPU()
@@ -15,9 +15,8 @@ onMounted(async () => {
 
   const model = spinningCube(device)
 
-  const moon = await useMoonbow({
+  const memory = await getMemory({
     device,
-    shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
     uniforms: ({ target }) => ({
@@ -27,27 +26,23 @@ onMounted(async () => {
     })
   })
 
-  const moon2 = await useMoonbow({
-    device,
-    shader: basic,
-    canvas: document.querySelector('canvas#two') as HTMLCanvasElement,
-    model: true,
-    uniforms: ({ target }) => ({
-      time: time,
-      intensity: intensity,
-      camera: gpuCamera(target)
-    })
+  const moon = gpuPipeline(memory, {
+    shader: shader
+  })
+
+  const moon2 = gpuPipeline(memory, {
+    shader: basic
   })
 
   let rotation = 0
   setInterval(() => {
-    rotation += 0.05
+    rotation += 0.02
     moon.frame(({ renderPass }) => {
-      model.render(renderPass, rotation)
+      model.render(renderPass, rotation, -2)
     })
 
     moon2.frame(({ renderPass }) => {
-      model.render(renderPass, rotation)
+      model.render(renderPass, rotation, 2)
     })
   }, 1000 / 60)
 })
@@ -56,7 +51,6 @@ onMounted(async () => {
 <template>
   <div class="canvas-wrapper">
     <canvas id="one" width="700" height="700"></canvas>
-    <canvas id="two" width="700" height="700"></canvas>
     <h1>Gradient</h1>
   </div>
   <h1 class="display">WebGPU</h1>

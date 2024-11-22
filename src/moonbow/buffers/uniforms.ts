@@ -1,12 +1,12 @@
 import { uniformBuffer } from '.'
 
-export function uTime(device: GPUDevice) {
+export function uTime(device: GPUDevice, speed = 0.1) {
   let time = 50
   return uniformBuffer(device, {
     label: 'Time Buffer',
     binding: undefined,
     update: (buffer) => {
-      time++
+      time += speed
       device.queue.writeBuffer(buffer, 0, new Uint32Array([time]))
       return time
     }

@@ -41,11 +41,13 @@ onMounted(async () => {
     }
   })
 
-  gpuPipeline(memory, {
+  const pipe = gpuPipeline(memory, {
     shader: ConwayShader,
     computeShader: ConwayCompute,
     wireframe: true
-  }).loop(({ compute }) => {
+  })
+
+  pipe.loop(({ compute }) => {
     compute(({ bindGroups }) => {
       const workgroupSize = 8
       const workgroupCount = Math.ceil(GRID_SIZE / workgroupSize)

@@ -36,6 +36,7 @@ onMounted(async () => {
     shader: shader,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
+    wireframe: true,
     uniforms: ({ target }) => ({
       time: time,
       intensity: intensity,
@@ -59,13 +60,18 @@ onMounted(async () => {
     moon.frame(({ renderPass, uniforms }) => {
       model.render(renderPass)
       uniforms.time?.update()
+      uniforms.camera?.update({
+        rotation: [0.1, 0.0, 0],
+        position: [0.0, 0.0, 4],
+        target: [0.0, 0.0, 0]
+      })
     })
 
     moon2.frame(({ renderPass, uniforms }) => {
       model.render(renderPass)
       uniforms.time?.update()
     })
-  }, 1000 / 60)
+  }, 1000 / 120)
 })
 </script>
 

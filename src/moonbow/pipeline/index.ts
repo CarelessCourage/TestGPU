@@ -29,33 +29,28 @@ export function gpuPipeline<
     : null
   const bindGroups = memory.bindGroups(pipe.bindGroup)
 
-  function getCommandEncoder() {
-    return pipe.target.device.createCommandEncoder({
-      label: 'Moonbow Command Encoder'
-    })
-  }
-
   function render(passedCommandEncoder?: GPUCommandEncoder) {
     type DrawProps = { bindGroup: GPUBindGroup }
     type DrawFunction = (props: { bindGroups: GPUBindGroup[] }) => DrawProps
 
     function draw(passedBindGroup: DrawProps | DrawFunction) {
-      const commandEncoder = passedCommandEncoder || getCommandEncoder()
       const encoder = getRenderer({
-        pipeline: pipe,
+        target: pipe.target,
         depthStencil: memory.depthStencil,
-        commandEncoder
+        commandEncoder: passedCommandEncoder
       })
       const { bindGroup } =
         typeof passedBindGroup === 'function' ? passedBindGroup({ bindGroups }) : passedBindGroup
-
       const initP = encoder.initPass()
+
       encoder.drawPass({
+        pipeline: pipe.pipeline,
         passEncoder: initP.renderPass,
         bindGroup: bindGroup
       })
 
       return {
+        ...pipe,
         submit: () => encoder.submitPass(initP.renderPass),
         frame: (callback: (props: MoonbowCallback<U, S, B>) => void) => {
           callback({
@@ -85,7 +80,9 @@ export function gpuPipeline<
     if (simulationPipeline === null) throw new Error('No compute shader provided')
     const options = typeof props === 'function' ? props({ bindGroups }) : props
 
-    const commandEncoder = getCommandEncoder()
+    const commandEncoder = pipe.target.device.createCommandEncoder({
+      label: 'Moonbow Command Encoder'
+    })
     const computeEncoder = computePass({
       commandEncoder,
       workgroups: options.workgroups,

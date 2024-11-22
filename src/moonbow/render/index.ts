@@ -55,27 +55,34 @@ export type MoonbowCompute = ReturnType<typeof computePass>
 interface PassRender {
   bindGroup: GPUBindGroup
   passEncoder: GPURenderPassEncoder
+  pipeline: GPURenderPipeline
 }
 
 export function getRenderer({
-  pipeline,
+  target,
   depthStencil,
   commandEncoder
 }: {
-  pipeline: Pick<PipelineCore, 'pipeline' | 'target'>
+  target: PipelineCore['target']
   depthStencil: MoonbowPipelineOptions['depthStencil']
-  commandEncoder: GPUCommandEncoder
+  commandEncoder?: GPUCommandEncoder
 }) {
+  const cmdEncoder =
+    commandEncoder ||
+    target.device.createCommandEncoder({
+      label: 'Moonbow Command Encoder'
+    })
+
   function initPass() {
-    const renderPass = commandEncoder.beginRenderPass({
+    const renderPass = cmdEncoder.beginRenderPass({
       label: 'Moonbow Render Pass',
       depthStencilAttachment: depthStencil
-        ? getDepthStencilAttachment(pipeline.target.device, pipeline.target.context.canvas)
+        ? getDepthStencilAttachment(target.device, target.context.canvas)
         : undefined,
       colorAttachments: [
         {
           // @location(0), see fragment shader
-          view: pipeline.target.context.getCurrentTexture().createView(),
+          view: target.context.getCurrentTexture().createView(),
           clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store'
@@ -89,22 +96,22 @@ export function getRenderer({
     }
   }
 
-  function drawPass({ bindGroup, passEncoder }: PassRender) {
-    passEncoder.setPipeline(pipeline.pipeline)
+  function drawPass({ bindGroup, passEncoder, pipeline }: PassRender) {
+    passEncoder.setPipeline(pipeline)
     passEncoder.setBindGroup(0, bindGroup) // The 0 passed as the first argument corresponds to the @group(0) in the shader code.
     return passEncoder
   }
 
   function submitPass(passEncoder: GPURenderPassEncoder) {
     passEncoder.end()
-    const commandBuffer = commandEncoder.finish()
-    pipeline.target.device.queue.submit([commandBuffer])
+    const commandBuffer = cmdEncoder.finish()
+    target.device.queue.submit([commandBuffer])
   }
 
   return {
     initPass,
     drawPass,
     submitPass,
-    commandEncoder
+    commandEncoder: cmdEncoder
   }
 }

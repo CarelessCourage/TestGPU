@@ -94,6 +94,6 @@ export type BindGroups<
   U extends MoonbowUniforms,
   S extends MoonbowUniforms,
   B extends GPUBindGroup[] = GPUBindGroup[]
-> = (bindGroup: BindGroup<U, S, B>) => B
+> = (bindGroup: BindGroup<U, S, B>) => B | [GPUBindGroup]
 
 export type PipelineCore = ReturnType<typeof pipelineCore>

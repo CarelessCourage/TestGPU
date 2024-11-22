@@ -288,7 +288,6 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var mix3 = mix(mix1, mix2, perlin);
     
     var output = vec4f(mix3, 1.0);
-    //var output = vec4f(palette1(intensity + simplex), 1.0);
 
     return output;
 }
