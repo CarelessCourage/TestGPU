@@ -23,9 +23,9 @@ export function spinningPlanks(device: GPUDevice) {
   })
 
   function render(pass: GPURenderPassEncoder, rotation: number) {
-    topPlank.set(pass, { rotation: [0, rotation, 0] })
-    middlePlank.set(pass, { rotation: [0, rotation - 0.4, 0] })
-    bottomPlank.set(pass, { rotation: [0, rotation - 0.8, 0] })
+    topPlank.setOptions(pass, { rotation: [0, rotation, 0] })
+    middlePlank.setOptions(pass, { rotation: [0, rotation - 0.4, 0] })
+    bottomPlank.setOptions(pass, { rotation: [0, rotation - 0.8, 0] })
   }
 
   return { render }

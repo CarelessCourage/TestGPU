@@ -70,7 +70,7 @@ onMounted(async () => {
     return device.createBindGroup({
       label: 'Moonbow bindgroup',
       layout: layout,
-      entries: 
+      entries:
     })
   }
 

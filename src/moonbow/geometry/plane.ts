@@ -1,34 +1,28 @@
 /// <reference types="@webgpu/types" />
 import { geoBuffer, bufferVertexLayout, indicesBuffer } from './utils.js'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
-import { renderObject } from './'
+import { getModel } from './'
 
 export function plane(device: GPUDevice): GeoObject {
-  const geo = geoPlane()
-  const buffer = cubeBuffer(device, geo)
+  const geometry = geoPlane()
+  const buffer = planeBuffer(device, geometry)
+  const actions = getModel(buffer)
 
-  const draw = (pass: GPURenderPassEncoder) => renderObject(pass, buffer)
-
-  function set(pass: GPURenderPassEncoder, options: ModelOptions) {
-    // Lets you set the options and draw the object in one call
-    // Usefull for when the options change each draw
+  function setOptions(pass: GPURenderPassEncoder, options: ModelOptions) {
     buffer.update(options)
-    draw(pass)
+    actions.bufferModel(pass)
+    actions.drawModel(pass)
   }
 
   return {
     buffer,
-    geometry: geo,
-    set: set,
-    draw: draw,
-    update: (options: ModelOptions) => {
-      buffer.update(options)
-      return { draw }
-    }
+    geometry,
+    setOptions,
+    actions
   }
 }
 
-function cubeBuffer(device: GPUDevice, geo: Geometry): GeoBuffers {
+function planeBuffer(device: GPUDevice, geo: Geometry): GeoBuffers {
   const vBuffer = geoBuffer({ device, data: geo.vertices })
   const nBuffer = geoBuffer({ device, data: geo.normals })
   const uvBuffer = geoBuffer({ device, data: geo.uvs })

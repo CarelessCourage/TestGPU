@@ -17,7 +17,7 @@ function surface(device: GPUDevice) {
   })
 
   function render(pass: GPURenderPassEncoder) {
-    middlePlank.set(pass, { rotation: [0.0, 0.0, 0] })
+    middlePlank.setOptions(pass, { rotation: [0.0, 0.0, 0] })
   }
 
   return { render }

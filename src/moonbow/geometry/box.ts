@@ -8,30 +8,24 @@ import {
   ensure3Values
 } from './utils.js'
 import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
-import { renderObject } from './'
+import { getModel } from './'
 
 export function cube(device: GPUDevice, options: ModelOptions): GeoObject {
-  const geo = geoCube(options)
-  const buffer = cubeBuffer(device, options, geo)
+  const geometry = geoCube(options)
+  const buffer = cubeBuffer(device, options, geometry)
+  const actions = getModel(buffer)
 
-  const draw = (pass: GPURenderPassEncoder) => renderObject(pass, buffer)
-
-  function set(pass: GPURenderPassEncoder, options: ModelOptions) {
-    // Lets you set the options and draw the object in one call
-    // Usefull for when the options change each draw
+  function setOptions(pass: GPURenderPassEncoder, options: ModelOptions) {
     buffer.update(options)
-    draw(pass)
+    actions.bufferModel(pass)
+    actions.drawModel(pass)
   }
 
   return {
     buffer,
-    geometry: geo,
-    set: set,
-    draw: draw,
-    update: (options: ModelOptions) => {
-      buffer.update(options)
-      return { draw }
-    }
+    actions,
+    geometry,
+    setOptions
   }
 }
 

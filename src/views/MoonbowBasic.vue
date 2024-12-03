@@ -10,9 +10,6 @@ import { uTime, float, gpuCamera, useMoonbow, useGPU, getMemory, gpuPipeline } f
 onMounted(async () => {
   const { device } = await useGPU()
 
-  const time = uTime(device)
-  const intensity = float(device, [0.1])
-
   const model = spinningCube(device)
 
   const memory = await getMemory({
@@ -20,8 +17,8 @@ onMounted(async () => {
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
     model: true,
     uniforms: ({ target }) => ({
-      time: time,
-      intensity: intensity,
+      time: uTime(device),
+      intensity: float(device, [0.1]),
       camera: gpuCamera(target)
     })
   })
