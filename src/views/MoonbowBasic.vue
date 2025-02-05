@@ -31,22 +31,22 @@ onMounted(async () => {
     shader: shader
   })
 
-  const moon = gpuPipeline(memory, {
-    shader: basic
-  })
+  // const moon = gpuPipeline(memory, {
+  //   shader: basic
+  // })
 
   let rotation = 0
   setInterval(() => {
     rotation += 0.002
-    moon.frame(({ renderPass }) => {
+    moon2.frame(({ renderPass }) => {
       model1.render(renderPass, rotation, -1)
       model2.render(renderPass, rotation, 2)
     })
 
-    moon2.frame(({ renderPass }) => {
-      model1.render(renderPass, rotation, -1)
-      model2.render(renderPass, rotation, 1)
-    })
+    // moon2.frame(({ renderPass }) => {
+    //   model1.render(renderPass, rotation, -1)
+    //   model2.render(renderPass, rotation, 1)
+    // })
   }, 1000 / 60)
 })
 </script>

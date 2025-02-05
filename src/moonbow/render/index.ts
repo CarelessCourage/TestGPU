@@ -83,7 +83,7 @@ export function getRenderer({
         {
           // @location(0), see fragment shader
           view: target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
+          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 0.0 },
           loadOp: 'clear',
           storeOp: 'store'
         }
