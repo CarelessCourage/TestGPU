@@ -1,39 +1,27 @@
 /// <reference types="@webgpu/types" />
 import { geoBuffer, bufferVertexLayout, indicesBuffer } from './utils.js'
-import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
+import type { GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { getModel } from './'
 
-export function plane(device: GPUDevice): GeoObject {
-  const geometry = geoPlane()
-  const buffer = planeBuffer(device, geometry)
-  const actions = getModel(buffer)
-
-  function setOptions(pass: GPURenderPassEncoder, options: ModelOptions) {
-    buffer.update(options)
-    actions.bufferModel(pass)
-    actions.drawModel(pass)
-  }
-
-  return {
-    buffer,
-    geometry,
-    setOptions,
-    actions
-  }
+export function plane(device: GPUDevice) {
+  const buffer = planeBuffer(device)
+  return getModel(buffer)
 }
 
-function planeBuffer(device: GPUDevice, geo: Geometry): GeoBuffers {
-  const vBuffer = geoBuffer({ device, data: geo.vertices })
-  const nBuffer = geoBuffer({ device, data: geo.normals })
-  const uvBuffer = geoBuffer({ device, data: geo.uvs })
+function planeBuffer(device: GPUDevice): GeoBuffers {
+  const geometry = planeGeometry()
+
+  const vBuffer = geoBuffer({ device, data: geometry.vertices })
+  const nBuffer = geoBuffer({ device, data: geometry.normals })
+  const uvBuffer = geoBuffer({ device, data: geometry.uvs })
 
   const indices = indicesBuffer({
     device: device,
-    indices: geo.indices
+    indices: geometry.indices
   })
 
   function update() {
-    const geo = geoPlane()
+    const geo = planeGeometry()
     const vertices = new Float32Array(geo.vertices)
     const normals = new Float32Array(geo.normals)
     const uvs = new Float32Array(geo.uvs)
@@ -47,14 +35,15 @@ function planeBuffer(device: GPUDevice, geo: Geometry): GeoBuffers {
     update: update,
     vertices: vBuffer,
     indices: indices,
-    indicesCount: geo.indicesCount,
+    indicesCount: geometry.indicesCount,
     normals: nBuffer,
     uvs: uvBuffer,
-    layout: bufferVertexLayout()
+    layout: bufferVertexLayout(),
+    geometry: geometry
   }
 }
 
-function geoPlane(): Geometry {
+function planeGeometry(): Geometry {
   const size = 0.8
   const indices: number[] = [0, 1, 2, 2, 1, 3] // Two triangles (0,1,2) and (2,1,3)
 

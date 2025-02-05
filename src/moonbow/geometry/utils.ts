@@ -1,16 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
 import { rotationSetting } from '../utils/rotate'
-import type { GetModel } from './'
-export interface GeoObject {
-  buffer: GeoBuffers
-  geometry: Geometry
-  setOptions: (pass: GPURenderPassEncoder, options: ModelOptions) => void
-  actions: GetModel
-  // draw: (pass: GPURenderPassEncoder) => void
-  // update: (options: ModelOptions) => {
-  //   draw: (pass: GPURenderPassEncoder) => void
-  // }
-}
 
 export interface GeoBuffers {
   update: (options: ModelOptions) => void
@@ -20,6 +9,7 @@ export interface GeoBuffers {
   normals: GPUBuffer
   uvs: GPUBuffer
   layout: GPUVertexBufferLayout[]
+  geometry: Geometry
 }
 
 export interface Geometry {

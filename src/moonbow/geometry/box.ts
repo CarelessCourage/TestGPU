@@ -7,40 +7,28 @@ import {
   modelMatrix,
   ensure3Values
 } from './utils.js'
-import type { GeoObject, GeoBuffers, Geometry, ModelOptions } from './utils.js'
+import type { GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { getModel } from './'
 
-export function cube(device: GPUDevice, options: ModelOptions): GeoObject {
-  const geometry = geoCube(options)
-  const buffer = cubeBuffer(device, options, geometry)
-  const actions = getModel(buffer)
-
-  function setOptions(pass: GPURenderPassEncoder, options: ModelOptions) {
-    buffer.update(options)
-    actions.bufferModel(pass)
-    actions.drawModel(pass)
-  }
-
-  return {
-    buffer,
-    actions,
-    geometry,
-    setOptions
-  }
+export function cube(device: GPUDevice, options: ModelOptions) {
+  const buffer = cubeBuffer(device, options)
+  return getModel(buffer)
 }
 
-function cubeBuffer(device: GPUDevice, options: ModelOptions, geo: Geometry): GeoBuffers {
-  const vBuffer = geoBuffer({ device, data: geo.vertices })
-  const nBuffer = geoBuffer({ device, data: geo.normals })
-  const uvBuffer = geoBuffer({ device, data: geo.uvs })
+function cubeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
+  const geometry = cubeGeometry(options)
+
+  const vBuffer = geoBuffer({ device, data: geometry.vertices })
+  const nBuffer = geoBuffer({ device, data: geometry.normals })
+  const uvBuffer = geoBuffer({ device, data: geometry.uvs })
 
   const indices = indicesBuffer({
     device: device,
-    indices: geo.indices
+    indices: geometry.indices
   })
 
   function update(o: ModelOptions) {
-    const geo = geoCube({ ...options, ...o })
+    const geo = cubeGeometry({ ...options, ...o })
     const vertices = new Float32Array(geo.vertices)
     const normals = new Float32Array(geo.normals)
     const uvs = new Float32Array(geo.uvs)
@@ -54,14 +42,15 @@ function cubeBuffer(device: GPUDevice, options: ModelOptions, geo: Geometry): Ge
     update: update,
     vertices: vBuffer,
     indices: indices,
-    indicesCount: geo.indicesCount,
+    indicesCount: geometry.indicesCount,
     normals: nBuffer,
     uvs: uvBuffer,
-    layout: bufferVertexLayout()
+    layout: bufferVertexLayout(),
+    geometry: geometry
   }
 }
 
-function geoCube(options?: ModelOptions): Geometry {
+function cubeGeometry(options?: ModelOptions): Geometry {
   const resolution = ensure3Values(options?.resolution ?? 1)
 
   const size = 3

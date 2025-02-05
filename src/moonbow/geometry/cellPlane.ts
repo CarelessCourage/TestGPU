@@ -19,7 +19,6 @@ export function getCellPlane(device: GPUDevice, GRID_SIZE: number) {
 
   return {
     buffer: surface.buffer,
-    geometry: surface.geometry,
     render: (pass: GPURenderPassEncoder) => surface.setOptions(pass, { rotation: [0.0, 0.0, 0] }),
     update
   }

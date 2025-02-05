@@ -1,4 +1,4 @@
-import type { GeoBuffers } from './utils.js'
+import type { GeoBuffers, ModelOptions } from './utils.js'
 
 export function getModel(buffer: GeoBuffers) {
   function bufferModel(passEncoder: GPURenderPassEncoder) {
@@ -12,9 +12,17 @@ export function getModel(buffer: GeoBuffers) {
     passEncoder.drawIndexed(buffer.indicesCount, 1, 0, 0, 0)
   }
 
+  function setOptions(pass: GPURenderPassEncoder, options: ModelOptions) {
+    buffer.update(options)
+    bufferModel(pass)
+    drawModel(pass)
+  }
+
   return {
-    bufferModel,
-    drawModel
+    buffer,
+    drawModel,
+    setOptions,
+    bufferModel
   }
 }
 
