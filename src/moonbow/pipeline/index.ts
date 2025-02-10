@@ -1,15 +1,15 @@
 import { getRenderer, computePass, pipelineCore } from '../'
 import type {
   GetMemory,
-  MoonbowUniforms,
+  MoonbowBuffers,
   MoonbowPipelineOptions,
   ComputePass,
   PipelineCore
 } from '../'
 
 export interface MoonbowCallback<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 > extends GetMemory<U, S, B> {
   commandEncoder: GPUCommandEncoder
@@ -17,8 +17,8 @@ export interface MoonbowCallback<
 }
 
 export function gpuPipeline<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(memory: GetMemory<U, S, B>, options?: Partial<MoonbowPipelineOptions>) {
   const pipe = pipelineCore({ ...memory, ...options })

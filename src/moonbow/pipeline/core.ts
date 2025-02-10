@@ -1,11 +1,11 @@
 import { bufferVertexLayout } from '../geometry/utils'
 import { getStencil } from '../render/utils'
 import { getBindGroupLayout, getUniformEntries } from './entries'
-import type { GetMemory, MoonbowUniforms } from '../'
+import type { GetMemory, MoonbowBuffers } from '../'
 
 function memoryLayout<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(memory: GetMemory<U, S, B>) {
   const target = memory.target
@@ -20,8 +20,8 @@ function memoryLayout<
 }
 
 export function pipelineCore<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(memory: GetMemory<U, S, B>) {
   const memLay = memoryLayout(memory)
@@ -80,8 +80,8 @@ export function pipelineCore<
 }
 
 export type BindGroup<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 > = (
   callback?: ({
@@ -91,8 +91,8 @@ export type BindGroup<
 ) => GPUBindGroup
 
 export type BindGroups<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 > = (bindGroup: BindGroup<U, S, B>) => B | [GPUBindGroup]
 

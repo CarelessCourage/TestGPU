@@ -1,9 +1,9 @@
 import { gpuPipeline, getMemory } from './'
-import type { MoonbowUniforms, MoonbowOptions } from './'
+import type { MoonbowBuffers, MoonbowOptions } from './'
 
 export async function useMoonbow<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(passedOptions: Partial<MoonbowOptions<U, S, B>>) {
   const memory = await getMemory(passedOptions)
