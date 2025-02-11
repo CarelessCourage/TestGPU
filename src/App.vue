@@ -12,6 +12,7 @@ import { RouterView, RouterLink } from 'vue-router'
       <RouterLink to="/marbles" activeClass="active">Marbles</RouterLink>
       <RouterLink to="/bomber" activeClass="active">Bomber</RouterLink>
       <RouterLink to="/impact" activeClass="active">Impact</RouterLink>
+      <RouterLink to="/earth" activeClass="active">Earth</RouterLink>
     </nav>
   </header>
   <RouterView />
