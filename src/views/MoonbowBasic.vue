@@ -54,7 +54,6 @@ onMounted(async () => {
 <template>
   <div class="canvas-wrapper">
     <canvas id="one" width="700" height="700"></canvas>
-
     <h1>Gradient</h1>
   </div>
   <h1 class="display">WebGPU</h1>

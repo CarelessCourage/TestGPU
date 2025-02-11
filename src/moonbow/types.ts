@@ -1,11 +1,11 @@
 import type { UniformBuffer, GPUCanvas, BindGroups } from './'
 
-export interface MoonbowUniforms {
+export interface MoonbowBuffers {
   [key: string]: UniformBuffer
 }
 
 export interface MoonbowMemory {
-  [key: string]: MoonbowUniforms[] | MoonbowUniforms
+  [key: string]: MoonbowBuffers[] | MoonbowBuffers
 }
 
 export interface MoonbowPipelineOptions {
@@ -17,8 +17,8 @@ export interface MoonbowPipelineOptions {
 }
 
 export interface MoonbowOptions<
-  U extends MoonbowUniforms,
-  S extends MoonbowUniforms,
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 > extends MoonbowPipelineOptions {
   uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>

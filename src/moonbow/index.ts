@@ -18,7 +18,7 @@ import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
 import type { GetMemory } from './memory'
 import type { MoonbowPipeline } from './pipeline'
 import type { UniformBuffer } from './buffers'
-import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowUniforms } from './types'
+import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowBuffers } from './types'
 import type { PipelineCore, BindGroup, BindGroups } from './pipeline/core'
 
 export {
@@ -55,6 +55,6 @@ export type {
   MoonbowCompute,
   MoonbowPipelineOptions,
   MoonbowPipeline,
-  MoonbowUniforms,
+  MoonbowBuffers,
   PipelineCore
 }
