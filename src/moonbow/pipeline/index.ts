@@ -38,17 +38,13 @@ export function gpuPipeline<
     : null
 
   const actions = {
+    ...makeCommands({ pipe, memory }),
     compute: (props: ComputeProps) =>
-      makeCommands<U, S, B>(
-        { pipe, memory },
-        computeEncoder(props, {
-          pipe,
-          bindGroups: memory.bindGroups(pipe.bindGroup),
-          simulationPipeline
-        })
-      ),
-
-    ...makeCommands({ pipe, memory })
+      computeCommands<U, S, B>(props, {
+        pipe,
+        memory,
+        simulationPipeline
+      })
   }
 
   function loop(callback: (props: typeof actions) => void, interval = 1000 / 60) {
@@ -125,18 +121,23 @@ function makeCommands<
   }
 }
 
-function computeEncoder(
+function computeCommands<
+  U extends MoonbowBuffers,
+  S extends MoonbowBuffers,
+  B extends GPUBindGroup[] = GPUBindGroup[]
+>(
   props: ComputeProps,
   {
     pipe,
-    bindGroups,
+    memory,
     simulationPipeline
   }: {
     pipe: PipelineCore
-    bindGroups: GPUBindGroup[]
+    memory: GetMemory<U, S, B>
     simulationPipeline: GPUComputePipeline | null
   }
 ) {
+  const bindGroups = memory.bindGroups(pipe.bindGroup)
   if (simulationPipeline === null) throw new Error('No compute shader provided')
   const options = isFunc(props) ? props({ bindGroups }) : props
 
@@ -152,7 +153,7 @@ function computeEncoder(
   })
 
   computeEncoder.draw().submit()
-  return commandEncoder
+  return makeCommands({ pipe, memory }, commandEncoder)
 }
 
 function getSimulationPipeline(props: {
