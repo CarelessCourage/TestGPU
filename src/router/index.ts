@@ -51,6 +51,11 @@ const router = createRouter({
       path: '/earth',
       name: 'Earth',
       component: EarthSphere
+    },
+    {
+      path: '/postprocess',
+      name: 'PostProcess',
+      component: () => import('@/views/PostProcessDemo.vue')
     }
   ]
 })
