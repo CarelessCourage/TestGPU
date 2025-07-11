@@ -15,7 +15,6 @@ struct VertexOutput {
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
-
     let state = f32(cellState[input.instance]);
     //Makes sure the square is aligned with the grid since the square would normally be aligned with the center
     let gridPos = (input.pos * state + 1) / grid;

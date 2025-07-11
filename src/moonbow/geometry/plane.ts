@@ -12,8 +12,8 @@ export function plane(device: GPUDevice, options: ModelOptions) {
 function planeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
   const geometry = planeGeometry(options)
 
-  // Calculate maximum buffer size for resolution up to 20x20 to be safe
-  const maxResolution = 20
+  // Calculate maximum buffer size for resolution up to 50x50 to handle high-resolution cases
+  const maxResolution = 50
   const maxVertices = (maxResolution + 1) * (maxResolution + 1)
   const maxIndices = maxResolution * maxResolution * 6 // 6 indices per quad
 

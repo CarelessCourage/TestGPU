@@ -12,8 +12,8 @@ export function cube(device: GPUDevice, options: ModelOptions) {
 function cubeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
   const geometry = cubeGeometry(options)
 
-  // Calculate maximum buffer size for resolution up to 20x20x20 to be safe
-  const maxResolution = 20
+  // Calculate maximum buffer size for resolution up to 50x50x50 to handle high-resolution cases
+  const maxResolution = 50
   const maxVerticesPerFace = (maxResolution + 1) * (maxResolution + 1)
   const maxVertices = maxVerticesPerFace * 6 // 6 faces
   const maxIndicesPerFace = maxResolution * maxResolution * 6 // 6 indices per quad
