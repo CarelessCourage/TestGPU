@@ -1,5 +1,7 @@
 import { gpuPipeline } from './'
+import { toGPUColor, BackgroundColors } from './background'
 import type { GetMemory, MoonbowBuffers, MoonbowPipelineOptions } from './'
+import type { BackgroundColor } from './background'
 
 export interface ShaderObject {
   shader: string
@@ -9,6 +11,11 @@ export interface ShaderObject {
 export interface MultiShaderRenderCall {
   pipeline: string | number
   renderFunction: (renderPass: GPURenderPassEncoder) => void
+}
+
+export interface MultiShaderOptions {
+  backgroundColor?: BackgroundColor
+  baseOptions?: Partial<Omit<MoonbowPipelineOptions, 'shader'>>
 }
 
 /**
@@ -21,7 +28,7 @@ export function createMultiShaderPipelines<
 >(
   memory: GetMemory<U, S, B>,
   shaders: ShaderObject[] | Record<string, string>,
-  baseOptions?: Partial<Omit<MoonbowPipelineOptions, 'shader'>>
+  options?: MultiShaderOptions
 ) {
   const shadersArray = Array.isArray(shaders)
     ? shaders
@@ -29,7 +36,7 @@ export function createMultiShaderPipelines<
 
   const pipelines = shadersArray.map((shaderObj, index) => {
     const pipeline = gpuPipeline(memory, {
-      ...baseOptions,
+      ...options?.baseOptions,
       shader: shaderObj.shader
     })
 
@@ -39,6 +46,11 @@ export function createMultiShaderPipelines<
       index
     }
   })
+
+  // Get background color or use default
+  const backgroundColor = options?.backgroundColor
+    ? toGPUColor(options.backgroundColor)
+    : BackgroundColors.default
 
   /**
    * Creates a render frame that can render multiple objects with different shaders
@@ -55,7 +67,7 @@ export function createMultiShaderPipelines<
       colorAttachments: [
         {
           view: memory.target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 0.0 },
+          clearValue: backgroundColor,
           loadOp: 'clear',
           storeOp: 'store'
         }

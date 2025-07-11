@@ -56,6 +56,11 @@ const router = createRouter({
       path: '/postprocess',
       name: 'PostProcess',
       component: () => import('@/views/PostProcessDemo.vue')
+    },
+    {
+      path: '/background',
+      name: 'Background',
+      component: () => import('@/views/BackgroundColorDemo.vue')
     }
   ]
 })

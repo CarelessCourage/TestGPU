@@ -1,9 +1,12 @@
 import { getUniformEntries } from './'
+import { toGPUColor, BackgroundColors } from './background'
 import type { GetMemory, MoonbowBuffers, MoonbowPipelineOptions } from './'
 import type { MultiShaderRenderCall } from './multiShader'
+import type { BackgroundColor } from './background'
 
 export interface PostProcessOptions {
   postProcessShader: string
+  backgroundColor?: BackgroundColor
   baseOptions?: Partial<Omit<MoonbowPipelineOptions, 'shader'>>
 }
 
@@ -111,6 +114,11 @@ export function createPostProcessPipeline<
     }
   })
 
+  // Get background color or use default
+  const backgroundColor = options.backgroundColor
+    ? toGPUColor(options.backgroundColor)
+    : BackgroundColors.default
+
   /**
    * Render with post-processing:
    * 1. Render scene to offscreen texture
@@ -127,7 +135,7 @@ export function createPostProcessPipeline<
       colorAttachments: [
         {
           view: renderTextureView,
-          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 1.0 },
+          clearValue: backgroundColor,
           loadOp: 'clear',
           storeOp: 'store'
         }
@@ -328,11 +336,17 @@ export function createAutoPostProcessPipeline<
   U extends MoonbowBuffers,
   _S extends MoonbowBuffers,
   _B extends GPUBindGroup[] = GPUBindGroup[]
->(memory: GetMemory<U, _S, _B>, scenePipelines: any[], customEffects?: string) {
+>(
+  memory: GetMemory<U, _S, _B>,
+  scenePipelines: any[],
+  customEffects?: string,
+  backgroundColor?: BackgroundColor
+) {
   const existingUniforms = memory.uniforms ? Object.keys(memory.uniforms) : []
   const autoShader = generatePostProcessShader(existingUniforms, customEffects)
 
   return createPostProcessPipeline(memory, scenePipelines, {
-    postProcessShader: autoShader
+    postProcessShader: autoShader,
+    backgroundColor
   })
 }

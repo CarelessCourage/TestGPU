@@ -18,6 +18,7 @@ import {
   createAutoPostProcessPipeline,
   generatePostProcessShader
 } from './postProcess'
+import { toGPUColor, BackgroundColors } from './background'
 
 import type { GPUCanvas } from './target'
 import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
@@ -28,6 +29,7 @@ import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowBuffers } from './t
 import type { PipelineCore, BindGroup, BindGroups } from './pipeline/core'
 import type { MultiShaderPipelines, ShaderObject, MultiShaderRenderCall } from './multiShader'
 import type { PostProcessPipeline, PostProcessOptions } from './postProcess'
+import type { BackgroundColor } from './background'
 
 export {
   cube,
@@ -52,7 +54,9 @@ export {
   createMultiShaderPipelines,
   createPostProcessPipeline,
   createAutoPostProcessPipeline,
-  generatePostProcessShader
+  generatePostProcessShader,
+  toGPUColor,
+  BackgroundColors
 }
 
 export type {
@@ -73,5 +77,6 @@ export type {
   ShaderObject,
   MultiShaderRenderCall,
   PostProcessPipeline,
-  PostProcessOptions
+  PostProcessOptions,
+  BackgroundColor
 }
