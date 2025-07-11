@@ -19,6 +19,8 @@ import {
   generatePostProcessShader
 } from './postProcess'
 import { toGPUColor, BackgroundColors } from './background'
+import { createRefractionPipeline } from './refraction'
+import { createFramebuffer, createRefractionFramebuffers } from './framebuffer'
 
 import type { GPUCanvas } from './target'
 import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
@@ -29,6 +31,8 @@ import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowBuffers } from './t
 import type { PipelineCore, BindGroup, BindGroups } from './pipeline/core'
 import type { MultiShaderPipelines, ShaderObject, MultiShaderRenderCall } from './multiShader'
 import type { PostProcessPipeline, PostProcessOptions } from './postProcess'
+import type { RefractionOptions, RefractionPipeline } from './refraction'
+import type { Framebuffer, FramebufferOptions, RefractionFramebuffers } from './framebuffer'
 import type { BackgroundColor } from './background'
 
 export {
@@ -56,7 +60,10 @@ export {
   createAutoPostProcessPipeline,
   generatePostProcessShader,
   toGPUColor,
-  BackgroundColors
+  BackgroundColors,
+  createRefractionPipeline,
+  createFramebuffer,
+  createRefractionFramebuffers
 }
 
 export type {
@@ -78,5 +85,10 @@ export type {
   MultiShaderRenderCall,
   PostProcessPipeline,
   PostProcessOptions,
-  BackgroundColor
+  BackgroundColor,
+  RefractionOptions,
+  RefractionPipeline,
+  Framebuffer,
+  FramebufferOptions,
+  RefractionFramebuffers
 }

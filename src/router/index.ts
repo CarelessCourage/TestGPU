@@ -76,6 +76,11 @@ const router = createRouter({
       path: '/cube-vs-plane',
       name: 'CubeVsPlane',
       component: () => import('@/views/CubeVsPlaneDemo.vue')
+    },
+    {
+      path: '/refraction-demo',
+      name: 'Refraction',
+      component: () => import('@/views/RefractionDemo.vue')
     }
   ]
 })

@@ -92,7 +92,7 @@ async function initWebGPU() {
     size: size.value
   })
 
-  planeModel = plane(device, {
+  planeModel = cube(device, {
     resolution: resolution.value,
     rotation: [rotationX.value, rotationY.value, 0],
     size: size.value
