@@ -1,66 +1,61 @@
 <template>
   <div class="fluid-container">
     <h1>Fluid Cursor WebGPU</h1>
-    <canvas 
-      ref="canvasRef" 
-      class="fluid-canvas" 
-      width="800" 
-      height="600"
-    ></canvas>
-    
+    <canvas ref="canvasRef" class="fluid-canvas" width="800" height="600"></canvas>
+
     <div class="controls">
       <h3>Fluid Parameters</h3>
       <div class="control-group">
         <label>
           Splat Radius: {{ config.SPLAT_RADIUS.toFixed(2) }}
-          <input 
-            type="range" 
-            min="0.1" 
-            max="1.0" 
+          <input
+            type="range"
+            min="0.1"
+            max="1.0"
             step="0.01"
             v-model.number="config.SPLAT_RADIUS"
           />
         </label>
-        
+
         <label>
           Splat Force: {{ config.SPLAT_FORCE.toFixed(0) }}
-          <input 
-            type="range" 
-            min="1000" 
-            max="10000" 
+          <input
+            type="range"
+            min="1000"
+            max="10000"
             step="100"
             v-model.number="config.SPLAT_FORCE"
           />
         </label>
-        
+
         <label>
           Color Update Speed: {{ config.COLOR_UPDATE_SPEED.toFixed(1) }}
-          <input 
-            type="range" 
-            min="1" 
-            max="20" 
+          <input
+            type="range"
+            min="1"
+            max="20"
             step="0.1"
             v-model.number="config.COLOR_UPDATE_SPEED"
           />
         </label>
-        
+
         <label>
           Density Dissipation: {{ config.DENSITY_DISSIPATION.toFixed(2) }}
-          <input 
-            type="range" 
-            min="0.9" 
-            max="1.0" 
+          <input
+            type="range"
+            min="0.9"
+            max="1.0"
             step="0.001"
             v-model.number="config.DENSITY_DISSIPATION"
           />
         </label>
-        
+
         <label>
           Velocity Dissipation: {{ config.VELOCITY_DISSIPATION.toFixed(2) }}
-          <input 
-            type="range" 
-            min="0.1" 
-            max="1.0" 
+          <input
+            type="range"
+            min="0.1"
+            max="1.0"
             step="0.01"
             v-model.number="config.VELOCITY_DISSIPATION"
           />
@@ -78,6 +73,18 @@ import { useGPU, gpuCanvas } from '../moonbow'
 import FluidDisplayShader from '../shaders/fluidDisplay.wgsl'
 // @ts-ignore
 import FluidSplatShader from '../shaders/fluidSplat.wgsl'
+// @ts-ignore
+import FluidAdvectionShader from '../shaders/fluidAdvection.wgsl'
+// @ts-ignore
+import FluidDivergenceShader from '../shaders/fluidDivergence.wgsl'
+// @ts-ignore
+import FluidPressureShader from '../shaders/fluidPressure.wgsl'
+// @ts-ignore
+import FluidGradientShader from '../shaders/fluidGradient.wgsl'
+// @ts-ignore
+import FluidCurlShader from '../shaders/fluidCurl.wgsl'
+// @ts-ignore
+import FluidVorticityShader from '../shaders/fluidVorticity.wgsl'
 
 interface ColorRGB {
   r: number
@@ -145,7 +152,9 @@ function generateColor(): ColorRGB {
 }
 
 function HSVtoRGB(h: number, s: number, v: number): ColorRGB {
-  let r = 0, g = 0, b = 0
+  let r = 0,
+    g = 0,
+    b = 0
   const i = Math.floor(h * 6)
   const f = h * 6 - i
   const p = v * (1 - s)
@@ -153,12 +162,36 @@ function HSVtoRGB(h: number, s: number, v: number): ColorRGB {
   const t = v * (1 - (1 - f) * s)
 
   switch (i % 6) {
-    case 0: r = v; g = t; b = p; break
-    case 1: r = q; g = v; b = p; break
-    case 2: r = p; g = v; b = t; break
-    case 3: r = p; g = q; b = v; break
-    case 4: r = t; g = p; b = v; break
-    case 5: r = v; g = p; b = q; break
+    case 0:
+      r = v
+      g = t
+      b = p
+      break
+    case 1:
+      r = q
+      g = v
+      b = p
+      break
+    case 2:
+      r = p
+      g = v
+      b = t
+      break
+    case 3:
+      r = p
+      g = q
+      b = v
+      break
+    case 4:
+      r = t
+      g = p
+      b = v
+      break
+    case 5:
+      r = v
+      g = p
+      b = q
+      break
   }
   return { r, g, b }
 }
@@ -174,7 +207,10 @@ onMounted(async () => {
   const aspectRatio = canvas.width / canvas.height
 
   // Create textures for fluid simulation
-  const createTexture = (usage: GPUTextureUsageFlags = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT) => {
+  const createTexture = (
+    usage: GPUTextureUsageFlags = GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.RENDER_ATTACHMENT
+  ) => {
     return device.createTexture({
       size: [textureSize, textureSize],
       format: 'rgba16float',
@@ -185,23 +221,36 @@ onMounted(async () => {
   // Ping-pong textures for fluid simulation
   const velocityTextures = [createTexture(), createTexture()]
   const densityTextures = [createTexture(), createTexture()]
+  const pressureTextures = [createTexture(), createTexture()]
+  const divergenceTexture = createTexture()
+  const curlTexture = createTexture()
 
   // Initialize textures with clear color
   const initCommandEncoder = device.createCommandEncoder()
-  
-  // Clear density textures
-  for (let i = 0; i < 2; i++) {
+
+  // Clear all textures
+  const texturesToClear = [
+    ...velocityTextures,
+    ...densityTextures,
+    ...pressureTextures,
+    divergenceTexture,
+    curlTexture
+  ]
+
+  for (const texture of texturesToClear) {
     const pass = initCommandEncoder.beginRenderPass({
-      colorAttachments: [{
-        view: densityTextures[i].createView(),
-        loadOp: 'clear',
-        clearValue: { r: 0, g: 0, b: 0, a: 1 },
-        storeOp: 'store'
-      }]
+      colorAttachments: [
+        {
+          view: texture.createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
     })
     pass.end()
   }
-  
+
   device.queue.submit([initCommandEncoder.finish()])
 
   // Create sampler
@@ -228,6 +277,16 @@ onMounted(async () => {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   })
 
+  const fluidUniformBuffer = device.createBuffer({
+    size: 32, // 2 vec4s for more fluid parameters
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  })
+
+  const timeUniformBuffer = device.createBuffer({
+    size: 16, // 1 vec4
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  })
+
   // Create render pipelines
   const createPipeline = (shader: string, format: GPUTextureFormat = 'rgba16float') => {
     return device.createRenderPipeline({
@@ -249,6 +308,12 @@ onMounted(async () => {
 
   const displayPipeline = createPipeline(FluidDisplayShader, target.format)
   const splatPipeline = createPipeline(FluidSplatShader)
+  const advectionPipeline = createPipeline(FluidAdvectionShader)
+  const divergencePipeline = createPipeline(FluidDivergenceShader)
+  const pressurePipeline = createPipeline(FluidPressureShader)
+  const gradientPipeline = createPipeline(FluidGradientShader)
+  const curlPipeline = createPipeline(FluidCurlShader)
+  const vorticityPipeline = createPipeline(FluidVorticityShader)
 
   // Create bind group helper
   const createBindGroup = (pipeline: GPURenderPipeline, resources: GPUBindingResource[]) => {
@@ -268,6 +333,7 @@ onMounted(async () => {
   let lastTime = performance.now()
   let currentVelocity = 0
   let currentDensity = 0
+  let currentPressure = 0
 
   function updatePointerDownData(pointer: Pointer, id: number, posX: number, posY: number) {
     if (!canvas) return
@@ -301,14 +367,43 @@ onMounted(async () => {
 
     // Update splat uniform data
     const splatData1 = new Float32Array([
-      pointer.texcoordX, pointer.texcoordY, pointer.color.r, pointer.color.g
+      pointer.texcoordX,
+      pointer.texcoordY,
+      pointer.color.r,
+      pointer.color.g
     ])
     const splatData2 = new Float32Array([
-      pointer.color.b, config.SPLAT_RADIUS, aspectRatio, config.SPLAT_FORCE
+      pointer.color.b,
+      config.SPLAT_RADIUS,
+      aspectRatio,
+      config.SPLAT_FORCE
     ])
-    
+
     device.queue.writeBuffer(splatUniformBuffer, 0, splatData1)
     device.queue.writeBuffer(splatUniformBuffer2, 0, splatData2)
+
+    // Splat velocity
+    const velocityBindGroup = createBindGroup(splatPipeline, [
+      { buffer: splatUniformBuffer },
+      { buffer: splatUniformBuffer2 },
+      velocityTextures[currentVelocity].createView(),
+      sampler
+    ])
+
+    const velocityPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: velocityTextures[1 - currentVelocity].createView(),
+          loadOp: 'load',
+          storeOp: 'store'
+        }
+      ]
+    })
+
+    velocityPass.setPipeline(splatPipeline)
+    velocityPass.setBindGroup(0, velocityBindGroup)
+    velocityPass.draw(3)
+    velocityPass.end()
 
     // Splat density
     const densityBindGroup = createBindGroup(splatPipeline, [
@@ -319,12 +414,13 @@ onMounted(async () => {
     ])
 
     const densityPass = commandEncoder.beginRenderPass({
-      colorAttachments: [{
-        view: densityTextures[1 - currentDensity].createView(),
-        loadOp: 'clear',
-        clearValue: { r: 0, g: 0, b: 0, a: 1 },
-        storeOp: 'store'
-      }]
+      colorAttachments: [
+        {
+          view: densityTextures[1 - currentDensity].createView(),
+          loadOp: 'load',
+          storeOp: 'store'
+        }
+      ]
     })
 
     densityPass.setPipeline(splatPipeline)
@@ -335,10 +431,164 @@ onMounted(async () => {
     device.queue.submit([commandEncoder.finish()])
 
     // Swap textures
+    currentVelocity = 1 - currentVelocity
     currentDensity = 1 - currentDensity
   }
 
-  function simulate(dt: number) {
+  function simulateFluid(dt: number) {
+    const commandEncoder = device.createCommandEncoder()
+
+    // Update fluid uniforms
+    const fluidParams = new Float32Array([
+      dt,
+      config.VELOCITY_DISSIPATION,
+      config.DENSITY_DISSIPATION,
+      config.PRESSURE,
+      config.CURL,
+      1.0 / textureSize,
+      aspectRatio,
+      0.0
+    ])
+    device.queue.writeBuffer(fluidUniformBuffer, 0, fluidParams)
+
+    // 1. Advection - move velocity and density with the flow
+    // Advect velocity
+    const velocityAdvectionBindGroup = createBindGroup(advectionPipeline, [
+      { buffer: fluidUniformBuffer },
+      velocityTextures[currentVelocity].createView(),
+      velocityTextures[currentVelocity].createView(),
+      sampler
+    ])
+
+    const velocityAdvectionPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: velocityTextures[1 - currentVelocity].createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
+    })
+
+    velocityAdvectionPass.setPipeline(advectionPipeline)
+    velocityAdvectionPass.setBindGroup(0, velocityAdvectionBindGroup)
+    velocityAdvectionPass.draw(3)
+    velocityAdvectionPass.end()
+
+    currentVelocity = 1 - currentVelocity
+
+    // Advect density
+    const densityAdvectionBindGroup = createBindGroup(advectionPipeline, [
+      { buffer: fluidUniformBuffer },
+      velocityTextures[currentVelocity].createView(),
+      densityTextures[currentDensity].createView(),
+      sampler
+    ])
+
+    const densityAdvectionPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: densityTextures[1 - currentDensity].createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
+    })
+
+    densityAdvectionPass.setPipeline(advectionPipeline)
+    densityAdvectionPass.setBindGroup(0, densityAdvectionBindGroup)
+    densityAdvectionPass.draw(3)
+    densityAdvectionPass.end()
+
+    currentDensity = 1 - currentDensity
+
+    // 2. Compute divergence
+    const divergenceBindGroup = createBindGroup(divergencePipeline, [
+      { buffer: fluidUniformBuffer },
+      velocityTextures[currentVelocity].createView(),
+      sampler
+    ])
+
+    const divergencePass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: divergenceTexture.createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
+    })
+
+    divergencePass.setPipeline(divergencePipeline)
+    divergencePass.setBindGroup(0, divergenceBindGroup)
+    divergencePass.draw(3)
+    divergencePass.end()
+
+    // 3. Solve pressure (Jacobi iterations)
+    for (let i = 0; i < config.PRESSURE_ITERATIONS; i++) {
+      const pressureBindGroup = createBindGroup(pressurePipeline, [
+        { buffer: fluidUniformBuffer },
+        pressureTextures[currentPressure].createView(),
+        divergenceTexture.createView(),
+        sampler
+      ])
+
+      const pressurePass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: pressureTextures[1 - currentPressure].createView(),
+            loadOp: 'clear',
+            clearValue: { r: 0, g: 0, b: 0, a: 1 },
+            storeOp: 'store'
+          }
+        ]
+      })
+
+      pressurePass.setPipeline(pressurePipeline)
+      pressurePass.setBindGroup(0, pressureBindGroup)
+      pressurePass.draw(3)
+      pressurePass.end()
+
+      currentPressure = 1 - currentPressure
+    }
+
+    // 4. Subtract pressure gradient
+    const gradientBindGroup = createBindGroup(gradientPipeline, [
+      { buffer: fluidUniformBuffer },
+      velocityTextures[currentVelocity].createView(),
+      pressureTextures[currentPressure].createView(),
+      sampler
+    ])
+
+    const gradientPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: velocityTextures[1 - currentVelocity].createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
+    })
+
+    gradientPass.setPipeline(gradientPipeline)
+    gradientPass.setBindGroup(0, gradientBindGroup)
+    gradientPass.draw(3)
+    gradientPass.end()
+
+    currentVelocity = 1 - currentVelocity
+
+    device.queue.submit([commandEncoder.finish()])
+  }
+
+  function render() {
+    const currentTime = performance.now()
+    const dt = Math.min((currentTime - lastTime) / 1000, 0.016666)
+    lastTime = currentTime
+
     // Update color
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED
     if (colorUpdateTimer >= 1) {
@@ -357,14 +607,9 @@ onMounted(async () => {
         pointer.moved = false
       }
     })
-  }
 
-  function render() {
-    const currentTime = performance.now()
-    const dt = Math.min((currentTime - lastTime) / 1000, 0.016666)
-    lastTime = currentTime
-
-    simulate(dt)
+    // Run fluid simulation
+    simulateFluid(dt)
 
     // Render to screen
     const commandEncoder = device.createCommandEncoder()
@@ -375,12 +620,14 @@ onMounted(async () => {
     ])
 
     const renderPass = commandEncoder.beginRenderPass({
-      colorAttachments: [{
-        view: target.context.getCurrentTexture().createView(),
-        loadOp: 'clear',
-        clearValue: { r: 0, g: 0, b: 0, a: 1 },
-        storeOp: 'store'
-      }]
+      colorAttachments: [
+        {
+          view: target.context.getCurrentTexture().createView(),
+          loadOp: 'clear',
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
+          storeOp: 'store'
+        }
+      ]
     })
 
     renderPass.setPipeline(displayPipeline)

@@ -28,12 +28,19 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4f {
     let color = vec3f(splat_data.zw, splat_data2.x);
     let radius = splat_data2.y;
     let aspect_ratio = splat_data2.z;
+    let force = splat_data2.w;
     
     var p = input.uv - point;
     p.x *= aspect_ratio;
     
-    let splat = exp(-dot(p, p) / radius) * color;
-    let base = textureSample(target_texture, texture_sampler, input.uv).rgb;
+    let distance = length(p);
+    let splat_strength = exp(-distance * distance / radius);
     
-    return vec4f(base + splat, 1.0);
+    let base = textureSample(target_texture, texture_sampler, input.uv);
+    
+    // For velocity, add force-based motion
+    // For density, add color
+    let result = base + vec4f(color * splat_strength, 0.0);
+    
+    return vec4f(result.rgb, 1.0);
 }
