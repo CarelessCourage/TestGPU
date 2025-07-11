@@ -1,12 +1,6 @@
 /// <reference types="@webgpu/types" />
 import { mat4 } from 'gl-matrix'
-import {
-  geoBuffer,
-  bufferVertexLayout,
-  indicesBuffer,
-  modelMatrix,
-  ensure3Values
-} from './utils.js'
+import { bufferVertexLayout, modelMatrix, ensure3Values } from './utils.js'
 import type { GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { getModel } from './'
 
@@ -18,31 +12,64 @@ export function cube(device: GPUDevice, options: ModelOptions) {
 function cubeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
   const geometry = cubeGeometry(options)
 
-  const vBuffer = geoBuffer({ device, data: geometry.vertices })
-  const nBuffer = geoBuffer({ device, data: geometry.normals })
-  const uvBuffer = geoBuffer({ device, data: geometry.uvs })
+  // Calculate maximum buffer size for resolution up to 20x20x20 to be safe
+  const maxResolution = 20
+  const maxVerticesPerFace = (maxResolution + 1) * (maxResolution + 1)
+  const maxVertices = maxVerticesPerFace * 6 // 6 faces
+  const maxIndicesPerFace = maxResolution * maxResolution * 6 // 6 indices per quad
+  const maxIndices = maxIndicesPerFace * 6 // 6 faces
 
-  const indices = indicesBuffer({
-    device: device,
-    indices: geometry.indices
+  // Create buffers with maximum size
+  const vBuffer = device.createBuffer({
+    label: 'Cube Vertices Buffer',
+    size: maxVertices * 3 * 4, // 3 floats per vertex, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
   })
+
+  const nBuffer = device.createBuffer({
+    label: 'Cube Normals Buffer',
+    size: maxVertices * 3 * 4, // 3 floats per normal, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  })
+
+  const uvBuffer = device.createBuffer({
+    label: 'Cube UVs Buffer',
+    size: maxVertices * 2 * 4, // 2 floats per UV, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  })
+
+  const indices = device.createBuffer({
+    label: 'Cube Indices Buffer',
+    size: maxIndices * 2, // 2 bytes per index (Uint16)
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  })
+
+  // Write initial data
+  device.queue.writeBuffer(vBuffer, 0, geometry.vertices)
+  device.queue.writeBuffer(nBuffer, 0, geometry.normals)
+  device.queue.writeBuffer(uvBuffer, 0, geometry.uvs)
+  device.queue.writeBuffer(indices, 0, geometry.indices)
+
+  let currentIndicesCount = geometry.indicesCount
 
   function update(o: ModelOptions) {
     const geo = cubeGeometry({ ...options, ...o })
-    const vertices = new Float32Array(geo.vertices)
-    const normals = new Float32Array(geo.normals)
-    const uvs = new Float32Array(geo.uvs)
 
-    device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
-    device.queue.writeBuffer(nBuffer, 0, normals.buffer)
-    device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
+    device.queue.writeBuffer(vBuffer, 0, geo.vertices)
+    device.queue.writeBuffer(nBuffer, 0, geo.normals)
+    device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
+    device.queue.writeBuffer(indices, 0, geo.indices)
+
+    currentIndicesCount = geo.indicesCount
   }
 
   return {
     update: update,
     vertices: vBuffer,
     indices: indices,
-    indicesCount: geometry.indicesCount,
+    get indicesCount() {
+      return currentIndicesCount
+    },
     normals: nBuffer,
     uvs: uvBuffer,
     layout: bufferVertexLayout(),

@@ -5,7 +5,7 @@ import shader from '../shaders/shader.wgsl'
 import basic from '../shaders/basic.wgsl'
 import { onMounted } from 'vue'
 import { spinningCube } from '../scenes/spinningCube'
-import { uTime, float, gpuCamera, useGPU, getMemory, gpuPipeline } from '../moonbow'
+import { uTime, float, gpuCamera, useGPU, getMemory, createMultiShaderPipelines } from '../moonbow'
 
 onMounted(async () => {
   const { device } = await useGPU()
@@ -16,7 +16,7 @@ onMounted(async () => {
   const time = uTime(device)
   const intensity = float(device, [0.1])
 
-  // Create shared memory that both pipelines will use
+  // Create shared memory that all pipelines will use
   const memory = await getMemory({
     device,
     canvas: document.querySelector('canvas#one') as HTMLCanvasElement,
@@ -28,67 +28,31 @@ onMounted(async () => {
     })
   })
 
-  // Create two separate pipelines with different shaders
-  const shaderPipeline = gpuPipeline(memory, {
-    shader: shader
-  })
-
-  const basicPipeline = gpuPipeline(memory, {
-    shader: basic
+  // Create multiple pipelines with different shaders
+  const multiShader = createMultiShaderPipelines(memory, {
+    gradient: shader,
+    basic: basic
   })
 
   let rotation = 0
   setInterval(() => {
     rotation += 0.002
 
-    // Create a shared command encoder for both render passes
-    const commandEncoder = device.createCommandEncoder({ label: 'Multi-shader Command Encoder' })
-
-    // Create the render pass descriptor
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      label: 'Multi-shader Render Pass',
-      colorAttachments: [
-        {
-          view: memory.target.context.getCurrentTexture().createView(),
-          clearValue: { r: 0.15, g: 0.15, b: 0.25, a: 0.0 },
-          loadOp: 'clear',
-          storeOp: 'store'
+    // Render both models with different shaders in a single frame
+    multiShader.multiFrame([
+      {
+        pipeline: 'gradient',
+        renderFunction: (renderPass) => {
+          model1.render(renderPass, rotation, -1)
         }
-      ]
-    }
-
-    // Add depth stencil if enabled
-    if (memory.depthStencil) {
-      const depthTexture = device.createTexture({
-        size: [memory.target.element.width, memory.target.element.height],
-        format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
-      })
-
-      renderPassDescriptor.depthStencilAttachment = {
-        view: depthTexture.createView(),
-        depthClearValue: 1.0,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store'
+      },
+      {
+        pipeline: 'basic',
+        renderFunction: (renderPass) => {
+          model2.render(renderPass, rotation, 2)
+        }
       }
-    }
-
-    const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor)
-
-    // Render model1 with the shader pipeline
-    const bindGroups1 = memory.bindGroups(shaderPipeline.core.bindGroup)
-    renderPass.setPipeline(shaderPipeline.core.pipeline)
-    renderPass.setBindGroup(0, bindGroups1[0])
-    model1.render(renderPass, rotation, -1)
-
-    // Render model2 with the basic pipeline
-    const bindGroups2 = memory.bindGroups(basicPipeline.core.bindGroup)
-    renderPass.setPipeline(basicPipeline.core.pipeline)
-    renderPass.setBindGroup(0, bindGroups2[0])
-    model2.render(renderPass, rotation, 2)
-
-    renderPass.end()
-    device.queue.submit([commandEncoder.finish()])
+    ])
   }, 1000 / 60)
 })
 </script>
@@ -96,7 +60,7 @@ onMounted(async () => {
 <template>
   <div class="canvas-wrapper">
     <canvas id="one" width="700" height="700"></canvas>
-    <h1>Multi-Shader Demo (Manual)</h1>
+    <h1>Multi-Shader Demo</h1>
     <p>Left cube uses gradient shader, right cube uses basic shader</p>
   </div>
   <h1 class="display">WebGPU Multi-Shader</h1>

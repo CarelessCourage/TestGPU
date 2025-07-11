@@ -1,41 +1,73 @@
 /// <reference types="@webgpu/types" />
-import { geoBuffer, bufferVertexLayout, indicesBuffer } from './utils.js'
+import { mat4 } from 'gl-matrix'
+import { bufferVertexLayout, modelMatrix, ensure3Values } from './utils.js'
 import type { GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { getModel } from './'
 
-export function plane(device: GPUDevice) {
-  const buffer = planeBuffer(device)
+export function plane(device: GPUDevice, options: ModelOptions) {
+  const buffer = planeBuffer(device, options)
   return getModel(buffer)
 }
 
-function planeBuffer(device: GPUDevice): GeoBuffers {
-  const geometry = planeGeometry()
+function planeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
+  const geometry = planeGeometry(options)
 
-  const vBuffer = geoBuffer({ device, data: geometry.vertices })
-  const nBuffer = geoBuffer({ device, data: geometry.normals })
-  const uvBuffer = geoBuffer({ device, data: geometry.uvs })
+  // Calculate maximum buffer size for resolution up to 20x20 to be safe
+  const maxResolution = 20
+  const maxVertices = (maxResolution + 1) * (maxResolution + 1)
+  const maxIndices = maxResolution * maxResolution * 6 // 6 indices per quad
 
-  const indices = indicesBuffer({
-    device: device,
-    indices: geometry.indices
+  // Create buffers with maximum size
+  const vBuffer = device.createBuffer({
+    label: 'Plane Vertices Buffer',
+    size: maxVertices * 3 * 4, // 3 floats per vertex, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
   })
 
-  function update() {
-    const geo = planeGeometry()
-    const vertices = new Float32Array(geo.vertices)
-    const normals = new Float32Array(geo.normals)
-    const uvs = new Float32Array(geo.uvs)
+  const nBuffer = device.createBuffer({
+    label: 'Plane Normals Buffer',
+    size: maxVertices * 3 * 4, // 3 floats per normal, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  })
 
-    device.queue.writeBuffer(vBuffer, 0, vertices.buffer)
-    device.queue.writeBuffer(nBuffer, 0, normals.buffer)
-    device.queue.writeBuffer(uvBuffer, 0, uvs.buffer)
+  const uvBuffer = device.createBuffer({
+    label: 'Plane UVs Buffer',
+    size: maxVertices * 2 * 4, // 2 floats per UV, 4 bytes per float
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  })
+
+  const indices = device.createBuffer({
+    label: 'Plane Indices Buffer',
+    size: maxIndices * 2, // 2 bytes per index (Uint16)
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  })
+
+  // Write initial data
+  device.queue.writeBuffer(vBuffer, 0, geometry.vertices)
+  device.queue.writeBuffer(nBuffer, 0, geometry.normals)
+  device.queue.writeBuffer(uvBuffer, 0, geometry.uvs)
+  device.queue.writeBuffer(indices, 0, geometry.indices)
+
+  let currentIndicesCount = geometry.indicesCount
+
+  function update(o: ModelOptions) {
+    const geo = planeGeometry({ ...options, ...o })
+
+    device.queue.writeBuffer(vBuffer, 0, geo.vertices)
+    device.queue.writeBuffer(nBuffer, 0, geo.normals)
+    device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
+    device.queue.writeBuffer(indices, 0, geo.indices)
+
+    currentIndicesCount = geo.indicesCount
   }
 
   return {
     update: update,
     vertices: vBuffer,
     indices: indices,
-    indicesCount: geometry.indicesCount,
+    get indicesCount() {
+      return currentIndicesCount
+    },
     normals: nBuffer,
     uvs: uvBuffer,
     layout: bufferVertexLayout(),
@@ -43,85 +75,91 @@ function planeBuffer(device: GPUDevice): GeoBuffers {
   }
 }
 
-function planeGeometry(): Geometry {
-  const size = 0.8
-  const indices: number[] = [0, 1, 2, 2, 1, 3] // Two triangles (0,1,2) and (2,1,3)
+function planeGeometry(options?: ModelOptions): Geometry {
+  const resolution = ensure3Values(options?.resolution ?? 1)
 
-  const vertices = new Float32Array([
-    -size,
-    -size,
-    size, // Vertex 0
+  const size = 3
+  const width = size
+  const height = size
 
-    -size,
-    size,
-    size, // Vertex 1
+  const widthSegments = Math.floor(resolution[0])
+  const heightSegments = Math.floor(resolution[1])
 
-    size,
-    -size,
-    size, // Vertex 2
+  // geometry data
+  const indices: number[] = []
+  const vertices: number[] = []
+  const normals: number[] = []
+  const uvs: number[] = []
+  const colors: number[] = []
 
-    size,
-    size,
-    size // Vertex 3
-  ])
+  const segmentWidth = width / widthSegments
+  const segmentHeight = height / heightSegments
 
-  const normals: number[] = [
-    0,
-    0,
-    1, // Normal for Vertex 0
+  const widthHalf = width / 2
+  const heightHalf = height / 2
 
-    0,
-    0,
-    1, // Normal for Vertex 1
+  const gridX1 = widthSegments + 1
+  const gridY1 = heightSegments + 1
 
-    0,
-    0,
-    1, // Normal for Vertex 2
+  // generate vertices, normals and uvs
+  for (let iy = 0; iy < gridY1; iy++) {
+    const y = iy * segmentHeight - heightHalf
 
-    0,
-    0,
-    1 // Normal for Vertex 3
-  ] // All normals are pointing in the positive z direction
+    for (let ix = 0; ix < gridX1; ix++) {
+      const x = ix * segmentWidth - widthHalf
 
-  const uvs: number[] = [
-    0,
-    0, // UV for Vertex 0
+      // vertices (plane in XY plane at z=0)
+      vertices.push(x, y, 0)
 
-    0,
-    1, // UV for Vertex 1
+      // normals (pointing in positive Z direction)
+      normals.push(0, 0, 1)
 
-    1,
-    0, // UV for Vertex 2
+      // uvs
+      uvs.push(ix / widthSegments)
+      uvs.push(1 - iy / heightSegments)
+    }
+  }
 
-    1,
-    1 // UV for Vertex 3
-  ] // UV coordinates for texture mapping
+  // generate indices
+  for (let iy = 0; iy < heightSegments; iy++) {
+    for (let ix = 0; ix < widthSegments; ix++) {
+      const a = ix + gridX1 * iy
+      const b = ix + gridX1 * (iy + 1)
+      const c = ix + 1 + gridX1 * (iy + 1)
+      const d = ix + 1 + gridX1 * iy
 
-  const colors: number[] = [
-    1,
-    1,
-    1, // Color for Vertex 0 (white)
+      // faces (two triangles per segment)
+      indices.push(a, b, d)
+      indices.push(b, c, d)
+    }
+  }
 
-    1,
-    1,
-    1, // Color for Vertex 1 (white)
-
-    1,
-    1,
-    1, // Color for Vertex 2 (white)
-
-    1,
-    1,
-    1 // Color for Vertex 3 (white)
-  ] // All vertices are colored white
+  // apply transformations
+  const transform = modelMatrix(options)
+  const transformedVertices: number[] = []
+  for (let i = 0; i < vertices.length; i += 3) {
+    const vertex: [number, number, number] = [vertices[i], vertices[i + 1], vertices[i + 2]]
+    const transformedVertex = transformVertex(vertex, transform)
+    transformedVertices.push(...transformedVertex)
+  }
 
   return {
-    vertices: vertices,
+    vertices: new Float32Array(transformedVertices),
     indices: new Uint16Array(indices),
     colors: new Float32Array(colors),
     normals: new Float32Array(normals),
     uvs: new Float32Array(uvs),
-    vertexCount: vertices.length,
+    vertexCount: transformedVertices.length,
     indicesCount: indices.length
   }
+}
+
+function transformVertex(vertex: [number, number, number], matrix: mat4) {
+  const [x, y, z] = vertex
+  const w = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] // Apply perspective
+  return [
+    (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) / w, // Apply transformation and perspective divide
+    (matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]) / w,
+    (matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]) / w
+  ]
 }

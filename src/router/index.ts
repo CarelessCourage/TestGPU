@@ -66,6 +66,16 @@ const router = createRouter({
       path: '/background',
       name: 'BackgroundColorDemo',
       component: () => import('@/views/BackgroundColorDemo.vue')
+    },
+    {
+      path: '/plane',
+      name: 'PlaneGeometry',
+      component: () => import('@/views/PlaneGeometryTest.vue')
+    },
+    {
+      path: '/cube-vs-plane',
+      name: 'CubeVsPlane',
+      component: () => import('@/views/CubeVsPlaneDemo.vue')
     }
   ]
 })
