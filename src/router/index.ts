@@ -61,6 +61,11 @@ const router = createRouter({
       path: '/background',
       name: 'Background',
       component: () => import('@/views/BackgroundColorDemo.vue')
+    },
+    {
+      path: '/background',
+      name: 'BackgroundColorDemo',
+      component: () => import('@/views/BackgroundColorDemo.vue')
     }
   ]
 })
