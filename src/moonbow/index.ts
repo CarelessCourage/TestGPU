@@ -12,6 +12,7 @@ import { pipelineCore } from './pipeline/core'
 import { float, uTime, fTime } from './buffers/uniforms'
 import { uniformBuffer } from './buffers'
 import { getUniformEntries } from './pipeline/entries'
+import { createMultiShaderPipelines } from './multiShader'
 
 import type { GPUCanvas } from './target'
 import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
@@ -20,6 +21,7 @@ import type { MoonbowPipeline } from './pipeline'
 import type { UniformBuffer } from './buffers'
 import type { MoonbowOptions, MoonbowPipelineOptions, MoonbowBuffers } from './types'
 import type { PipelineCore, BindGroup, BindGroups } from './pipeline/core'
+import type { MultiShaderPipelines, ShaderObject, MultiShaderRenderCall } from './multiShader'
 
 export {
   cube,
@@ -40,7 +42,8 @@ export {
   uniformBuffer,
   bufferVertexLayout,
   getUniformEntries,
-  getOptionsWithDefaults
+  getOptionsWithDefaults,
+  createMultiShaderPipelines
 }
 
 export type {
@@ -56,5 +59,8 @@ export type {
   MoonbowPipelineOptions,
   MoonbowPipeline,
   MoonbowBuffers,
-  PipelineCore
+  PipelineCore,
+  MultiShaderPipelines,
+  ShaderObject,
+  MultiShaderRenderCall
 }
