@@ -13,6 +13,18 @@ import { float, uTime, fTime } from './buffers/uniforms'
 import { uniformBuffer } from './buffers'
 import { getUniformEntries } from './pipeline/entries'
 
+// TypeGPU Foundation
+import { 
+  createFoundation, 
+  createUniformBuffer, 
+  createStorageBuffer,
+  createVertexBuffer,
+  schemas,
+  type MoonbowFoundation
+} from './foundation'
+import { createMoonbowUniforms } from './buffers/uniforms-typegpu'
+import { createCompatibleUniforms } from './buffers/uniforms-compatible'
+
 import type { GPUCanvas } from './target'
 import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
 import type { GetMemory } from './memory'
@@ -40,7 +52,14 @@ export {
   uniformBuffer,
   bufferVertexLayout,
   getUniformEntries,
-  getOptionsWithDefaults
+  getOptionsWithDefaults,
+  createFoundation,
+  createUniformBuffer,
+  createStorageBuffer,
+  createVertexBuffer,
+  schemas,
+  createMoonbowUniforms,
+  createCompatibleUniforms
 }
 
 export type {
@@ -56,5 +75,6 @@ export type {
   MoonbowPipelineOptions,
   MoonbowPipeline,
   MoonbowBuffers,
-  PipelineCore
+  PipelineCore,
+  MoonbowFoundation
 }
