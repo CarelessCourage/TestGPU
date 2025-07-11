@@ -5,12 +5,12 @@ import shader from '../shaders/shader.wgsl'
 import basic from '../shaders/basic.wgsl'
 import { onMounted } from 'vue'
 import { spinningCube } from '../scenes/spinningCube'
-import { 
-  uTime, 
-  float, 
-  gpuCamera, 
-  useGPU, 
-  getMemory, 
+import {
+  uTime,
+  float,
+  gpuCamera,
+  useGPU,
+  getMemory,
   gpuPipeline,
   createCompatibleUniforms
 } from '../moonbow'
@@ -42,7 +42,7 @@ onMounted(async () => {
 
   // === NEW TYPEGPU API (Same interface, TypeGPU under the hood) ===
   const canvas2 = document.querySelector('canvas#two') as HTMLCanvasElement
-  
+
   if (canvas2) {
     // Create TypeGPU-based uniforms that are compatible with your existing API
     const typeGpuUniforms = await createCompatibleUniforms({
@@ -52,7 +52,7 @@ onMounted(async () => {
 
     const typeGpuTime = typeGpuUniforms.uTime(0.002)
     const typeGpuIntensity = typeGpuUniforms.float([0.2])
-    
+
     const typeGpuMemory = await getMemory({
       device,
       canvas: canvas2,
@@ -75,7 +75,7 @@ onMounted(async () => {
     let rotation = 0
     setInterval(() => {
       rotation += 0.002
-      
+
       // Legacy approach
       moon1.frame(({ renderPass }) => {
         model1.render(renderPass, rotation, -1)
@@ -117,7 +117,12 @@ onMounted(async () => {
   <div class="info">
     <p><strong>Left:</strong> Your existing Moonbow API with direct WebGPU</p>
     <p><strong>Right:</strong> Same API, same experience - but TypeGPU foundation underneath</p>
-    <p><em>The API stays the same, but you get TypeGPU's type safety and features when you need them</em></p>
+    <p>
+      <em
+        >The API stays the same, but you get TypeGPU's type safety and features when you need
+        them</em
+      >
+    </p>
   </div>
 </template>
 

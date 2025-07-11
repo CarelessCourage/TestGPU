@@ -14,9 +14,9 @@ import { uniformBuffer } from './buffers'
 import { getUniformEntries } from './pipeline/entries'
 
 // TypeGPU Foundation
-import { 
-  createFoundation, 
-  createUniformBuffer, 
+import {
+  createFoundation,
+  createUniformBuffer,
   createStorageBuffer,
   createVertexBuffer,
   schemas,

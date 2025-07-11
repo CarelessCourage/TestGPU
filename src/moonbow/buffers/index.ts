@@ -1,9 +1,13 @@
+import type { TgpuBuffer } from 'typegpu'
+
 export interface UniformBuffer {
   binding?: number
   visibility?: number
   buffer: GPUBuffer
   bufferType?: GPUBufferBindingType
   update: () => void
+  tgpuBuffer?: TgpuBuffer<any>
+  write?: (data: any) => void
 }
 
 interface UBOptions {

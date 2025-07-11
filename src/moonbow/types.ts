@@ -1,4 +1,5 @@
 import type { UniformBuffer, GPUCanvas, BindGroups } from './'
+import type { TgpuRoot } from 'typegpu'
 
 export interface MoonbowBuffers {
   [key: string]: UniformBuffer
@@ -21,9 +22,10 @@ export interface MoonbowOptions<
   S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 > extends MoonbowPipelineOptions {
-  uniforms: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<U>
-  storage: (props: { target: GPUCanvas; device: GPUDevice }) => Partial<S>
+  uniforms: (props: { target: GPUCanvas; device: GPUDevice; root: TgpuRoot }) => Partial<U>
+  storage: (props: { target: GPUCanvas; device: GPUDevice; root: TgpuRoot }) => Partial<S>
   bindGroups: BindGroups<U, S, B>
   canvas: HTMLCanvasElement | null
   device: GPUDevice
+  root: TgpuRoot
 }

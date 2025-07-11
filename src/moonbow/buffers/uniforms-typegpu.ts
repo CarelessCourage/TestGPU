@@ -57,15 +57,15 @@ export async function createMoonbowUniforms(options: {
   canvas?: HTMLCanvasElement | null
 }) {
   const foundation = await createFoundation(options)
-  
+
   return {
     foundation,
-    
+
     // TypeGPU-based uniform creators
     uTime: (speed = 0.1) => {
       let time = 50
       const buffer = createUniformBuffer(foundation, schemas.time, { value: time })
-      
+
       return {
         ...buffer,
         update: () => {
@@ -75,11 +75,11 @@ export async function createMoonbowUniforms(options: {
         }
       }
     },
-    
+
     fTime: () => {
       let time = 50
       const buffer = createUniformBuffer(foundation, schemas.float, time)
-      
+
       return {
         ...buffer,
         update: () => {
@@ -89,16 +89,16 @@ export async function createMoonbowUniforms(options: {
         }
       }
     },
-    
+
     float: (value: number[]) => {
       const schema = schemas.floatArray(value.length)
       return createUniformBuffer(foundation, schema, value)
     },
-    
+
     vec3: (value: [number, number, number]) => {
       return createUniformBuffer(foundation, schemas.vec3, value)
     },
-    
+
     vec4: (value: [number, number, number, number]) => {
       return createUniformBuffer(foundation, schemas.vec4, value)
     }

@@ -15,7 +15,7 @@ export interface MoonbowMemoryOptions<
 }
 
 /**
- * Gets a device and lets the user allocate uniform/storage buffers to the memory on it. 
+ * Gets a device and lets the user allocate uniform/storage buffers to the memory on it.
  * Now supports TypeGPU foundation layer.
  */
 export async function getMemory<
@@ -29,10 +29,12 @@ export async function getMemory<
   // Create TypeGPU foundation if requested
   let foundation: MoonbowFoundation | undefined
   if (options.useTypeGPU || options.foundation) {
-    foundation = options.foundation || await createFoundation({
-      device: options.device,
-      canvas: options.canvas
-    })
+    foundation =
+      options.foundation ||
+      (await createFoundation({
+        device: options.device,
+        canvas: options.canvas
+      }))
   }
 
   const uniforms = options.uniforms?.({ target, device: options.device, foundation }) || {}

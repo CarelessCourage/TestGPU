@@ -11,9 +11,7 @@ export function createMoonbowCompatibleBuffer(
   initialData?: any,
   updateCallback?: (data: any) => any
 ): UniformBuffer {
-  const tgpuBuffer = foundation.root
-    .createBuffer(schema)
-    .$usage('uniform')
+  const tgpuBuffer = foundation.root.createBuffer(schema).$usage('uniform')
 
   if (initialData) {
     tgpuBuffer.write(initialData)
@@ -42,35 +40,35 @@ export async function createCompatibleUniforms(options: {
   canvas?: HTMLCanvasElement | null
 }) {
   const foundation = await createFoundation(options)
-  
+
   return {
     foundation,
-    
+
     // Compatible uniform creators
     uTime: (speed = 0.1) => {
       let time = 50
       const timeBuffer = createMoonbowCompatibleBuffer(
-        foundation, 
-        d.struct({ value: d.u32 }), 
+        foundation,
+        d.struct({ value: d.u32 }),
         { value: time },
         () => {
           time += speed
           return { value: time }
         }
       )
-      
+
       return timeBuffer
     },
-    
+
     float: (value: number[]) => {
       const schema = d.arrayOf(d.f32, value.length)
       return createMoonbowCompatibleBuffer(foundation, schema, value)
     },
-    
+
     vec3: (value: [number, number, number]) => {
       return createMoonbowCompatibleBuffer(foundation, d.vec3f, value)
     },
-    
+
     vec4: (value: [number, number, number, number]) => {
       return createMoonbowCompatibleBuffer(foundation, d.vec4f, value)
     }

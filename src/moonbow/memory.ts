@@ -1,8 +1,9 @@
 import { useGPU, gpuCanvas } from './'
 import type { MoonbowBuffers, MoonbowOptions, BindGroup } from './'
+import type { TgpuRoot } from 'typegpu'
 
 /**
- * Gets a device and lets the user allocate uniform/storage buffers to the memory on it. Also assembles the options and assigns the defaults.
+ * Gets a TypeGPU root and lets the user allocate uniform/storage buffers to the memory on it.
  */
 export async function getMemory<
   U extends MoonbowBuffers,
@@ -10,10 +11,10 @@ export async function getMemory<
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(passedOptions: Partial<MoonbowOptions<U, S, B>>) {
   const options = await getOptionsWithDefaults(passedOptions)
-  const target = gpuCanvas(options.device, options.canvas)
+  const target = gpuCanvas(options.root, options.canvas)
 
-  const uniforms = options.uniforms?.({ target, device: options.device }) || {}
-  const storage = options.storage?.({ target, device: options.device }) || {}
+  const uniforms = options.uniforms?.({ target, device: options.device, root: options.root }) || {}
+  const storage = options.storage?.({ target, device: options.device, root: options.root }) || {}
 
   delete uniforms?.storage
   return {
@@ -29,7 +30,9 @@ export async function getOptionsWithDefaults<
   S extends MoonbowBuffers,
   B extends GPUBindGroup[] = GPUBindGroup[]
 >(options: Partial<MoonbowOptions<U, S, B>>) {
-  const device = options.device || (await useGPU()).device
+  const gpu = await useGPU()
+  const root = options.root || gpu.root
+  const device = options.device || gpu.device
 
   function bindGroupFallback(bindGroup: BindGroup<U, S, B>) {
     return [bindGroup()] as const
@@ -40,6 +43,7 @@ export async function getOptionsWithDefaults<
     storage: options.storage || (() => ({})),
     canvas: options.canvas || null,
     device: device,
+    root: root,
     model: options.model === undefined ? true : options.model,
     shader: options.shader || '',
     computeShader: options.computeShader || '',

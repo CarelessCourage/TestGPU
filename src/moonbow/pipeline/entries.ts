@@ -3,7 +3,7 @@ import type { UniformBuffer } from '../buffers'
 export function getUniformEntries(props: { device: GPUDevice; uniforms: UniformBuffer[] }) {
   const defaultVisibility = GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE
   return props.uniforms.map((uniform, index) => ({
-    binding: uniform.binding === undefined ? index : uniform.binding,
+    binding: uniform.binding !== undefined ? uniform.binding : index,
     visibility: uniform.visibility || defaultVisibility,
     buffer: { type: uniform.bufferType || ('uniform' as GPUBufferBindingType) },
     resource: { buffer: uniform.buffer }

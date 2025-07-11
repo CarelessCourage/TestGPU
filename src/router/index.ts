@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ConwayGame from '../views/ConwayGame.vue'
 import GradientPlane from '@/views/GradientPlane.vue'
 import MoonbowBasic from '@/views/MoonbowBasic.vue'
+import MoonbowUnified from '@/views/MoonbowUnified.vue'
 import MoonbowTypeGPU from '@/views/MoonbowTypeGPU.vue'
 import AnimatedPlanks from '@/views/AnimatedPlanks.vue'
 import BomberSet from '@/views/BomberSet.vue'
@@ -21,6 +22,11 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
+      component: MoonbowUnified
+    },
+    {
+      path: '/basic',
+      name: 'Basic',
       component: MoonbowBasic
     },
     {
