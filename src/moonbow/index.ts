@@ -19,6 +19,7 @@ import {
   generatePostProcessShader
 } from './postProcess'
 import { toGPUColor, BackgroundColors } from './background'
+import { createScene } from './scene'
 
 import type { GPUCanvas } from './target'
 import type { MoonbowRender, MoonbowCompute, ComputePass } from './render'
@@ -55,6 +56,7 @@ export {
   createPostProcessPipeline,
   createAutoPostProcessPipeline,
   generatePostProcessShader,
+  createScene,
   toGPUColor,
   BackgroundColors
 }
@@ -78,5 +80,6 @@ export type {
   MultiShaderRenderCall,
   PostProcessPipeline,
   PostProcessOptions,
+  // Scene
   BackgroundColor
 }

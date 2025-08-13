@@ -253,6 +253,11 @@ export function createPostProcessPipeline<
     renderTexture,
     // Expose manual resize recalculation (optional external call after user resizes canvas dimensions).
     resize: () => ensureTargetsCurrent(),
+    dispose: () => {
+      renderTexture.destroy()
+      depthTexture?.destroy()
+      // ShaderModule / Pipeline objects are GC-managed; left for future explicit destruction if API adds it.
+    },
     memory
   }
 }
