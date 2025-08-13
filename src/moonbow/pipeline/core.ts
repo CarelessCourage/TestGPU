@@ -75,7 +75,12 @@ export function pipelineCore<
     layout: memLay.layout,
     uniformEntries: memLay.uniformEntries,
     storageEntries: memLay.storageEntries,
-    bindGroup
+    bindGroup,
+    // No explicit destroy on pipeline objects in WebGPU spec yet; rely on GC.
+    // Expose a placeholder for symmetry allowing higher-level dispose patterns.
+    dispose: () => {
+      // Future: release resources like render bundles, custom caches.
+    }
   }
 }
 

@@ -4,6 +4,8 @@ export interface UniformBuffer {
   buffer: GPUBuffer
   bufferType?: GPUBufferBindingType
   update: () => void
+  // Destroy underlying GPUBuffer when user no longer needs it.
+  destroy: () => void
 }
 
 interface UBOptions {
@@ -31,7 +33,8 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UniformBuf
     visibility: options.visibility || defaultVisibility,
     buffer: buffer,
     // Explicitly mark this as a uniform buffer for bind group layout construction.
-    update: () => options.update(buffer)
+    update: () => options.update(buffer),
+    destroy: () => buffer.destroy()
   }
 }
 
@@ -56,6 +59,7 @@ export function storageBuffer(device: GPUDevice, options: UBOptions): UniformBuf
     buffer,
     // Mark the buffer type so getUniformEntries can map to the correct layout ("storage").
     bufferType: 'storage',
-    update: () => options.update(buffer)
+    update: () => options.update(buffer),
+    destroy: () => buffer.destroy()
   }
 }

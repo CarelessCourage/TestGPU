@@ -52,6 +52,28 @@ export function createMultiShaderPipelines<
     ? toGPUColor(options.backgroundColor)
     : BackgroundColors.default
 
+  // Cached depth texture reused each frame & recreated on resize.
+  let depthTexture: GPUTexture | null = null
+  let depthWidth = memory.target.element.width
+  let depthHeight = memory.target.element.height
+
+  function ensureDepthTexture() {
+    if (!memory.depthStencil) return null
+    const w = memory.target.element.width
+    const h = memory.target.element.height
+    if (!depthTexture || w !== depthWidth || h !== depthHeight) {
+      depthTexture?.destroy()
+      depthTexture = memory.target.device.createTexture({
+        size: [w, h],
+        format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
+      })
+      depthWidth = w
+      depthHeight = h
+    }
+    return depthTexture
+  }
+
   /**
    * Creates a render frame that can render multiple objects with different shaders
    */
@@ -74,16 +96,11 @@ export function createMultiShaderPipelines<
       ]
     }
 
-    // Add depth stencil if enabled
-    if (memory.depthStencil) {
-      const depthTexture = device.createTexture({
-        size: [memory.target.element.width, memory.target.element.height],
-        format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
-      })
-
+    // Depth attachment (cached)
+    const depth = ensureDepthTexture()
+    if (depth) {
       renderPassDescriptor.depthStencilAttachment = {
-        view: depthTexture.createView(),
+        view: depth.createView(),
         depthClearValue: 1.0,
         depthLoadOp: 'clear',
         depthStoreOp: 'store'
@@ -127,6 +144,11 @@ export function createMultiShaderPipelines<
     pipelines: pipelines.map((p) => ({ label: p.label, pipeline: p.pipeline })),
     multiFrame,
     getPipeline,
+    resize: () => ensureDepthTexture(),
+    dispose: () => {
+      depthTexture?.destroy()
+      pipelines.forEach((p) => p.pipeline.dispose())
+    },
     memory
   }
 }

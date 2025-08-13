@@ -77,6 +77,12 @@ export function gpuPipeline<
     loop,
     animate,
     updateAllBuffers,
+    // Dispose underlying resources: user should call when tearing down context.
+    dispose: () => {
+      pipe.dispose()
+      Object.values(memory.uniforms || {}).forEach((u: any) => u.destroy && u.destroy())
+      Object.values(memory.storage || {}).forEach((s: any) => s.destroy && s.destroy())
+    },
     ...actions
   }
 }
