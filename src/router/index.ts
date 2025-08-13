@@ -9,6 +9,8 @@ import MarblePlane from '@/views/MarblePlane.vue'
 import ImpactPlane from '@/views/ImpactPlane.vue'
 import EarthSphere from '@/views/EarthSphere.vue'
 import FluidCursor from '@/views/FluidCursor.vue'
+import BubblesDemo from '@/views/BubblesDemo.vue'
+import BubblesFullscreen from '@/views/BubblesFullscreen.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -82,6 +84,16 @@ const router = createRouter({
       path: '/fluid-cursor',
       name: 'FluidCursor',
       component: FluidCursor
+    },
+    {
+      path: '/bubbles',
+      name: 'Bubbles',
+      component: BubblesDemo
+    },
+    {
+      path: '/bubbles-fs',
+      name: 'BubblesFullscreen',
+      component: BubblesFullscreen
     }
   ]
 })
