@@ -5,7 +5,8 @@ export function getUniformEntries(props: { device: GPUDevice; uniforms: UniformB
   return props.uniforms.map((uniform, index) => ({
     binding: uniform.binding === undefined ? index : uniform.binding,
     visibility: uniform.visibility || defaultVisibility,
-    buffer: { type: uniform.bufferType || ('uniform' as GPUBufferBindingType) },
+    // Use explicit bufferType when provided (e.g. 'storage'). Fallback to 'uniform'.
+    buffer: { type: (uniform.bufferType || 'uniform') as GPUBufferBindingType },
     resource: { buffer: uniform.buffer }
   }))
 }

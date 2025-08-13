@@ -37,14 +37,22 @@ export function float(device: GPUDevice, value: number[]) {
   })
 }
 
-export const vec3 = (device: GPUDevice, value: number) =>
+// NOTE: WebGPU alignment rules mean a vec3 in a uniform block is rounded up to 16 bytes.
+// We still expose vec3 for ergonomics but allocate 16 bytes. Caller passes 3 components.
+export const vec3 = (device: GPUDevice, value: [number, number, number]) =>
   uniformBuffer(device, {
-    size: 12,
-    update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
+    size: 16, // padded to 16 bytes
+    update: (buffer) => {
+      const data = new Float32Array([value[0], value[1], value[2], 0])
+      device.queue.writeBuffer(buffer, 0, data)
+    }
   })
 
-export const vec4 = (device: GPUDevice, value: number) =>
+export const vec4 = (device: GPUDevice, value: [number, number, number, number]) =>
   uniformBuffer(device, {
     size: 16,
-    update: (buffer) => device.queue.writeBuffer(buffer, 0, new Uint32Array([value]))
+    update: (buffer) => {
+      const data = new Float32Array(value)
+      device.queue.writeBuffer(buffer, 0, data)
+    }
   })

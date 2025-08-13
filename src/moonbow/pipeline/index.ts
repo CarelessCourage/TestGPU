@@ -47,14 +47,36 @@ export function gpuPipeline<
       })
   }
 
+  // requestAnimationFrame driven render loop (vs synced, pauses on tab blur).
+  function animate(callback: (props: typeof actions, dt: number, t: number) => void) {
+    let last = performance.now()
+    function frame(now: number) {
+      const dt = (now - last) / 1000
+      last = now
+      callback(actions, dt, now / 1000)
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  }
+
+  // Backwards compatible interval loop (deprecated: prefer animate()).
   function loop(callback: (props: typeof actions) => void, interval = 1000 / 60) {
-    setInterval(() => callback(actions), interval)
+    const id = setInterval(() => callback(actions), interval)
+    return () => clearInterval(id)
+  }
+
+  // Allow user to update every uniform/storage buffer generated during getMemory.
+  function updateAllBuffers() {
+    Object.values(memory.uniforms || {}).forEach((u: any) => u.update && u.update())
+    Object.values(memory.storage || {}).forEach((s: any) => s.update && s.update())
   }
 
   return {
     core: pipe,
     simulationPipeline,
     loop,
+    animate,
+    updateAllBuffers,
     ...actions
   }
 }

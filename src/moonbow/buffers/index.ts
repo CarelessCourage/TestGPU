@@ -30,23 +30,32 @@ export function uniformBuffer(device: GPUDevice, options: UBOptions): UniformBuf
     binding: options.binding,
     visibility: options.visibility || defaultVisibility,
     buffer: buffer,
+    // Explicitly mark this as a uniform buffer for bind group layout construction.
     update: () => options.update(buffer)
   }
 }
 
 export function storageBuffer(device: GPUDevice, options: UBOptions): UniformBuffer {
+  // Storage buffers typically need STORAGE + COPY_DST usage; caller can extend.
+  const usage = options.usage || GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   const buffer = device.createBuffer({
     label: options.label,
     size: options.size || 4,
-    usage: options.usage || GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    usage
   })
 
-  // Passes the buffer to the update callback
+  // Execute initial population/update of buffer contents.
   options.update(buffer)
+
   return {
     binding: options.binding,
-    visibility: options.visibility,
-    buffer: buffer,
+    // Provide a sane default visibility including COMPUTE if caller omitted one.
+    visibility:
+      options.visibility ||
+      GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+    buffer,
+    // Mark the buffer type so getUniformEntries can map to the correct layout ("storage").
+    bufferType: 'storage',
     update: () => options.update(buffer)
   }
 }

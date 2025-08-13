@@ -26,23 +26,46 @@ export function createPostProcessPipeline<
   const device = memory.target.device
   const canvas = memory.target.element
 
-  // Create offscreen render target
-  const renderTexture = device.createTexture({
+  // Offscreen render + depth textures are cached and recreated only when canvas size changes.
+  let renderTexture = device.createTexture({
     size: [canvas.width, canvas.height],
     format: memory.target.format,
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
   })
+  let renderTextureView = renderTexture.createView()
 
-  const renderTextureView = renderTexture.createView()
-
-  // Create depth texture for offscreen rendering if needed
-  const depthTexture = memory.depthStencil
+  let depthTexture = memory.depthStencil
     ? device.createTexture({
         size: [canvas.width, canvas.height],
         format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT
       })
     : null
+
+  let cachedWidth = canvas.width
+  let cachedHeight = canvas.height
+
+  function ensureTargetsCurrent() {
+    if (canvas.width !== cachedWidth || canvas.height !== cachedHeight) {
+      cachedWidth = canvas.width
+      cachedHeight = canvas.height
+      renderTexture.destroy()
+      renderTexture = device.createTexture({
+        size: [canvas.width, canvas.height],
+        format: memory.target.format,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+      })
+      renderTextureView = renderTexture.createView()
+      if (memory.depthStencil) {
+        depthTexture?.destroy()
+        depthTexture = device.createTexture({
+          size: [canvas.width, canvas.height],
+          format: 'depth24plus',
+          usage: GPUTextureUsage.RENDER_ATTACHMENT
+        })
+      }
+    }
+  }
 
   // Create sampler for the offscreen texture
   const sampler = device.createSampler({
@@ -125,6 +148,8 @@ export function createPostProcessPipeline<
    * 2. Apply post-processing to final canvas
    */
   function renderWithPostProcess(sceneRenderCalls: MultiShaderRenderCall[]) {
+    // Resize-aware: ensure offscreen targets reflect current canvas size.
+    ensureTargetsCurrent()
     const commandEncoder = device.createCommandEncoder({
       label: 'Post-process Command Encoder'
     })
@@ -226,6 +251,8 @@ export function createPostProcessPipeline<
     renderWithPostProcess,
     postProcessPipeline,
     renderTexture,
+    // Expose manual resize recalculation (optional external call after user resizes canvas dimensions).
+    resize: () => ensureTargetsCurrent(),
     memory
   }
 }
