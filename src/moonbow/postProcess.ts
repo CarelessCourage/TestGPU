@@ -376,9 +376,10 @@ export function createAutoPostProcessPipeline<
 ) {
   const existingUniforms = memory.uniforms ? Object.keys(memory.uniforms) : []
   const autoShader = generatePostProcessShader(existingUniforms, customEffects)
-
-  return createPostProcessPipeline(memory, scenePipelines, {
+  const base = createPostProcessPipeline(memory, scenePipelines, {
     postProcessShader: autoShader,
     backgroundColor
   })
+  // Return base object (already includes dispose/resize) for clarity & future extension.
+  return base
 }
