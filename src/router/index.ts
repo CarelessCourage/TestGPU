@@ -11,6 +11,7 @@ import EarthSphere from '@/views/EarthSphere.vue'
 import FluidCursor from '@/views/FluidCursor.vue'
 import BubblesDemo from '@/views/BubblesDemo.vue'
 import BubblesFullscreen from '@/views/BubblesFullscreen.vue'
+import BubblesMultiPass from '@/views/BubblesMultiPass.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -94,6 +95,11 @@ const router = createRouter({
       path: '/bubbles-fs',
       name: 'BubblesFullscreen',
       component: BubblesFullscreen
+    },
+    {
+      path: '/bubbles-mp',
+      name: 'BubblesMultiPass',
+      component: BubblesMultiPass
     }
   ]
 })
