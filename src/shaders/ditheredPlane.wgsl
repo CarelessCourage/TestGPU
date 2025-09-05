@@ -18,6 +18,9 @@ struct ViewProjectionMatrix {
 @group(0) @binding(2) var<uniform> view: ViewProjectionMatrix;
 @group(0) @binding(3) var tex: texture_2d<f32>;
 @group(0) @binding(4) var texSampler: sampler;
+// Monochrome controls
+@group(0) @binding(5) var<uniform> monoEnabled: f32; // 0.0 = off, >0.5 = on
+@group(0) @binding(6) var<uniform> monoColor: vec4<f32>; // tint color for mono
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
@@ -57,6 +60,12 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
     var rgb = color.rgb;
     rgb = floor(rgb * L + T) / denom;
     rgb = clamp(rgb, vec3f(0.0), vec3f(1.0));
+
+    if (monoEnabled > 0.5) {
+        // luminance (Rec. 601)
+        let luma = dot(rgb, vec3f(0.299, 0.587, 0.114));
+        rgb = vec3f(luma) * monoColor.rgb;
+    }
 
     return vec4f(rgb, color.a);
 }
