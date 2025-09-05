@@ -13,6 +13,7 @@ import BubblesDemo from '@/views/BubblesDemo.vue'
 import BubblesFullscreen from '@/views/BubblesFullscreen.vue'
 import BubblesMultiPass from '@/views/BubblesMultiPass.vue'
 import TexturedPlane from '@/views/TexturedPlane.vue'
+import DitheredPlane from '@/views/DitheredPlane.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -101,6 +102,11 @@ const router = createRouter({
       path: '/textured-plane',
       name: 'TexturedPlane',
       component: TexturedPlane
+    },
+    {
+      path: '/dithered-plane',
+      name: 'DitheredPlane',
+      component: DitheredPlane
     }
     // {
     //   path: '/bubbles-mp',
