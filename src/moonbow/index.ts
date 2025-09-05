@@ -11,6 +11,12 @@ import { gpuPipeline } from './pipeline'
 import { pipelineCore } from './pipeline/core'
 import { float, uTime, fTime } from './buffers/uniforms'
 import { uniformBuffer } from './buffers'
+import {
+  createTextureFromUrl,
+  textureBinding,
+  samplerBinding,
+  createTextureResourcesFromUrl
+} from './buffers/textures'
 import { getUniformEntries } from './pipeline/entries'
 import { createMultiShaderPipelines } from './multiShader'
 import {
@@ -49,6 +55,10 @@ export {
   computePass,
   gpuPipeline,
   uniformBuffer,
+  createTextureFromUrl,
+  textureBinding,
+  samplerBinding,
+  createTextureResourcesFromUrl,
   bufferVertexLayout,
   getUniformEntries,
   getOptionsWithDefaults,

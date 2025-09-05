@@ -1,6 +1,7 @@
 import { bufferVertexLayout } from '../geometry/utils'
 import { getStencil } from '../render/utils'
-import { getBindGroupLayout, getUniformEntries } from './entries'
+import { getBindGroupLayout, getUniformEntries, getResourceLayout } from './entries'
+import type { ResourceBinding } from '../buffers/textures'
 import type { GetMemory, MoonbowBuffers } from '../'
 
 function memoryLayout<
@@ -11,12 +12,37 @@ function memoryLayout<
   const target = memory.target
   const uniforms = memory.uniforms ? Object.values(memory.uniforms) : []
   const storage = memory.storage ? Object.values(memory.storage) : []
+  const resources: ResourceBinding[] = (memory as any).resources || []
 
   const uniformEntries = getUniformEntries({ device: target.device, uniforms })
   const storageEntries = getUniformEntries({ device: target.device, uniforms: storage || [] })
-  const layout = getBindGroupLayout(target.device, [...uniformEntries, ...storageEntries])
+  // Build a combined layout that also includes texture/sampler resources if present
+  const bufferLayoutEntries = [...uniformEntries, ...storageEntries]
+  const resourceLayoutEntries = resources.map((res, idx) => {
+    const binding = res.binding ?? bufferLayoutEntries.length + idx
+    const visibility = res.visibility || GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT
+    if (res.resourceType === 'texture') {
+      return {
+        binding,
+        visibility,
+        texture: { sampleType: res.textureSampleType || ('float' as GPUTextureSampleType) }
+      }
+    }
+    return { binding, visibility, sampler: {} as GPUSamplerBindingLayout }
+  })
 
-  return { target, layout, uniformEntries, storageEntries }
+  const layout = resourceLayoutEntries.length
+    ? getResourceLayout(target.device, [
+        ...bufferLayoutEntries.map((entry) => ({
+          binding: entry.binding,
+          visibility: entry.visibility,
+          buffer: entry.buffer
+        })),
+        ...resourceLayoutEntries
+      ])
+    : getBindGroupLayout(target.device, bufferLayoutEntries)
+
+  return { target, layout, uniformEntries, storageEntries, resources, bufferLayoutEntries }
 }
 
 export function pipelineCore<
@@ -52,7 +78,8 @@ export function pipelineCore<
     depthStencil: getStencil(memory.depthStencil),
     primitive: {
       topology: memory.wireframe ? 'line-list' : 'triangle-list',
-      cullMode: 'back' // ensures backfaces dont get rendered
+      cullMode: (memory as any).cullMode || 'back',
+      frontFace: (memory as any).frontFace || 'ccw'
     }
   })
 
@@ -60,10 +87,20 @@ export function pipelineCore<
   const bindGroup: BindGroup<U, S, B> = (
     callback?: ({ uniformEntries, storageEntries }: typeof memLay) => Iterable<GPUBindGroupEntry>
   ) => {
+    // Build resource entries for textures/samplers
+    const baseEntries = callback
+      ? [...callback(memLay)]
+      : [...memLay.uniformEntries, ...memLay.storageEntries]
+    const textureEntries = memLay.resources.map((res, idx) => {
+      const binding = res.binding ?? memLay.bufferLayoutEntries.length + idx
+      if (res.resourceType === 'texture') return { binding, resource: res.view as GPUTextureView }
+      return { binding, resource: res.sampler as GPUSampler }
+    })
+
     return memLay.target.device.createBindGroup({
       label: 'Moonbow bindgroup',
       layout: memLay.layout,
-      entries: callback ? callback(memLay) : [...memLay.uniformEntries, ...memLay.storageEntries]
+      entries: [...baseEntries, ...textureEntries]
     })
   }
 

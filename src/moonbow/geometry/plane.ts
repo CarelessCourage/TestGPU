@@ -4,12 +4,12 @@ import { bufferVertexLayout, modelMatrix, ensure3Values } from './utils.js'
 import type { GeoBuffers, Geometry, ModelOptions } from './utils.js'
 import { getModel } from './'
 
-export function plane(device: GPUDevice, options: ModelOptions) {
+export function plane(device: GPUDevice, options: ModelOptions = {}) {
   const buffer = planeBuffer(device, options)
   return getModel(buffer)
 }
 
-function planeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
+function planeBuffer(device: GPUDevice, options: ModelOptions = {}): GeoBuffers {
   const geometry = planeGeometry(options)
 
   // Calculate maximum buffer size for resolution up to 50x50 to handle high-resolution cases
@@ -43,20 +43,21 @@ function planeBuffer(device: GPUDevice, options: ModelOptions): GeoBuffers {
   })
 
   // Write initial data
-  device.queue.writeBuffer(vBuffer, 0, geometry.vertices)
-  device.queue.writeBuffer(nBuffer, 0, geometry.normals)
-  device.queue.writeBuffer(uvBuffer, 0, geometry.uvs)
-  device.queue.writeBuffer(indices, 0, geometry.indices)
+  device.queue.writeBuffer(vBuffer, 0, geometry.vertices.buffer, 0, geometry.vertices.byteLength)
+  device.queue.writeBuffer(nBuffer, 0, geometry.normals.buffer, 0, geometry.normals.byteLength)
+  device.queue.writeBuffer(uvBuffer, 0, geometry.uvs.buffer, 0, geometry.uvs.byteLength)
+  device.queue.writeBuffer(indices, 0, geometry.indices.buffer, 0, geometry.indices.byteLength)
 
   let currentIndicesCount = geometry.indicesCount
 
   function update(o: ModelOptions) {
-    const geo = planeGeometry({ ...options, ...o })
+    const base = options || {}
+    const geo = planeGeometry({ ...base, ...o })
 
-    device.queue.writeBuffer(vBuffer, 0, geo.vertices)
-    device.queue.writeBuffer(nBuffer, 0, geo.normals)
-    device.queue.writeBuffer(uvBuffer, 0, geo.uvs)
-    device.queue.writeBuffer(indices, 0, geo.indices)
+    device.queue.writeBuffer(vBuffer, 0, geo.vertices.buffer, 0, geo.vertices.byteLength)
+    device.queue.writeBuffer(nBuffer, 0, geo.normals.buffer, 0, geo.normals.byteLength)
+    device.queue.writeBuffer(uvBuffer, 0, geo.uvs.buffer, 0, geo.uvs.byteLength)
+    device.queue.writeBuffer(indices, 0, geo.indices.buffer, 0, geo.indices.byteLength)
 
     currentIndicesCount = geo.indicesCount
   }

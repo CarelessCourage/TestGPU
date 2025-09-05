@@ -1,7 +1,7 @@
 import { plane } from './plane'
 
 export function getCellPlane(device: GPUDevice, GRID_SIZE: number) {
-  const surface = plane(device)
+  const surface = plane(device, {})
 
   function update(encoder: GPURenderPassEncoder) {
     encoder.setVertexBuffer(0, surface.buffer.vertices)

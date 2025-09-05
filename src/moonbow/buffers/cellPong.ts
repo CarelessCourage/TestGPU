@@ -38,7 +38,8 @@ export function getCellPong(device: GPUDevice, GRID_SIZE: number) {
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
     buffer: grid.buffer, // Grid uniform buffer
     bufferType: 'uniform', // Grid uniform buffer
-    update: () => console.log('rex')
+    update: () => console.log('rex'),
+    destroy: () => grid.destroy()
   }
 
   const storage: UniformBuffer[] = [
@@ -47,14 +48,16 @@ export function getCellPong(device: GPUDevice, GRID_SIZE: number) {
       visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
       buffer: stateA.buffer, // Cell state input buffer
       bufferType: 'read-only-storage', // Cell state input buffer
-      update: () => console.log('rex')
+      update: () => console.log('rex'),
+      destroy: () => stateA.destroy()
     },
     {
       binding: 2,
       visibility: GPUShaderStage.COMPUTE,
       buffer: stateB.buffer, // Cell state output buffer
       bufferType: 'storage', // Cell state output buffer
-      update: () => console.log('rex')
+      update: () => console.log('rex'),
+      destroy: () => stateB.destroy()
     }
   ]
 
