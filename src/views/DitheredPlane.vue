@@ -23,7 +23,7 @@ onMounted(async () => {
   // Use intensity as number of levels (e.g. 6 levels)
   const levels = float(device, [levelsVal.value])
 
-  const model = plane(device, { resolution: [1, 1, 1] })
+  const model = plane(device, { resolution: [1, 1, 1], size: [1, 1.4, 1] })
 
   const tex = await createTextureFromUrl(device, '/sam2.jpg')
   const view = tex.createView()
@@ -49,7 +49,7 @@ onMounted(async () => {
       model.setOptions(renderPass, { rotation: [0, 0, 0], position: [0, 0, 0] })
       uniforms.time?.update()
       // Adjust camera to fit plane well
-      uniforms.view?.update({ position: [0, 0, 4], target: [0, 0, 0], rotation: [0, 0, 0] })
+      uniforms.view?.update({ position: [0, 0, 10], target: [0, 0, 0], rotation: [0, 0, 0] })
     })
   })
 

@@ -52,7 +52,7 @@ export function indicesBuffer({ device, indices }: IndicesBuffer) {
     size: indices.byteLength,
     usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
   })
-  device.queue.writeBuffer(buffer, 0, indices)
+  device.queue.writeBuffer(buffer, 0, indices.buffer, 0, indices.byteLength)
   return buffer
 }
 
@@ -81,6 +81,9 @@ export interface ModelOptions {
   rotation?: number | [number, number, number]
   size?: number | [number, number, number]
   resolution?: number | [number, number, number]
+  // Optional explicit geometry size (pre-transform): used by plane
+  width?: number
+  height?: number
 }
 
 function handleOptions(options?: ModelOptions) {

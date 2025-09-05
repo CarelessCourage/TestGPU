@@ -80,8 +80,8 @@ function planeGeometry(options?: ModelOptions): Geometry {
   const resolution = ensure3Values(options?.resolution ?? 1)
 
   const size = 3
-  const width = size
-  const height = size
+  const width = options?.width ?? size
+  const height = options?.height ?? size
 
   const widthSegments = Math.floor(resolution[0])
   const heightSegments = Math.floor(resolution[1])
